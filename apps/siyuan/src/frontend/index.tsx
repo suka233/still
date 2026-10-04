@@ -1,4 +1,4 @@
-import { upcomingCharges, type DueReminder, type LocalDate, type Subscription } from "@still/core";
+import { convertTotals, monthlyTotals, upcomingCharges, type DueReminder, type LocalDate, type Subscription } from "@still/core";
 import {
   ManagerView,
   ReminderDialog,
@@ -7,6 +7,8 @@ import {
   UpcomingPanel,
   createStillStore,
   createTranslate,
+  formatCycle,
+  formatDate,
   formatDaysLeft,
   formatMoney,
   resolveMessages,
@@ -15,7 +17,7 @@ import {
   type Translate,
 } from "@still/ui";
 import { useState } from "react";
-import { Dialog, Plugin, confirm, getFrontend, openTab, platformUtils } from "siyuan";
+import { Dialog, Plugin, confirm, getFrontend, openTab, platformUtils, type Protyle } from "siyuan";
 import pluginJson from "../../plugin.json" with { type: "json" };
 import { RPC, type RemindersDueParams } from "../shared/rpc.js";
 import { createRpcClient, type SiyuanStillClient } from "./client.js";
@@ -116,6 +118,17 @@ export default class StillPlugin extends Plugin {
       callback: () => this.#openAdd?.(),
     });
     this.#registerStatusBar();
+    this.protyleSlash = [
+      {
+        filter: ["still", "xulema", "xlm", "续了么", "订阅", "subscription"],
+        html: `<div class="b3-list-item__first"><svg class="b3-list-item__graphic"><use xlink:href="#iconStill"></use></svg><span class="b3-list-item__text">${this.#t("slash.summary")}</span></div>`,
+        id: "still-summary",
+        callback: (protyle: Protyle) => {
+          const lute = protyle.protyle.lute;
+          if (lute) protyle.insert(lute.Md2BlockDOM(this.#summaryMarkdown()), true);
+        },
+      },
+    ];
 
     this.kernel.rpc.bind(RPC.notifyChanged, this.#onChanged);
     this.kernel.rpc.bind(RPC.notifyRemindersDue, this.#onRemindersDue);
@@ -217,6 +230,31 @@ export default class StillPlugin extends Plugin {
       el.title = next ? formatMoney(next.subscription.price, this.#locale) : "";
     };
     this.#cleanups.push(this.#store.subscribe(render));
+  }
+
+  /** A Markdown table of live subscriptions, inserted by the `/续了么` slash command. */
+  #summaryMarkdown(): string {
+    const { subscriptions, today, settings, rates } = this.#store.getState();
+    const rows = upcomingCharges(subscriptions, today);
+    if (!rows.length) return this.#t("slash.empty");
+    const cell = (s: string) => s.replace(/\|/g, "\\|");
+    const lines = [
+      `| ${this.#t("slash.colName")} | ${this.#t("slash.colPrice")} | ${this.#t("slash.colCycle")} | ${this.#t("slash.colNext")} |`,
+      "| --- | ---: | --- | --- |",
+      ...rows.map(
+        (r) =>
+          `| ${cell(r.subscription.name)} | ${formatMoney(r.subscription.price, this.#locale)} | ${formatCycle(r.subscription.cycle, this.#t)} | ${formatDate(r.chargeDate, this.#locale)} · ${formatDaysLeft(r.daysLeft, this.#t)} |`,
+      ),
+    ];
+    const totals = monthlyTotals(subscriptions, today);
+    const converted = settings.convertCurrency && rates ? convertTotals(totals, settings.defaultCurrency, rates) : null;
+    const amount =
+      converted && !Object.keys(converted.unconverted).length && Object.keys(totals).length > 1
+        ? `≈ ${formatMoney({ amount: converted.amount, currency: settings.defaultCurrency }, this.#locale)}`
+        : Object.entries(totals)
+            .map(([currency, v]) => formatMoney({ amount: v, currency }, this.#locale))
+            .join(" + ");
+    return `${lines.join("\n")}\n\n${this.#t("slash.total", { amount })}`;
   }
 
   #lastSync = 0;

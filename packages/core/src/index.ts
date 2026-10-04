@@ -8,3 +8,4 @@ export * from "./reminders.js";
 export * from "./repository.js";
 export * from "./summary.js";
 export * from "./rates.js";
+export * from "./channels.js";

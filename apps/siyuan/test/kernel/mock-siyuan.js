@@ -26,7 +26,7 @@ var __mock = { storage: new Map(), mtimes: new Map(), rpc: new Map(), broadcasts
       version: "0.1.0",
       displayName: "Still",
       platform: "darwin",
-      i18n: {},
+      i18n: { "push.title": "{name} renews {when}", "push.body": "{price} · Still using it?", "push.tomorrow": "tomorrow", "push.inDays": "in {n} days" },
       lifecycle: { onload: null, onrunning: null, onunload: null },
     },
     logger: { trace: log("trace"), debug: log("debug"), info: log("info"), warn: log("warn"), error: log("error") },
@@ -74,15 +74,34 @@ var __mock = { storage: new Map(), mtimes: new Map(), rpc: new Map(), broadcasts
         __mock.broadcasts.push({ method: method, params: params });
       },
     },
+    agent: {
+      registerCapability: async function (name, config, handler) {
+        __mock.capabilities = (__mock.capabilities || {});
+        __mock.capabilities[name] = { config: config, handler: handler };
+        return { id: name, name: "plugin__still__" + name, description: config.description, inputSchema: config.inputSchema };
+      },
+      unregisterCapability: async function () {},
+    },
     client: {
       fetch: async function (path, init) {
         if (path === "/api/system/getConf") {
           var body = { code: 0, msg: "", data: { conf: { system: { id: "8d2f-ABC_123-device-xyz" } } } };
           return { ok: true, status: 200, json: async () => body, text: async () => JSON.stringify(body) };
         }
+        function reply(body) {
+          return { ok: true, status: 200, json: async () => body, text: async () => JSON.stringify(body) };
+        }
+        if (path === "/api/notebook/lsNotebooks") {
+          return reply({ code: 0, data: { notebooks: [{ id: "20260101000000-nb00001", name: "Journal", closed: false }, { id: "x", name: "Closed", closed: true }] } });
+        }
+        if (path === "/api/block/appendDailyNoteBlock") {
+          __mock.journal = (__mock.journal || []).concat([JSON.parse(init.body)]);
+          return reply({ code: 0, data: [] });
+        }
         if (path === "/api/network/forwardProxy") {
           var req = JSON.parse(init.body);
           __mock.proxied = (__mock.proxied || []).concat([req]);
+          if (req.url.indexOf("fail.example") >= 0) return reply({ code: 0, data: { url: req.url, status: 500, body: "nope" } });
           var payload = { result: "success", base_code: "USD", rates: { USD: 1, CNY: 7.2, EUR: 0.9 } };
           var envelope = { code: 0, msg: "", data: { url: req.url, status: 200, body: JSON.stringify(payload), contentType: "application/json" } };
           return { ok: true, status: 200, json: async () => envelope, text: async () => JSON.stringify(envelope) };

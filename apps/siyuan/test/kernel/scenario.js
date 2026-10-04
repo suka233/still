@@ -32,7 +32,7 @@
   await life.onload();
   await life.onrunning();
 
-  check("binds all RPC methods", __mock.rpc.size === 12, Array.from(__mock.rpc.keys()));
+  check("binds all RPC methods", __mock.rpc.size === 17, Array.from(__mock.rpc.keys()));
 
   var empty = await call("snapshot");
   check("empty snapshot", empty.subscriptions.length === 0 && empty.settings.notifyAt === "09:00", empty);
@@ -114,6 +114,50 @@
   var rates = await call("refreshRates");
   check("rates fetched via forwardProxy", rates && rates.rates.CNY === 7.2 && __mock.proxied[0].url.indexOf("open.er-api.com") >= 0, rates);
   check("snapshot carries rates", (await call("snapshot")).rates.base === "USD");
+
+  // --- push channels ---
+  var device = await call("deviceInfo");
+  check("device info", device.deviceId === "8d2fABC123device", device);
+  var test = await call("testChannel", { id: "t1", kind: "ntfy", name: "Phone", config: { topic: "still-test" } });
+  check("test push goes through forwardProxy", test.ok && __mock.proxied.some((p) => p.url === "https://ntfy.sh" && p.payload.topic === "still-test"), test);
+  var failing = await call("testChannel", { id: "t2", kind: "webhook", config: { url: "https://fail.example/hook" } });
+  check("failed test push reports status", failing.ok === false && failing.status === 500, failing);
+  var badChannel = null;
+  try {
+    await call("testChannel", { id: "t3", kind: "telegram", config: {} });
+  } catch (e) {
+    badChannel = String(e.message);
+  }
+  check("invalid channel config rejected", badChannel !== null && badChannel.indexOf("botToken is required") >= 0, badChannel);
+
+  var reminderSub = await call("createSubscription", Object.assign({}, input, { name: "Pushy", anchorDate: localDate(1) }));
+  // A window shows it first; push must still go out.
+  await call("claimReminders", [reminderSub.id + ":" + localDate(1) + ":t1"]);
+  __mock.proxied.length = 0;
+  await call("saveNotifications", {
+    channels: [{ id: "n1", kind: "ntfy", name: "Phone", enabled: true, config: { topic: "still" } }],
+    sender: device.deviceId,
+    journal: { enabled: true, notebookId: "20260101000000-nb00001" },
+  });
+  await sleep(300);
+  var pushyPushes = () => __mock.proxied.filter((p) => p.url === "https://ntfy.sh" && p.payload.title.indexOf("Pushy") >= 0);
+  check("due reminder pushed even though a window already showed it", pushyPushes().length === 1, __mock.proxied);
+  check("push recorded in delivery log", JSON.parse(__mock.storage.get("delivered/8d2fABC123device.json")).keys["push|" + reminderSub.id + ":" + localDate(1) + ":t1"]);
+  await call("updateSettings", { notifyAt: "00:00" }); // triggers another tick
+  await sleep(300);
+  check("no duplicate push on later ticks", pushyPushes().length === 1, __mock.proxied);
+  await call("saveNotifications", { channels: [{ id: "n1", kind: "ntfy", name: "Phone", enabled: true, config: { topic: "still" } }], sender: "someOtherDevice", journal: { enabled: false, notebookId: null } });
+  check("notebooks list skips closed ones", (await call("listNotebooks")).length === 1);
+  await call("decide", reminderSub.id, localDate(1), "cancel");
+  await sleep(100);
+  check("journal entry written for cancellation only when enabled", !(__mock.journal || []).some((j) => j.data.indexOf("Pushy") >= 0));
+  await call("deleteSubscription", reminderSub.id);
+
+  // --- AI agent tool ---
+  var cap = __mock.capabilities && __mock.capabilities.subscriptions;
+  check("agent capability registered", !!cap && cap.config.effects.localRead === true, cap && cap.config);
+  var answer = cap && (await cap.handler({ withinDays: 400 }));
+  check("agent capability answers from live data", answer && answer.upcoming.some((u) => u.name === "Edited on phone") && answer.monthlyTotals.USD === "$15.99", answer);
 
   // --- backup round trip ---
   var backup = await call("exportData");

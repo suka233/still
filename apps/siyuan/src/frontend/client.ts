@@ -49,6 +49,11 @@ export function createRpcClient(rpc: IKernelPluginRpc): SiyuanStillClient {
     exportData: () => call(RPC.exportData),
     importData: (backup) => call(RPC.importData, backup),
     refreshRates: () => call(RPC.refreshRates),
+    getNotifications: () => call(RPC.getNotifications),
+    saveNotifications: (settings) => call(RPC.saveNotifications, settings),
+    testChannel: (channel) => call(RPC.testChannel, channel),
+    deviceInfo: () => call(RPC.deviceInfo),
+    listNotebooks: () => call(RPC.listNotebooks),
     pendingReminders: () => call(RPC.pendingReminders),
     claimReminders: (keys) => call(RPC.claimReminders, keys),
   };

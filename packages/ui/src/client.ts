@@ -1,4 +1,4 @@
-import type { Decision, DecisionChoice, ExchangeRates, LocalDate, Settings, Snapshot, StillBackup, Subscription, SubscriptionInput } from "@still/core";
+import type { Channel, Decision, DecisionChoice, ExchangeRates, LocalDate, NotificationSettings, Settings, Snapshot, StillBackup, Subscription, SubscriptionInput } from "@still/core";
 
 export interface DecideResult {
   decision: Decision;
@@ -23,6 +23,13 @@ export interface StillClient {
   importData?(backup: StillBackup): Promise<ImportResult>;
   /** Fetches fresh exchange rates now. */
   refreshRates?(): Promise<ExchangeRates | null>;
+  /** Push channels; hosts without background delivery omit these. */
+  getNotifications?(): Promise<NotificationSettings>;
+  saveNotifications?(settings: NotificationSettings): Promise<NotificationSettings>;
+  testChannel?(channel: Channel): Promise<{ ok: boolean; status: number; error?: string }>;
+  deviceInfo?(): Promise<{ deviceId: string; name: string; os: string }>;
+  /** Notebooks for the daily-note option (SiYuan only). */
+  listNotebooks?(): Promise<{ id: string; name: string }[]>;
 }
 
 export interface ImportResult {

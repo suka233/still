@@ -13,6 +13,7 @@ import {
   type Settings,
   type Subscription,
 } from "./model.js";
+import { DEFAULT_NOTIFICATION_SETTINGS, validateNotificationSettings, type NotificationSettings } from "./channels.js";
 import type { ExchangeRates } from "./rates.js";
 import { chargeDateOfKey } from "./reminders.js";
 
@@ -42,6 +43,7 @@ export const PATHS = {
   decisionsDir: "decisions",
   decision: (id: string) => `decisions/${id}.json`,
   rates: "rates.json",
+  notifications: "notifications.json",
 } as const;
 
 /** Delivery records are kept this long after their charge date. */
@@ -251,6 +253,19 @@ export class StillRepository {
     if (local && local.updatedAt >= incoming.updatedAt) return false;
     await this.#files.write(PATHS.decision(incoming.id), JSON.stringify(incoming, null, 2));
     return true;
+  }
+
+  async getNotifications(): Promise<NotificationSettings> {
+    const raw = await this.#readJson(PATHS.notifications);
+    const result = raw ? validateNotificationSettings(raw) : null;
+    return result?.ok ? result.value : { ...DEFAULT_NOTIFICATION_SETTINGS, channels: [] };
+  }
+
+  async saveNotifications(raw: unknown): Promise<NotificationSettings> {
+    const result = validateNotificationSettings(raw);
+    if (!result.ok) throw new ValidationError(result.errors);
+    await this.#files.write(PATHS.notifications, JSON.stringify(result.value, null, 2));
+    return result.value;
   }
 
   async getRates(): Promise<ExchangeRates | null> {

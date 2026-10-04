@@ -1,4 +1,16 @@
 {
   "openManager": "Still: open subscriptions",
-  "addSubscription": "Still: add subscription"
+  "addSubscription": "Still: add subscription",
+  "push.title": "{name} renews {when}",
+  "push.trialTitle": "{name} trial ends {when}",
+  "push.body": "{price} · Still using it?",
+  "push.today": "today",
+  "push.tomorrow": "tomorrow",
+  "push.inDays": "in {n} days",
+  "push.testTitle": "Still is connected",
+  "push.testBody": "Renewal reminders will arrive here.",
+  "journal.charge": "💳 Renewed {name}: {price}",
+  "journal.cancel": "✂️ Decided not to renew {name} (saves {price} per charge)",
+  "agent.title": "Subscriptions (Still)",
+  "agent.description": "Lists the user's subscriptions tracked by Still: name, price, billing cycle, status, next charge date and monthly totals per currency. Use it to answer questions about recurring spending or upcoming renewals."
 }

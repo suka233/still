@@ -11,7 +11,7 @@
  */
 import * as esbuild from "esbuild";
 import { zipSync } from "fflate";
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, watch as watchFs, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build as viteBuild } from "vite";
@@ -67,6 +67,16 @@ function zipDist() {
 copyStatic();
 
 if (watch) {
+  // Keep i18n and the manifest in sync too; SiYuan reads them on plugin reload.
+  for (const path of [join(root, "src/i18n"), join(root, "plugin.json")]) {
+    watchFs(path, { recursive: true }, () => {
+      try {
+        copyStatic();
+      } catch (e) {
+        console.warn("[still] copy failed", e);
+      }
+    });
+  }
   const ctx = await esbuild.context(kernelOptions);
   await ctx.watch();
   await viteBuild({ root, mode, configFile: join(root, "vite.config.ts"), build: { watch: {} } });

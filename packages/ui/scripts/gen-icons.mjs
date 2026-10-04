@@ -16,7 +16,9 @@ const icons = require("simple-icons");
 const { SERVICES } = await import(join(root, "src/catalog/services.ts"));
 
 const bySlug = new Map(Object.values(icons).filter((i) => i?.slug).map((i) => [i.slug, i]));
-const used = [...new Set(SERVICES.map((s) => s.icon).filter(Boolean))].sort();
+/** Icons used outside the service catalog (push channel badges). */
+const EXTRA = ["ntfy", "telegram", "discord", "wechat"];
+const used = [...new Set([...SERVICES.map((s) => s.icon).filter(Boolean), ...EXTRA])].sort();
 const missing = used.filter((slug) => !bySlug.has(slug));
 if (missing.length) {
   console.error(`unknown simple-icons slugs: ${missing.join(", ")}`);

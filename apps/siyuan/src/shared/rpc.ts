@@ -17,6 +17,11 @@ export const RPC = {
   refreshRates: "refreshRates",
   exportData: "exportData",
   importData: "importData",
+  getNotifications: "getNotifications",
+  saveNotifications: "saveNotifications",
+  testChannel: "testChannel",
+  deviceInfo: "deviceInfo",
+  listNotebooks: "listNotebooks",
   // kernel → frontend notifications
   notifyChanged: "changed",
   notifyRemindersDue: "reminders-due",
@@ -30,6 +35,18 @@ export interface DecideResult {
 
 export interface RemindersDueParams {
   reminders: DueReminder[];
+}
+
+export interface DeviceInfo {
+  deviceId: string;
+  name: string;
+  os: string;
+}
+
+export interface ChannelTestResult {
+  ok: boolean;
+  status: number;
+  error?: string;
 }
 
 export interface ImportResult {

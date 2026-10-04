@@ -11,6 +11,7 @@ import { toast } from "../../components/ui/toaster.js";
 import { useClient, useHost, useHostInfo, useI18n, useStill } from "../../context.js";
 import { COMMON_CURRENCIES } from "../../format.js";
 import { parseRpcErrors } from "../errors.js";
+import { NotificationsSection } from "./NotificationsSection.js";
 import { ThemePicker } from "./ThemePicker.js";
 
 const REMIND_OPTIONS = [0, 1, 2, 3, 5, 7, 14, 30];
@@ -43,6 +44,8 @@ export function SettingsView() {
           <DaysChips value={settings.trialRemindDaysBefore} onChange={(trialRemindDaysBefore) => patch({ trialRemindDaysBefore })} />
         </Row>
       </Section>
+
+      <NotificationsSection />
 
       <Section title={t("settings.currency")}>
         <Row label={t("settings.defaultCurrency")}>

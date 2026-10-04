@@ -20,12 +20,15 @@ import {
   localMinutesOf,
   parseRatesPayload,
   toSubscriptionInput,
+  validateChannel,
   type FileStore,
   type Snapshot,
   type StillBackup,
 } from "@still/core";
-import { RPC, type DecideResult, type ImportResult, type RpcErrorData } from "../shared/rpc.js";
+import { RPC, type ChannelTestResult, type DecideResult, type DeviceInfo, type ImportResult, type RpcErrorData } from "../shared/rpc.js";
+import { registerAgentCapability } from "./agent.js";
 import { httpRequest } from "./http.js";
+import { Notifier, listNotebooks, sendToChannel, testMessage } from "./notify.js";
 
 /** How often the reminder scheduler wakes up. */
 const TICK_MS = 60_000;
@@ -63,17 +66,17 @@ const files: FileStore = {
   },
 };
 
-/** SiYuan's per-device ID, reduced to the characters HLC node IDs allow. */
-async function readDeviceId(): Promise<string> {
+/** This device as SiYuan knows it; the ID is reduced to the characters HLC node IDs allow. */
+async function readDeviceInfo(): Promise<DeviceInfo> {
   try {
     const res = await siyuan.client.fetch("/api/system/getConf", { method: "POST", body: "{}" });
-    const id: unknown = (await res.json())?.data?.conf?.system?.id;
-    const cleaned = typeof id === "string" ? id.replace(/[^0-9A-Za-z]/g, "").slice(0, 16) : "";
-    if (cleaned) return cleaned;
+    const system = (await res.json())?.data?.conf?.system ?? {};
+    const cleaned = typeof system.id === "string" ? system.id.replace(/[^0-9A-Za-z]/g, "").slice(0, 16) : "";
+    if (cleaned) return { deviceId: cleaned, name: String(system.name ?? ""), os: String(system.os ?? siyuan.plugin.platform) };
   } catch (e) {
     await siyuan.logger.warn("getConf failed, falling back to a random device id", String(e));
   }
-  return `r${Math.random().toString(36).slice(2, 12)}`;
+  return { deviceId: `r${Math.random().toString(36).slice(2, 12)}`, name: "", os: siyuan.plugin.platform };
 }
 
 /** Serialises async sections so concurrent RPC calls can't interleave read-modify-write. */
@@ -105,6 +108,8 @@ function clockNow() {
 
 let repo: StillRepository;
 let deviceId: string;
+let device: DeviceInfo;
+let notifier: Notifier;
 const timers: unknown[] = [];
 const exclusive = createMutex();
 /** Keys already broadcast during this kernel session, so each tick doesn't re-announce them. */
@@ -147,14 +152,28 @@ async function refreshRates(force = false) {
   }
 }
 
-async function dueReminders() {
+async function dueState() {
   const [subscriptions, settings, delivered, decisions] = await Promise.all([
     repo.listSubscriptions(),
     repo.getSettings(),
     repo.readDelivered(),
     repo.listDecisions(),
   ]);
-  return computeDueReminders(subscriptions, settings, clockNow(), delivered, indexDecisions(decisions));
+  const clock = clockNow();
+  const index = indexDecisions(decisions);
+  return {
+    subscriptions,
+    settings,
+    clock,
+    /** Not yet shown in any window. */
+    due: computeDueReminders(subscriptions, settings, clock, delivered, index),
+    /** Due regardless of window delivery; push keeps its own log (`push|…`). */
+    dueForPush: computeDueReminders(subscriptions, settings, clock, new Set(), index),
+  };
+}
+
+async function dueReminders() {
+  return (await dueState()).due;
 }
 
 async function readFingerprint(): Promise<string> {
@@ -209,16 +228,32 @@ function onKernelEvent(event: { type: string }) {
   }, 400);
 }
 
-async function tick() {
+let ticking = false;
+let tickAgain = false;
+async function tick(): Promise<void> {
+  // Never overlap (a push round can be slow); re-run once if asked meanwhile.
+  if (ticking) {
+    tickAgain = true;
+    return;
+  }
+  ticking = true;
   void refreshRates();
   try {
-    const due = await dueReminders();
+    const { due, dueForPush, subscriptions, settings, clock } = await dueState();
     const fresh = due.filter((r) => !announced.has(r.key));
-    if (fresh.length === 0) return;
     for (const r of fresh) announced.add(r.key);
-    await siyuan.rpc.broadcast(RPC.notifyRemindersDue, { reminders: fresh });
+    if (fresh.length) await siyuan.rpc.broadcast(RPC.notifyRemindersDue, { reminders: fresh });
+    // Push and journal independently of any window being open.
+    await notifier.pushReminders(dueForPush, subscriptions);
+    await notifier.journalCharges(subscriptions, settings, clock);
   } catch (e) {
     await siyuan.logger.error("reminder tick failed", String(e));
+  } finally {
+    ticking = false;
+    if (tickAgain) {
+      tickAgain = false;
+      void tick();
+    }
   }
 }
 
@@ -283,6 +318,25 @@ const handlers: Record<string, Handler> = {
       return result;
     }),
 
+  [RPC.getNotifications]: () => repo.getNotifications(),
+
+  [RPC.saveNotifications]: (settings: unknown) =>
+    exclusive(async () => {
+      const saved = await repo.saveNotifications(settings);
+      void tick(); // a newly added channel may have reminders waiting
+      return saved;
+    }),
+
+  [RPC.testChannel]: async (raw: unknown): Promise<ChannelTestResult> => {
+    const result = validateChannel(raw);
+    if (!result.ok) throw new ValidationError(result.errors);
+    return sendToChannel(result.value, testMessage());
+  },
+
+  [RPC.deviceInfo]: async () => device,
+
+  [RPC.listNotebooks]: () => listNotebooks(),
+
   [RPC.refreshRates]: async () => {
     await refreshRates(true);
     return repo.getRates();
@@ -314,6 +368,7 @@ const handlers: Record<string, Handler> = {
           status: "cancelled",
           endDate: cancellationEndDate(clockNow().today, decision.chargeDate),
         });
+        void notifier.journalCancellation(subscription);
       }
       await changed();
       return { decision, subscription };
@@ -333,8 +388,10 @@ const handlers: Record<string, Handler> = {
 };
 
 siyuan.plugin.lifecycle.onload = async () => {
-  deviceId = await readDeviceId();
+  device = await readDeviceInfo();
+  deviceId = device.deviceId;
   repo = new StillRepository({ files, clock: createHlcClock(deviceId) });
+  notifier = new Notifier(repo, () => deviceId);
   for (const [name, handler] of Object.entries(handlers)) {
     await siyuan.rpc.bind(name, async (...args: unknown[]) => {
       try {
@@ -345,6 +402,7 @@ siyuan.plugin.lifecycle.onload = async () => {
     });
   }
   siyuan.event.handler = onKernelEvent;
+  await registerAgentCapability(() => repo);
 };
 
 siyuan.plugin.lifecycle.onrunning = () => {
