@@ -264,6 +264,8 @@ export const en = {
   "slash.colNext": "Next charge",
   "slash.total": "Monthly average: {amount}",
   "slash.empty": "No active subscriptions.",
+  "welcome.title": "What are you paying for?",
+  "welcome.more": "More…",
   settings: "Settings",
   "settings.defaultCurrency": "Default currency",
   "settings.remindDaysBefore": "Remind days before renewal",

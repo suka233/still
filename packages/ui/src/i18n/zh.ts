@@ -266,6 +266,8 @@ export const zh: Messages = {
   "slash.colNext": "下次扣费",
   "slash.total": "月均支出：{amount}",
   "slash.empty": "没有生效中的订阅。",
+  "welcome.title": "你都在为哪些服务付费？",
+  "welcome.more": "更多…",
   settings: "设置",
   "settings.defaultCurrency": "默认币种",
   "settings.remindDaysBefore": "续费前几天提醒",

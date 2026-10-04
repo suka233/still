@@ -221,7 +221,7 @@ export function searchServices(query: string, locale: string, limit = 24): Catal
     const popular = zh
       ? ["chatgpt", "netflix", "icloud", "bilibili", "spotify", "baidu-netdisk", "youtube-premium", "github-copilot", "netease-music", "claude", "iqiyi", "siyuan-sync"]
       : ["netflix", "spotify", "chatgpt", "youtube-premium", "icloud", "disney-plus", "claude", "github-copilot", "apple-music", "prime-video", "notion", "1password"];
-    return popular.map((id) => byId.get(id)!).filter(Boolean);
+    return popular.map((id) => byId.get(id)!).filter(Boolean).slice(0, limit);
   }
   const scored: { s: CatalogService; score: number }[] = [];
   for (const s of SERVICES) {

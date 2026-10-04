@@ -11,6 +11,7 @@ import {
   formatDate,
   formatDaysLeft,
   formatMoney,
+  guessCurrency,
   resolveMessages,
   type StillHost,
   type StillStore,
@@ -261,6 +262,11 @@ export default class StillPlugin extends Plugin {
   async #sync() {
     this.#lastSync = Date.now();
     await this.#store.getState().refresh();
+    const { status, settings, saveSettings } = this.#store.getState();
+    // First run: pick the currency the user most likely pays in.
+    if (status === "ready" && settings.updatedAt === null) {
+      void saveSettings({ defaultCurrency: guessCurrency(this.#locale) }).catch(() => undefined);
+    }
     try {
       await this.#deliver(await this.#client.pendingReminders());
     } catch (e) {

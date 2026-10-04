@@ -113,9 +113,11 @@ export interface SubscriptionDialogProps {
   onOpenChange(open: boolean): void;
   /** `null` creates a new subscription (starting with the service picker). */
   subscription: Subscription | null;
+  /** Skip the picker and start from this preset (new subscriptions only). */
+  initialPick?: PickResult | null;
 }
 
-export function SubscriptionDialog({ open, onOpenChange, subscription }: SubscriptionDialogProps) {
+export function SubscriptionDialog({ open, onOpenChange, subscription, initialPick }: SubscriptionDialogProps) {
   const { t, locale } = useI18n();
   const settings = useStill((s) => s.settings);
   const today = useStill((s) => s.today);
@@ -127,8 +129,9 @@ export function SubscriptionDialog({ open, onOpenChange, subscription }: Subscri
     if (!open) return;
     setStep(subscription ? "form" : "pick");
     setForm(subscription ? stateFromSubscription(subscription, settings.remindDaysBefore) : blankState(defaults));
+    if (!subscription && initialPick) onPick(initialPick);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, subscription]);
+  }, [open, subscription, initialPick]);
 
   function onPick(result: PickResult) {
     const base = blankState(defaults);

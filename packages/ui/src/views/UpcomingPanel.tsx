@@ -1,5 +1,5 @@
 import type { Subscription } from "@still/core";
-import { ArrowUpRightIcon, PlusIcon } from "lucide-react";
+import { ArrowUpRightIcon, MoreHorizontalIcon, PlusIcon } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "../components/ui/badge.js";
 import { Button } from "../components/ui/button.js";
@@ -10,6 +10,8 @@ import { MoneyList } from "./MoneyList.js";
 import { PendingSection } from "./PendingSection.js";
 import { StatusState } from "./StatusState.js";
 import { SubscriptionAvatar } from "./SubscriptionAvatar.js";
+import { SERVICE_ICON_PREFIX, displayName, searchServices } from "../catalog/services.js";
+import type { PickResult } from "./ServicePicker.js";
 import { SubscriptionDialog } from "./SubscriptionDialog.js";
 import { useTotals, useUpcoming } from "./useDerived.js";
 
@@ -26,11 +28,14 @@ export function UpcomingPanel({ className }: { className?: string }) {
   const status = useStill((s) => s.status);
   const upcoming = useUpcoming();
   const totals = useTotals();
+  const subscriptions = useStill((s) => s.subscriptions);
   const [editing, setEditing] = useState<Subscription | null>(null);
+  const [pick, setPick] = useState<PickResult | null>(null);
   const [open, setOpen] = useState(false);
 
-  const openEditor = (sub: Subscription | null) => {
+  const openEditor = (sub: Subscription | null, preset: PickResult | null = null) => {
     setEditing(sub);
+    setPick(preset);
     setOpen(true);
   };
 
@@ -56,13 +61,32 @@ export function UpcomingPanel({ className }: { className?: string }) {
           <PendingSection />
 
           {upcoming.length === 0 ? (
-            <div className="still:flex still:flex-1 still:flex-col still:items-center still:justify-center still:gap-2 still:px-4 still:text-center">
-              <div className="still:font-display still:font-medium">{t("noSubscriptions")}</div>
+            <div className="still:flex still:flex-1 still:flex-col still:items-center still:justify-center still:gap-3 still:px-2 still:text-center">
+              <div className="still:font-display still:text-base still:font-semibold">{subscriptions.length ? t("noSubscriptions") : t("welcome.title")}</div>
               <p className="still:text-sm still:text-muted-foreground">{t("emptyHint")}</p>
-              <Button size="sm" variant="outline" className="still:mt-1" onClick={() => openEditor(null)}>
-                <PlusIcon />
-                {t("addSubscription")}
-              </Button>
+              <div className="still:grid still:w-full still:grid-cols-3 still:gap-1">
+                {searchServices("", locale, 5).map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => openEditor(null, { kind: "service", service: s })}
+                    className="still:flex still:min-w-0 still:flex-col still:items-center still:gap-1 still:rounded-lg still:px-1 still:py-2 still:transition-colors still:hover:bg-accent"
+                  >
+                    <SubscriptionAvatar subscription={{ icon: SERVICE_ICON_PREFIX + s.id, name: s.name }} />
+                    <span className="still:w-full still:truncate still:text-[11px]">{displayName(s, locale)}</span>
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => openEditor(null)}
+                  className="still:flex still:min-w-0 still:flex-col still:items-center still:gap-1 still:rounded-lg still:px-1 still:py-2 still:text-muted-foreground still:transition-colors still:hover:bg-accent"
+                >
+                  <span className="still-avatar still:flex still:size-8 still:items-center still:justify-center still:border still:border-dashed still:border-border">
+                    <MoreHorizontalIcon className="still:size-4" />
+                  </span>
+                  <span className="still:w-full still:truncate still:text-[11px]">{t("welcome.more")}</span>
+                </button>
+              </div>
             </div>
           ) : (
             <section className="still:flex still:flex-col still:gap-1">
@@ -110,7 +134,7 @@ export function UpcomingPanel({ className }: { className?: string }) {
         </>
       )}
 
-      <SubscriptionDialog open={open} onOpenChange={setOpen} subscription={editing} />
+      <SubscriptionDialog open={open} onOpenChange={setOpen} subscription={editing} initialPick={pick} />
     </div>
   );
 }

@@ -44,3 +44,19 @@ export function formatDate(date: string, locale: string, options: Intl.DateTimeF
 
 /** Common currencies first; the select still accepts any ISO 4217 code. */
 export const COMMON_CURRENCIES = ["USD", "CNY", "EUR", "GBP", "JPY", "HKD", "TWD", "KRW", "SGD", "CAD", "AUD", "INR", "RUB", "TRY", "BRL", "CHF"];
+
+/** A sensible default currency for a locale, used on first run. */
+export function guessCurrency(locale: string): string {
+  const l = locale.toLowerCase();
+  if (l.startsWith("zh-tw") || l.startsWith("zh-hant")) return "TWD";
+  if (l.startsWith("zh-hk") || l.startsWith("zh-mo")) return "HKD";
+  if (l.startsWith("zh")) return "CNY";
+  if (l.startsWith("ja")) return "JPY";
+  if (l.startsWith("ko")) return "KRW";
+  if (l.startsWith("ru")) return "RUB";
+  if (l.startsWith("tr")) return "TRY";
+  if (l.startsWith("pt-br")) return "BRL";
+  if (l === "en-gb") return "GBP";
+  if (/^(de|fr|es|it|nl|pt|fi|el|sk|sl|et|lv|lt)\b/.test(l)) return "EUR";
+  return "USD";
+}
