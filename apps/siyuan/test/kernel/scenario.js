@@ -54,12 +54,21 @@
   check("broadcasts changed", __mock.broadcasts.some((b) => b.method === "changed"));
   check("hlc uses device id", /-8d2fABC123device$/.test(created.updatedAt), created.updatedAt);
 
+  var settled = await call("snapshot");
+  check("new subscription already in its window is treated as kept", settled.decisions.length === 1 && settled.decisions[0].choice === "keep", settled.decisions);
+  await call("undoDecision", created.id, localDate(3)); // bring the reminder back for the rest of the scenario
   var pending = await call("pendingReminders");
   check("reminder due 3 days ahead", pending.length === 1 && pending[0].threshold === 3 && pending[0].daysLeft === 3, pending);
 
   await sleep(50); // let the tick scheduled after the edit run
   var due = __mock.broadcasts.filter((b) => b.method === "reminders-due");
   check("tick broadcasts reminders-due once", due.length === 1 && due[0].params.reminders.length === 1, due);
+
+  var trialSub = await call("createSubscription", Object.assign({}, input, { name: "Trial", anchorDate: localDate(1), trialEndsOn: localDate(1) }));
+  var afterTrial = await call("snapshot");
+  var trialDelivered = JSON.parse(__mock.storage.get("delivered/8d2fABC123device.json")).keys;
+  check("new trial isn't auto-kept but won't pop up", !afterTrial.decisions.some((d) => d.subscriptionId === trialSub.id) && trialDelivered[trialSub.id + ":" + localDate(1) + ":t1"], afterTrial.decisions);
+  await call("deleteSubscription", trialSub.id);
 
   var key = pending[0].key;
   var results = await Promise.all([call("claimReminders", [key]), call("claimReminders", [key])]);
@@ -131,7 +140,8 @@
   check("invalid channel config rejected", badChannel !== null && badChannel.indexOf("botToken is required") >= 0, badChannel);
 
   var reminderSub = await call("createSubscription", Object.assign({}, input, { name: "Pushy", anchorDate: localDate(1) }));
-  // A window shows it first; push must still go out.
+  // Created inside its window it's auto-kept; withdraw that so it reminds, and a window shows it first — push must still go out.
+  await call("undoDecision", reminderSub.id, localDate(1));
   await call("claimReminders", [reminderSub.id + ":" + localDate(1) + ":t1"]);
   __mock.proxied.length = 0;
   await call("saveNotifications", {

@@ -24,6 +24,7 @@ import {
   type FileStore,
   type Snapshot,
   type StillBackup,
+  type Subscription,
 } from "@still/core";
 import { RPC, type ChannelTestResult, type DecideResult, type DeviceInfo, type ImportResult, type RpcErrorData } from "../shared/rpc.js";
 import { registerAgentCapability } from "./agent.js";
@@ -126,6 +127,21 @@ async function snapshot(): Promise<Snapshot> {
     repo.getRates(),
   ]);
   return { subscriptions, settings, decisions, rates };
+}
+
+/**
+ * The user just told us about this subscription, so don't ask "still using
+ * it?" about a charge that's already inside the reminder window. A regular
+ * renewal counts as kept; a trial conversion stays in "Waiting for you"
+ * (that reminder is too valuable to drop) but doesn't pop up a card.
+ */
+async function settleNewSubscription(sub: Subscription) {
+  const settings = await repo.getSettings();
+  const due = computeDueReminders([sub], settings, clockNow(), new Set(), new Map());
+  for (const r of due) {
+    if (r.kind === "renewal") await repo.decide(sub.id, r.chargeDate, "keep");
+    else await repo.markDelivered(deviceId, [r.key]);
+  }
 }
 
 let lastRatesAttempt = 0;
@@ -262,9 +278,11 @@ type Handler = (...args: any[]) => Promise<unknown>;
 const handlers: Record<string, Handler> = {
   [RPC.snapshot]: () => snapshot(),
 
-  [RPC.createSubscription]: (input: unknown) =>
+  /** `options.settle: false` keeps reminders for an imminent charge (demo/seed data, imports). */
+  [RPC.createSubscription]: (input: unknown, options?: { settle?: boolean }) =>
     exclusive(async () => {
       const record = await repo.createSubscription(input);
+      if (options?.settle !== false) await settleNewSubscription(record);
       await changed();
       return record;
     }),

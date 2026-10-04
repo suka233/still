@@ -60,7 +60,7 @@ if (reset) {
 
 await rpc("updateSettings", { notifyAt: "00:00", defaultCurrency: zh ? "CNY" : "USD", remindDaysBefore: [3, 1], trialRemindDaysBefore: [3, 1] });
 for (const sub of demo) {
-  await rpc("createSubscription", { status: "active", ...sub });
+  await rpc("createSubscription", { status: "active", ...sub }, { settle: false });
 }
 await rpc("refreshRates").catch((e) => console.warn(`[still] rates: ${e.message}`));
 const snapshot = await rpc("snapshot");
