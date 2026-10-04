@@ -1,0 +1,21 @@
+{
+  "name": "@still/core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Platform-independent domain logic for Still: billing cycles, reminders, storage",
+  "license": "MIT",
+  "author": "suka233",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.3"
+  }
+}

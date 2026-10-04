@@ -1,0 +1,67 @@
+/* Scoped base styles for `.still-root`. Must be imported before the Tailwind utilities. */
+
+/* Scoped reset. Specificity (0,1,0) beats host element selectors; this file is
+   imported before the utilities, so equal-specificity utilities still win. */
+.still-root,
+.still-root :where(*, ::before, ::after) {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0 solid;
+}
+
+.still-root {
+  /* Default palette for hosts that don't map their own theme. */
+  --radius: 0.5rem;
+  --background: #ffffff;
+  --foreground: #1f2328;
+  --card: #ffffff;
+  --card-foreground: #1f2328;
+  --popover: #ffffff;
+  --popover-foreground: #1f2328;
+  --primary: #2f6feb;
+  --primary-foreground: #ffffff;
+  --secondary: #f2f4f7;
+  --secondary-foreground: #1f2328;
+  --muted: #f2f4f7;
+  --muted-foreground: #667085;
+  --accent: #eef2f6;
+  --accent-foreground: #1f2328;
+  --destructive: #d92d20;
+  --warning: #fdb022;
+  --warning-foreground: #1f2328;
+  --success: #12b76a;
+  --border: #e4e7ec;
+  --input: #d0d5dd;
+  --ring: #2f6feb;
+
+  color: var(--foreground);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.still-root :where(button, input, select, textarea) {
+  font: inherit;
+  color: inherit;
+  background-color: transparent;
+}
+
+.still-root :where(button, [role="button"]) {
+  cursor: pointer;
+}
+
+.still-root :where(a) {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+.still-root :where(img, svg) {
+  display: block;
+  vertical-align: middle;
+}
+
+.still-root :where(ol, ul, menu) {
+  list-style: none;
+}

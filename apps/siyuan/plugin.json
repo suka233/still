@@ -1,0 +1,60 @@
+{
+  "name": "still",
+  "author": "suka233",
+  "url": "https://github.com/suka233/still",
+  "version": "0.1.0",
+  "minAppVersion": "3.8.5",
+  "kernels": [
+    "windows",
+    "linux",
+    "darwin",
+    "ios",
+    "android",
+    "harmony",
+    "docker"
+  ],
+  "backends": [
+    "windows",
+    "linux",
+    "darwin",
+    "ios",
+    "android",
+    "harmony",
+    "docker"
+  ],
+  "frontends": [
+    "desktop",
+    "mobile",
+    "browser-desktop",
+    "browser-mobile",
+    "desktop-window"
+  ],
+  "disabledInPublish": true,
+  "displayName": {
+    "default": "Still",
+    "zh-CN": "续了么"
+  },
+  "description": {
+    "default": "Track subscriptions and free trials. Before each renewal, Still asks: still using it?",
+    "zh-CN": "记录订阅和免费试用，每次续费前问你一句：续了么？"
+  },
+  "readme": {
+    "default": "README.md",
+    "zh-CN": "README.zh-CN.md"
+  },
+  "icon": "icon.png",
+  "preview": "preview.png",
+  "funding": {
+    "custom": []
+  },
+  "keywords": [
+    "subscription",
+    "reminder",
+    "renewal",
+    "trial",
+    "订阅",
+    "续费",
+    "提醒",
+    "记账"
+  ]
+}

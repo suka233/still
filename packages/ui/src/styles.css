@@ -1,0 +1,48 @@
+/*
+ * Still UI styles, designed to live inside a host app (SiYuan, Obsidian…).
+ *
+ * - Every utility is prefixed `still:` so it can't match host or plugin markup.
+ * - Tailwind's global preflight is NOT included; a minimal reset is scoped to
+ *   `.still-root` instead, so the host page is left untouched.
+ * - Base rules live in base.css, imported before the utilities so that
+ *   equal-specificity utilities come later and win.
+ * - Nothing is put in a cascade layer: host stylesheets are unlayered, and
+ *   unlayered rules always beat layered ones, which would let a host's
+ *   `button { … }` override our utilities.
+ * - Colours come from shadcn-style tokens on `.still-root`. Hosts override the
+ *   tokens to follow their own theme.
+ */
+@import "./base.css";
+@import "tailwindcss/theme.css" prefix(still);
+@import "tailwindcss/utilities.css" prefix(still);
+@import "tw-animate-css";
+
+@source "./";
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-success: var(--success);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
