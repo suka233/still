@@ -7,19 +7,28 @@
  */
 import {
   NotFoundError,
+  PATHS,
   StillRepository,
   ValidationError,
+  cancellationEndDate,
   computeDueReminders,
   createHlcClock,
+  indexDecisions,
+  isLocalDate,
   localDateOf,
   localMinutesOf,
+  toSubscriptionInput,
   type FileStore,
   type Snapshot,
 } from "@still/core";
-import { RPC, type RpcErrorData } from "../shared/rpc.js";
+import { RPC, type DecideResult, type RpcErrorData } from "../shared/rpc.js";
 
 /** How often the reminder scheduler wakes up. */
 const TICK_MS = 60_000;
+/** How often storage is checked for changes made elsewhere (sync, other devices). */
+const POLL_MS = 15_000;
+/** Directories watched for changes, relative to the plugin's storage dir. */
+const WATCHED = [".", PATHS.subscriptionsDir, PATHS.decisionsDir, PATHS.deliveredDir];
 
 const files: FileStore = {
   async read(path) {
@@ -83,29 +92,83 @@ function clockNow() {
 
 let repo: StillRepository;
 let deviceId: string;
-let timer: unknown = null;
+const timers: unknown[] = [];
 const exclusive = createMutex();
 /** Keys already broadcast during this kernel session, so each tick doesn't re-announce them. */
 const announced = new Set<string>();
+/** Last seen shape of the storage directories, to notice edits made elsewhere. */
+let fingerprint = "";
+const unwatched = new Set(WATCHED);
 
 async function snapshot(): Promise<Snapshot> {
-  const [subscriptions, settings] = await Promise.all([repo.listSubscriptions(), repo.getSettings()]);
-  return { subscriptions, settings };
+  const [subscriptions, settings, decisions] = await Promise.all([
+    repo.listSubscriptions(),
+    repo.getSettings(),
+    repo.listDecisions(),
+  ]);
+  return { subscriptions, settings, decisions };
 }
 
 async function dueReminders() {
-  const [subscriptions, settings, delivered] = await Promise.all([
+  const [subscriptions, settings, delivered, decisions] = await Promise.all([
     repo.listSubscriptions(),
     repo.getSettings(),
     repo.readDelivered(),
+    repo.listDecisions(),
   ]);
-  return computeDueReminders(subscriptions, settings, clockNow(), delivered);
+  return computeDueReminders(subscriptions, settings, clockNow(), delivered, indexDecisions(decisions));
+}
+
+async function readFingerprint(): Promise<string> {
+  const parts: string[] = [];
+  for (const dir of WATCHED) {
+    try {
+      for (const e of await siyuan.storage.list(dir)) if (!e.isDir) parts.push(`${dir}/${e.name}@${e.updated}`);
+    } catch {
+      // directory not created yet
+    }
+  }
+  return parts.sort().join("|");
+}
+
+/** Broadcasts `changed` if storage differs from the last known state. */
+async function detectExternalChange() {
+  const next = await readFingerprint();
+  if (next === fingerprint) return;
+  fingerprint = next;
+  await siyuan.rpc.broadcast(RPC.notifyChanged, { source: "storage" });
+  void tick();
 }
 
 async function changed() {
-  await siyuan.rpc.broadcast(RPC.notifyChanged, {});
+  // Our own writes may have just created a directory worth watching.
+  if (unwatched.size) await watchStorage();
+  fingerprint = await readFingerprint();
+  await siyuan.rpc.broadcast(RPC.notifyChanged, { source: "rpc" });
   // Edits can move a charge date into a reminder window right away.
   void tick();
+}
+
+/** Watches storage directories where the platform supports it (not on mobile). */
+async function watchStorage() {
+  for (const dir of [...unwatched]) {
+    try {
+      await siyuan.storage.watcher.add(dir);
+      unwatched.delete(dir);
+    } catch {
+      // Missing directory or unsupported platform; polling covers it.
+    }
+  }
+}
+
+let fsDebounce: unknown = null;
+function onKernelEvent(event: { type: string }) {
+  if (event.type !== "fs-notify") return;
+  if (fsDebounce) clearTimeout(fsDebounce);
+  fsDebounce = setTimeout(() => {
+    fsDebounce = null;
+    void detectExternalChange();
+  }, 400);
 }
 
 async function tick() {
@@ -169,6 +232,34 @@ const handlers: Record<string, Handler> = {
       if (claimed.length) await repo.markDelivered(deviceId, claimed);
       return claimed;
     }),
+
+  /** Answers "still using it?" for one charge. "cancel" also ends the subscription. */
+  [RPC.decide]: (subscriptionId: string, chargeDate: unknown, choice: unknown, snoozeUntil?: unknown) =>
+    exclusive(async (): Promise<DecideResult> => {
+      const decision = await repo.decide(subscriptionId, chargeDate, choice, snoozeUntil);
+      let subscription = (await repo.getSubscription(subscriptionId))!;
+      if (decision.choice === "cancel" && subscription.status !== "cancelled") {
+        subscription = await repo.updateSubscription(subscriptionId, {
+          ...toSubscriptionInput(subscription),
+          status: "cancelled",
+          endDate: cancellationEndDate(clockNow().today, decision.chargeDate),
+        });
+      }
+      await changed();
+      return { decision, subscription };
+    }),
+
+  /** Withdraws a decision; `restore` puts the subscription back as it was before. */
+  [RPC.undoDecision]: (subscriptionId: string, chargeDate: unknown, restore?: unknown) =>
+    exclusive(async () => {
+      if (!isLocalDate(chargeDate)) throw new ValidationError(["chargeDate must be a YYYY-MM-DD date"]);
+      await repo.clearDecision(subscriptionId, chargeDate);
+      const subscription = restore
+        ? await repo.updateSubscription(subscriptionId, restore)
+        : await repo.getSubscription(subscriptionId);
+      await changed();
+      return subscription;
+    }),
 };
 
 siyuan.plugin.lifecycle.onload = async () => {
@@ -183,15 +274,26 @@ siyuan.plugin.lifecycle.onload = async () => {
       }
     });
   }
+  siyuan.event.handler = onKernelEvent;
 };
 
 siyuan.plugin.lifecycle.onrunning = () => {
   // Fire-and-forget: hooks must not block the kernel's startup sequence.
-  void tick();
-  timer = setInterval(() => void tick(), TICK_MS);
+  void (async () => {
+    fingerprint = await readFingerprint();
+    await watchStorage();
+    await tick();
+  })();
+  timers.push(setInterval(() => void tick(), TICK_MS));
+  timers.push(
+    setInterval(() => {
+      void watchStorage();
+      void detectExternalChange();
+    }, POLL_MS),
+  );
 };
 
 siyuan.plugin.lifecycle.onunload = () => {
-  if (timer) clearInterval(timer);
-  timer = null;
+  for (const t of timers.splice(0)) clearInterval(t);
+  siyuan.event.handler = null;
 };

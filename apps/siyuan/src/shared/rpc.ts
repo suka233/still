@@ -1,5 +1,5 @@
 /** JSON-RPC contract between the Still frontend and kernel plugin. */
-import type { DueReminder } from "@still/core";
+import type { Decision, DueReminder, Subscription } from "@still/core";
 
 export type { Snapshot } from "@still/core";
 
@@ -12,10 +12,18 @@ export const RPC = {
   updateSettings: "updateSettings",
   pendingReminders: "pendingReminders",
   claimReminders: "claimReminders",
+  decide: "decide",
+  undoDecision: "undoDecision",
   // kernel → frontend notifications
   notifyChanged: "changed",
   notifyRemindersDue: "reminders-due",
 } as const;
+
+export interface DecideResult {
+  decision: Decision;
+  /** The subscription after the decision (changed for "cancel"). */
+  subscription: Subscription;
+}
 
 export interface RemindersDueParams {
   reminders: DueReminder[];

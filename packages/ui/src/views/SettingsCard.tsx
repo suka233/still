@@ -4,8 +4,9 @@ import { Card, CardHeader, CardTitle } from "../components/ui/card.js";
 import { Input } from "../components/ui/input.js";
 import { Label } from "../components/ui/label.js";
 import { NativeSelect } from "../components/ui/native-select.js";
-import { useHost, useI18n, useStill } from "../context.js";
+import { useI18n, useStill } from "../context.js";
 import { COMMON_CURRENCIES } from "../format.js";
+import { toast } from "../components/ui/toaster.js";
 import { parseRpcErrors } from "./errors.js";
 
 function parseDays(text: string): number[] {
@@ -14,7 +15,6 @@ function parseDays(text: string): number[] {
 
 export function SettingsCard() {
   const { t } = useI18n();
-  const host = useHost();
   const settings = useStill((s) => s.settings);
   const save = useStill((s) => s.saveSettings);
   const [form, setForm] = useState({ currency: "", remind: "", trial: "", notifyAt: "" });
@@ -39,7 +39,7 @@ export function SettingsCard() {
         notifyAt: form.notifyAt,
       });
       setErrors([]);
-      host.toast?.(t("saved"));
+      toast(t("toast.saved"));
     } catch (e) {
       setErrors(parseRpcErrors(e));
     }

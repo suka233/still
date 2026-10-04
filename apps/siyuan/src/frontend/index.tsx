@@ -2,6 +2,7 @@ import { upcomingCharges, type DueReminder, type LocalDate, type Subscription } 
 import {
   ManagerView,
   ReminderDialog,
+  Toaster,
   UpcomingPanel,
   createStillStore,
   createTranslate,
@@ -12,7 +13,7 @@ import {
   type StillStore,
   type Translate,
 } from "@still/ui";
-import { Dialog, Plugin, confirm, getFrontend, openTab, platformUtils, showMessage } from "siyuan";
+import { Dialog, Plugin, confirm, getFrontend, openTab, platformUtils } from "siyuan";
 import { RPC, type RemindersDueParams } from "../shared/rpc.js";
 import { createRpcClient, type SiyuanStillClient } from "./client.js";
 import { ICONS } from "./icons.js";
@@ -55,14 +56,22 @@ export default class StillPlugin extends Plugin {
       openUrl: (url) => window.open(url, "_blank", "noopener"),
       confirm: (text) =>
         new Promise((resolve) => confirm(this.#t("appName"), text, () => resolve(true), () => resolve(false))),
-      toast: (text) => showMessage(text),
     };
     this.#ctx = { store: this.#store, host, lang, portalContainer: this.#portal };
 
     // The reminder card has no visible anchor of its own; it lives in the portal.
     const reminderAnchor = document.createElement("div");
     this.#portal.append(reminderAnchor);
-    this.#cleanups.push(mount(reminderAnchor, <ReminderDialog />, this.#ctx));
+    this.#cleanups.push(
+      mount(
+        reminderAnchor,
+        <>
+          <ReminderDialog />
+          <Toaster />
+        </>,
+        this.#ctx,
+      ),
+    );
 
     this.addIcons(ICONS);
     this.#registerDock();
@@ -84,6 +93,9 @@ export default class StillPlugin extends Plugin {
     this.kernel.rpc.bind(RPC.notifyChanged, this.#onChanged);
     this.kernel.rpc.bind(RPC.notifyRemindersDue, this.#onRemindersDue);
     this.eventBus.on("kernel-plugin-state-change", this.#onKernelState);
+    // Catch up after the window was hidden (laptop sleep, another app in front).
+    document.addEventListener("visibilitychange", this.#onVisible);
+    window.addEventListener("focus", this.#onVisible);
   }
 
   override async onLayoutReady() {
@@ -96,6 +108,8 @@ export default class StillPlugin extends Plugin {
     this.kernel.rpc.unbind(RPC.notifyChanged, this.#onChanged);
     this.kernel.rpc.unbind(RPC.notifyRemindersDue, this.#onRemindersDue);
     this.eventBus.off("kernel-plugin-state-change", this.#onKernelState);
+    document.removeEventListener("visibilitychange", this.#onVisible);
+    window.removeEventListener("focus", this.#onVisible);
     for (const cleanup of this.#cleanups.splice(0)) cleanup();
     this.#store.getState().dispose();
     this.#portal?.remove();
@@ -178,6 +192,7 @@ export default class StillPlugin extends Plugin {
   }
 
   async #sync() {
+    this.#lastSync = Date.now();
     await this.#store.getState().refresh();
     try {
       await this.#deliver(await this.#client.pendingReminders());
@@ -212,6 +227,12 @@ export default class StillPlugin extends Plugin {
   readonly #onRemindersDue = (...args: unknown[]) => {
     const params = args[0] as RemindersDueParams | undefined;
     void this.#deliver(params?.reminders ?? []).catch((e) => console.warn("[still] deliver failed", e));
+  };
+
+  #lastSync = 0;
+  readonly #onVisible = () => {
+    if (document.visibilityState !== "visible" || Date.now() - this.#lastSync < 10_000) return;
+    void this.#sync();
   };
 
   readonly #onKernelState = ({ detail }: CustomEvent<{ code: number }>) => {

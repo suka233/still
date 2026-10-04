@@ -1,11 +1,15 @@
-import { addDays, compareLocalDate, localDateOf } from "./date.js";
+import { addDays, compareLocalDate, isLocalDate, localDateOf, type LocalDate } from "./date.js";
 import { isHlc, type HlcClock } from "./hlc.js";
 import { randomUuid } from "./id.js";
 import {
+  DECISION_CHOICES,
   DEFAULT_SETTINGS,
   SCHEMA_VERSION,
+  decisionId,
   validateSettingsPatch,
   validateSubscriptionInput,
+  type Decision,
+  type DecisionChoice,
   type Settings,
   type Subscription,
 } from "./model.js";
@@ -34,6 +38,8 @@ export const PATHS = {
   settings: "settings.json",
   deliveredDir: "delivered",
   delivered: (deviceId: string) => `delivered/${deviceId}.json`,
+  decisionsDir: "decisions",
+  decision: (id: string) => `decisions/${id}.json`,
 } as const;
 
 /** Delivery records are kept this long after their charge date. */
@@ -179,6 +185,48 @@ export class StillRepository {
     await this.#files.write(path, JSON.stringify(file));
   }
 
+  async listDecisions({ includeDeleted = false } = {}): Promise<Decision[]> {
+    const names = await this.#files.list(PATHS.decisionsDir);
+    const records = await Promise.all(
+      names.filter((n) => n.endsWith(".json")).map(async (n) => migrateDecision(await this.#readJson(`${PATHS.decisionsDir}/${n}`))),
+    );
+    const live = records.filter((r): r is Decision => r !== null && (includeDeleted || !r.deletedAt));
+    for (const r of live) this.#clock.observe(r.updatedAt);
+    return live;
+  }
+
+  /** Records the answer for one charge, replacing any earlier answer for it. */
+  async decide(subscriptionId: string, chargeDate: unknown, choice: unknown, snoozeUntil?: unknown): Promise<Decision> {
+    const errors: string[] = [];
+    if (!isLocalDate(chargeDate)) errors.push("chargeDate must be a YYYY-MM-DD date");
+    if (!DECISION_CHOICES.includes(choice as DecisionChoice)) errors.push("choice must be keep, cancel or snooze");
+    if (choice === "snooze" && !isLocalDate(snoozeUntil)) errors.push("snoozeUntil must be a YYYY-MM-DD date");
+    if (errors.length) throw new ValidationError(errors);
+    if (!(await this.getSubscription(subscriptionId))) throw new NotFoundError(subscriptionId);
+    const record: Decision = {
+      id: decisionId(subscriptionId, chargeDate as LocalDate),
+      subscriptionId,
+      chargeDate: chargeDate as LocalDate,
+      choice: choice as DecisionChoice,
+      snoozeUntil: choice === "snooze" ? (snoozeUntil as LocalDate) : null,
+      decidedAt: this.#now().toISOString(),
+      updatedAt: this.#clock.now(),
+      deletedAt: null,
+      schemaVersion: SCHEMA_VERSION,
+    };
+    await this.#files.write(PATHS.decision(record.id), JSON.stringify(record, null, 2));
+    return record;
+  }
+
+  /** Withdraws the answer for one charge (used by undo); a no-op if there is none. */
+  async clearDecision(subscriptionId: string, chargeDate: LocalDate): Promise<void> {
+    const id = decisionId(subscriptionId, chargeDate);
+    const existing = migrateDecision(await this.#readJson(PATHS.decision(id)));
+    if (!existing || existing.deletedAt) return;
+    const tombstone: Decision = { ...existing, updatedAt: this.#clock.now(), deletedAt: this.#now().toISOString() };
+    await this.#files.write(PATHS.decision(id), JSON.stringify(tombstone, null, 2));
+  }
+
   async #readJson(path: string): Promise<unknown> {
     const text = await this.#files.read(path);
     if (text === null || text === "") return null;
@@ -220,5 +268,30 @@ export function migrateSubscription(raw: unknown): Subscription | null {
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,
     deletedAt: null,
+  };
+}
+
+export function migrateDecision(raw: unknown): Decision | null {
+  if (typeof raw !== "object" || raw === null) return null;
+  const r = raw as Record<string, unknown>;
+  if (
+    typeof r.id !== "string" ||
+    typeof r.subscriptionId !== "string" ||
+    !isLocalDate(r.chargeDate) ||
+    !DECISION_CHOICES.includes(r.choice as DecisionChoice) ||
+    !isHlc(r.updatedAt)
+  ) {
+    return null;
+  }
+  return {
+    id: r.id,
+    subscriptionId: r.subscriptionId,
+    chargeDate: r.chargeDate,
+    choice: r.choice as DecisionChoice,
+    snoozeUntil: isLocalDate(r.snoozeUntil) ? r.snoozeUntil : null,
+    decidedAt: typeof r.decidedAt === "string" ? r.decidedAt : "",
+    updatedAt: r.updatedAt,
+    deletedAt: typeof r.deletedAt === "string" ? r.deletedAt : null,
+    schemaVersion: typeof r.schemaVersion === "number" ? r.schemaVersion : SCHEMA_VERSION,
   };
 }

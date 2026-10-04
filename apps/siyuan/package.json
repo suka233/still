@@ -10,7 +10,8 @@
     "build": "node scripts/build.mjs",
     "dev": "node scripts/build.mjs --watch",
     "test": "node scripts/test-kernel.mjs",
-    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.kernel.json"
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.kernel.json",
+    "serve": "node scripts/serve.mjs"
   },
   "dependencies": {
     "@still/core": "workspace:*",

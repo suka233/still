@@ -1,6 +1,6 @@
 // Minimal stand-in for SiYuan's `globalThis.siyuan` kernel API (see
 // siyuan/kernel/plugin/*.go), enough to drive kernel.js under goja-runner.
-var __mock = { storage: new Map(), rpc: new Map(), broadcasts: [], logs: [] };
+var __mock = { storage: new Map(), mtimes: new Map(), rpc: new Map(), broadcasts: [], logs: [], watched: [], clock: 0 };
 
 (function () {
   function log(level) {
@@ -9,7 +9,7 @@ var __mock = { storage: new Map(), rpc: new Map(), broadcasts: [], logs: [] };
     };
   }
   function children(dir) {
-    var prefix = dir.replace(/\/$/, "") + "/";
+    var prefix = dir === "." ? "" : dir.replace(/\/$/, "") + "/";
     var names = new Map();
     __mock.storage.forEach(function (_, key) {
       if (key.indexOf(prefix) !== 0) return;
@@ -40,6 +40,7 @@ var __mock = { storage: new Map(), rpc: new Map(), broadcasts: [], logs: [] };
       put: async function (path, content) {
         if (typeof content !== "string") throw new TypeError("storage.put content must be a string");
         __mock.storage.set(path, content);
+        __mock.mtimes.set(path, ++__mock.clock);
       },
       remove: async function (path) {
         __mock.storage.delete(path);
@@ -49,11 +50,18 @@ var __mock = { storage: new Map(), rpc: new Map(), broadcasts: [], logs: [] };
         if (names.size === 0) throw new Error("directory does not exist: " + dir);
         var out = [];
         names.forEach(function (isDir, name) {
-          out.push({ name: name, isDir: isDir, isSymlink: false, updated: 0 });
+          var full = dir === "." ? name : dir.replace(/\/$/, "") + "/" + name;
+          out.push({ name: name, isDir: isDir, isSymlink: false, updated: __mock.mtimes.get(full) || 0 });
         });
         return out;
       },
-      watcher: { add: async function () {}, remove: async function () {} },
+      watcher: {
+        add: async function (path) {
+          if (path !== "." && children(path).size === 0) throw new Error("no such directory: " + path);
+          __mock.watched.push(path);
+        },
+        remove: async function () {},
+      },
     },
     rpc: {
       bind: async function (name, handler) {

@@ -58,7 +58,7 @@ describe("reminders", () => {
     const subs = [sub()];
     expect(computeDueReminders(subs, DEFAULT_SETTINGS, at("2026-10-06"), new Set())).toEqual([]);
     const [r] = computeDueReminders(subs, DEFAULT_SETTINGS, at("2026-10-07"), new Set());
-    expect(r).toMatchObject({ key: "s1:2026-10-10:3", kind: "renewal", daysLeft: 3, threshold: 3 });
+    expect(r).toMatchObject({ key: "s1:2026-10-10:t3", kind: "renewal", daysLeft: 3, threshold: 3 });
   });
 
   it("waits until notifyAt on the threshold day", () => {
@@ -73,7 +73,7 @@ describe("reminders", () => {
   });
 
   it("skips delivered keys but still fires the next threshold", () => {
-    const delivered = new Set(["s1:2026-10-10:3"]);
+    const delivered = new Set(["s1:2026-10-10:t3"]);
     expect(computeDueReminders([sub()], DEFAULT_SETTINGS, at("2026-10-08"), delivered)).toEqual([]);
     expect(computeDueReminders([sub()], DEFAULT_SETTINGS, at("2026-10-09"), delivered)).toHaveLength(1);
   });
@@ -200,10 +200,10 @@ describe("repository", () => {
 
   it("merges delivery records from every device and prunes old ones", async () => {
     const { files, repository } = repo();
-    files.data.set("delivered/old.json", JSON.stringify({ schemaVersion: 1, keys: { "x:2020-01-01:1": "t", "y:2026-10-05:1": "t" } }));
-    await repository.markDelivered("dev1", ["s1:2026-10-10:3"]);
+    files.data.set("delivered/old.json", JSON.stringify({ schemaVersion: 1, keys: { "x:2020-01-01:t1": "t", "y:2026-10-05:t1": "t" } }));
+    await repository.markDelivered("dev1", ["s1:2026-10-10:t3"]);
     await repository.markDelivered("old", []);
-    expect([...(await repository.readDelivered())].sort()).toEqual(["s1:2026-10-10:3", "y:2026-10-05:1"]);
+    expect([...(await repository.readDelivered())].sort()).toEqual(["s1:2026-10-10:t3", "y:2026-10-05:t1"]);
   });
 
   it("validates settings", async () => {

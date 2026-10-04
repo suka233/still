@@ -16,6 +16,7 @@ import { NativeSelect } from "../components/ui/native-select.js";
 import { Textarea } from "../components/ui/textarea.js";
 import { useHost, useI18n, useStill } from "../context.js";
 import { COMMON_CURRENCIES } from "../format.js";
+import { toast } from "../components/ui/toaster.js";
 import { parseRpcErrors } from "./errors.js";
 
 interface FormState {
@@ -127,8 +128,13 @@ export function SubscriptionDialog({ open, onOpenChange, subscription }: Subscri
     };
     setBusy(true);
     try {
-      if (subscription) await update(subscription.id, input);
-      else await create(input);
+      if (subscription) {
+        await update(subscription.id, input);
+        toast(t("toast.saved"));
+      } else {
+        const created = await create(input);
+        toast(t("toast.created", { name: created.name }));
+      }
       onOpenChange(false);
     } catch (e) {
       setErrors(parseRpcErrors(e));
@@ -143,6 +149,7 @@ export function SubscriptionDialog({ open, onOpenChange, subscription }: Subscri
     setBusy(true);
     try {
       await remove(subscription.id);
+      toast(t("toast.deleted", { name: subscription.name }));
       onOpenChange(false);
     } catch (e) {
       setErrors(parseRpcErrors(e));

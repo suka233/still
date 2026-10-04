@@ -65,3 +65,13 @@
 .still-root :where(ol, ul, menu) {
   list-style: none;
 }
+
+/* Hosts often set `svg { fill: currentColor }` for their filled icon sets;
+   Lucide icons are stroke-only and must stay unfilled. */
+.still-root svg.lucide {
+  fill: none;
+}
+
+.still-root .still-avatar {
+  border-radius: var(--avatar-radius, calc(var(--radius) - 2px));
+}

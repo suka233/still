@@ -1,57 +1,62 @@
-import { addDays } from "@still/core";
-import { Button } from "../components/ui/button.js";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../components/ui/dialog.js";
-import { useHost, useI18n, useStill } from "../context.js";
+import { estimatePaid } from "@still/core";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../components/ui/dialog.js";
+import { useI18n, useStill } from "../context.js";
 import { formatDate, formatDaysLeft, formatMoney } from "../format.js";
+import { DecisionActions } from "./DecisionActions.js";
 import { SubscriptionAvatar } from "./SubscriptionAvatar.js";
 
 /**
- * The "Still using it?" decision card. Shows the most urgent pending reminder;
- * every choice dismisses it, and "cancel" also records the cancellation.
+ * The "Still using it?" card. Shows the most urgent queued reminder; closing
+ * it without answering leaves the charge in the dock's "Waiting for you" list.
  */
 export function ReminderDialog() {
   const { t, locale } = useI18n();
-  const host = useHost();
-  const reminder = useStill((s) => s.reminders[0]);
-  const subscription = useStill((s) => s.subscriptions.find((x) => x.id === reminder?.subscriptionId));
+  const reminders = useStill((s) => s.reminders);
+  const subscriptions = useStill((s) => s.subscriptions);
+  const today = useStill((s) => s.today);
   const dismiss = useStill((s) => s.dismissReminder);
-  const update = useStill((s) => s.update);
 
+  // Skip reminders whose subscription vanished (deleted elsewhere).
+  const queue = reminders.filter((r) => subscriptions.some((s) => s.id === r.subscriptionId));
+  const reminder = queue[0];
+  const subscription = reminder && subscriptions.find((s) => s.id === reminder.subscriptionId);
   if (!reminder || !subscription) return null;
 
-  const when = `${formatDaysLeft(reminder.daysLeft, t)} (${formatDate(reminder.chargeDate, locale)})`;
-  const price = formatMoney(subscription.price, locale);
-
-  async function cancelIt() {
-    if (!reminder || !subscription) return;
-    const { id, schemaVersion: _v, createdAt: _c, updatedAt: _u, deletedAt: _d, ...input } = subscription;
-    // Service normally runs until the day before the charge that won't happen.
-    await update(id, { ...input, status: "cancelled", endDate: addDays(reminder.chargeDate, -1) });
-    if (subscription.cancelUrl) host.openUrl(subscription.cancelUrl);
-    host.toast?.(t("reminder.cancelHint"));
-    dismiss(reminder.key);
-  }
+  const paid = estimatePaid(subscription, today);
+  const meta = t("reminder.meta", {
+    when: formatDaysLeft(reminder.daysLeft, t),
+    date: formatDate(reminder.chargeDate, locale),
+    price: formatMoney(subscription.price, locale),
+  });
 
   return (
     <Dialog open onOpenChange={(open) => !open && dismiss(reminder.key)}>
-      <DialogContent className="still:max-w-sm">
-        <DialogHeader className="still:flex-row still:items-center still:gap-3">
-          <SubscriptionAvatar subscription={subscription} className="still:size-10 still:text-base" />
-          <div className="still:grid still:gap-1">
-            <DialogTitle>
-              {reminder.kind === "trial-ending"
-                ? t("reminder.trialTitle", { name: subscription.name })
-                : t("reminder.title", { name: subscription.name })}
-            </DialogTitle>
-            <DialogDescription>{t("reminder.body", { when, price })}</DialogDescription>
-          </div>
+      <DialogContent className="still:max-w-sm still:gap-5" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogHeader className="still:items-center still:gap-3 still:pr-0 still:pt-2 still:text-center">
+          <SubscriptionAvatar subscription={subscription} className="still:size-14 still:text-2xl" />
+          <DialogTitle className="still:text-lg">
+            {reminder.kind === "trial-ending"
+              ? t("reminder.trialTitle", { name: subscription.name })
+              : t("reminder.title", { name: subscription.name })}
+          </DialogTitle>
+          <DialogDescription className="still:tabular-nums">{meta}</DialogDescription>
+          {paid.count > 0 && (
+            <p className="still:text-xs still:text-muted-foreground">
+              {t("reminder.paid", { amount: formatMoney({ amount: paid.amount, currency: subscription.price.currency }, locale), count: paid.count })}
+            </p>
+          )}
+          {subscription.note && (
+            <p className="still:w-full still:rounded-md still:bg-muted still:px-3 still:py-2 still:text-left still:text-xs still:text-muted-foreground still:whitespace-pre-wrap">
+              {subscription.note}
+            </p>
+          )}
         </DialogHeader>
-        {subscription.note && <p className="still:text-sm still:text-muted-foreground still:whitespace-pre-wrap">{subscription.note}</p>}
-        <DialogFooter className="still:grid still:grid-cols-3">
-          <Button variant="outline" onClick={() => dismiss(reminder.key)}>{t("reminder.later")}</Button>
-          <Button variant="destructive" onClick={() => void cancelIt()}>{t("reminder.cancel")}</Button>
-          <Button onClick={() => dismiss(reminder.key)}>{t("reminder.keep")}</Button>
-        </DialogFooter>
+        <DecisionActions subscription={subscription} chargeDate={reminder.chargeDate} onDone={() => dismiss(reminder.key)} />
+        {queue.length > 1 && (
+          <p className="still:-mt-2 still:text-center still:text-xs still:text-muted-foreground">
+            {t("reminder.counter", { index: 1, total: queue.length })}
+          </p>
+        )}
       </DialogContent>
     </Dialog>
   );

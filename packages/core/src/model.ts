@@ -194,4 +194,41 @@ export function isBillableOn(sub: Subscription, date: LocalDate): boolean {
 export interface Snapshot {
   subscriptions: Subscription[];
   settings: Settings;
+  /** Live (non-deleted) decisions. */
+  decisions: Decision[];
+}
+
+/**
+ * The user's answer to "still using it?" for one specific charge.
+ *
+ * The ID is derived from (subscription, charge date), so every device writes
+ * the same file for the same question and sync converges on the latest answer.
+ */
+export type DecisionChoice = "keep" | "cancel" | "snooze";
+
+export const DECISION_CHOICES: readonly DecisionChoice[] = ["keep", "cancel", "snooze"];
+
+export interface Decision {
+  id: string;
+  subscriptionId: string;
+  chargeDate: LocalDate;
+  choice: DecisionChoice;
+  /** For `snooze`: ask again on this date (after `notifyAt`). */
+  snoozeUntil: LocalDate | null;
+  /** ISO 8601 instant. */
+  decidedAt: string;
+  updatedAt: Hlc;
+  /** Tombstone, e.g. after an undo. ISO 8601. */
+  deletedAt?: string | null;
+  schemaVersion: number;
+}
+
+export function decisionId(subscriptionId: string, chargeDate: LocalDate): string {
+  return `${subscriptionId}_${chargeDate}`;
+}
+
+/** The editable fields of a stored subscription, e.g. to re-submit it with changes. */
+export function toSubscriptionInput(sub: Subscription): SubscriptionInput {
+  const { id: _id, schemaVersion: _v, createdAt: _c, updatedAt: _u, deletedAt: _d, ...input } = sub;
+  return input;
 }

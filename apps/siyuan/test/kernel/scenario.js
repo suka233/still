@@ -32,7 +32,7 @@
   await life.onload();
   await life.onrunning();
 
-  check("binds all RPC methods", __mock.rpc.size === 7, Array.from(__mock.rpc.keys()));
+  check("binds all RPC methods", __mock.rpc.size === 9, Array.from(__mock.rpc.keys()));
 
   var empty = await call("snapshot");
   check("empty snapshot", empty.subscriptions.length === 0 && empty.settings.notifyAt === "09:00", empty);
@@ -74,6 +74,41 @@
     error = String(e && e.message ? e.message : e);
   }
   check("validation errors are JSON", error !== null && error.indexOf('"kind":"validation"') >= 0, error);
+
+  // --- decisions ---
+  var charge = pending[0].chargeDate;
+  var snoozed = await call("decide", created.id, charge, "snooze", localDate(1));
+  check("snooze recorded", snoozed.decision.choice === "snooze" && __mock.storage.has("decisions/" + created.id + "_" + charge + ".json"), snoozed);
+  check("snapshot carries decisions", (await call("snapshot")).decisions.length === 1);
+
+  var cancelled = await call("decide", created.id, charge, "cancel");
+  check("cancel ends the subscription the day before the charge", cancelled.subscription.status === "cancelled" && cancelled.subscription.endDate === localDate(2), cancelled.subscription);
+  check("one decision file per charge", (await call("snapshot")).decisions.length === 1);
+
+  var restored = await call("undoDecision", created.id, charge, Object.assign({}, input));
+  var afterUndo = await call("snapshot");
+  check("undo restores subscription and clears decision", restored.status === "active" && afterUndo.decisions.length === 0, afterUndo);
+
+  var bad = null;
+  try {
+    await call("decide", created.id, charge, "maybe");
+  } catch (e) {
+    bad = String(e.message);
+  }
+  check("invalid choice rejected", bad !== null && bad.indexOf("choice must be") >= 0, bad);
+
+  // --- changes made outside the kernel (sync, another device) ---
+  check("watches existing storage dirs", __mock.watched.indexOf("subscriptions") >= 0, __mock.watched);
+  __mock.broadcasts.length = 0;
+  siyuan.event.handler({ id: "x", type: "fs-notify", detail: {} });
+  await sleep(600);
+  check("no broadcast when nothing changed", !__mock.broadcasts.some((b) => b.method === "changed"), __mock.broadcasts);
+  var foreign = JSON.parse(__mock.storage.get("subscriptions/" + created.id + ".json"));
+  foreign.name = "Edited on phone";
+  await siyuan.storage.put("subscriptions/" + created.id + ".json", JSON.stringify(foreign));
+  siyuan.event.handler({ id: "y", type: "fs-notify", detail: {} });
+  await sleep(600);
+  check("external edit broadcasts changed", __mock.broadcasts.some((b) => b.method === "changed" && b.params.source === "storage"), __mock.broadcasts);
 
   var updated = await call("updateSubscription", created.id, Object.assign({}, input, { name: "Netflix Premium" }));
   check("update bumps hlc", updated.updatedAt > created.updatedAt && updated.name === "Netflix Premium");

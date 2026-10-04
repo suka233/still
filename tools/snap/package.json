@@ -1,0 +1,12 @@
+{
+  "name": "@still/snap",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Playwright screenshots of a running dev SiYuan for visual QA",
+  "license": "MIT",
+  "author": "suka233",
+  "type": "module",
+  "devDependencies": {
+    "playwright": "^1.59.1"
+  }
+}
