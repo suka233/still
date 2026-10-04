@@ -13,6 +13,7 @@
  *   tokens to follow their own theme.
  */
 @import "./base.css";
+@import "./themes.css";
 @import "tailwindcss/theme.css" prefix(still);
 @import "tailwindcss/utilities.css" prefix(still);
 @import "tw-animate-css";
@@ -20,6 +21,8 @@
 @source "./";
 
 @theme inline {
+  --font-display: var(--font-display, inherit);
+  --shadow-card: var(--card-shadow, none);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

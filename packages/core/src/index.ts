@@ -7,3 +7,4 @@ export * from "./money.js";
 export * from "./reminders.js";
 export * from "./repository.js";
 export * from "./summary.js";
+export * from "./rates.js";

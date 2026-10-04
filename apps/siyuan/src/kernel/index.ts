@@ -15,18 +15,31 @@ import {
   createHlcClock,
   indexDecisions,
   isLocalDate,
+  isStillBackup,
   localDateOf,
   localMinutesOf,
+  parseRatesPayload,
   toSubscriptionInput,
   type FileStore,
   type Snapshot,
+  type StillBackup,
 } from "@still/core";
-import { RPC, type DecideResult, type RpcErrorData } from "../shared/rpc.js";
+import { RPC, type DecideResult, type ImportResult, type RpcErrorData } from "../shared/rpc.js";
+import { httpRequest } from "./http.js";
 
 /** How often the reminder scheduler wakes up. */
 const TICK_MS = 60_000;
 /** How often storage is checked for changes made elsewhere (sync, other devices). */
 const POLL_MS = 15_000;
+/** Exchange rates are refreshed at most this often… */
+const RATES_MAX_AGE_MS = 12 * 60 * 60_000;
+/** …and after a failed attempt, retried no sooner than this. */
+const RATES_RETRY_MS = 60 * 60_000;
+/** Tried in order; both are free and need no API key. */
+const RATE_SOURCES = [
+  { url: "https://open.er-api.com/v6/latest/USD", source: "ExchangeRate-API" },
+  { url: "https://api.frankfurter.app/latest?from=USD", source: "Frankfurter (ECB)" },
+];
 /** Directories watched for changes, relative to the plugin's storage dir. */
 const WATCHED = [".", PATHS.subscriptionsDir, PATHS.decisionsDir, PATHS.deliveredDir];
 
@@ -101,12 +114,37 @@ let fingerprint = "";
 const unwatched = new Set(WATCHED);
 
 async function snapshot(): Promise<Snapshot> {
-  const [subscriptions, settings, decisions] = await Promise.all([
+  const [subscriptions, settings, decisions, rates] = await Promise.all([
     repo.listSubscriptions(),
     repo.getSettings(),
     repo.listDecisions(),
+    repo.getRates(),
   ]);
-  return { subscriptions, settings, decisions };
+  return { subscriptions, settings, decisions, rates };
+}
+
+let lastRatesAttempt = 0;
+/** Fetches exchange rates when conversion is on and the cache is stale. */
+async function refreshRates(force = false) {
+  const now = Date.now();
+  if (!force && now - lastRatesAttempt < RATES_RETRY_MS) return;
+  const settings = await repo.getSettings();
+  if (!settings.convertCurrency && !force) return;
+  const cached = await repo.getRates();
+  if (!force && cached && now - Date.parse(cached.fetchedAt) < RATES_MAX_AGE_MS) return;
+  lastRatesAttempt = now;
+  for (const { url, source } of RATE_SOURCES) {
+    try {
+      const res = await httpRequest({ url, timeoutMs: 8_000 });
+      const rates = res.status === 200 ? parseRatesPayload(res.json(), new Date().toISOString(), source) : null;
+      if (!rates) continue;
+      await exclusive(() => repo.saveRates(rates));
+      await changed();
+      return;
+    } catch (e) {
+      await siyuan.logger.warn(`exchange rates from ${source} failed`, String(e));
+    }
+  }
 }
 
 async function dueReminders() {
@@ -172,6 +210,7 @@ function onKernelEvent(event: { type: string }) {
 }
 
 async function tick() {
+  void refreshRates();
   try {
     const due = await dueReminders();
     const fresh = due.filter((r) => !announced.has(r.key));
@@ -217,6 +256,37 @@ const handlers: Record<string, Handler> = {
     }),
 
   [RPC.pendingReminders]: () => dueReminders(),
+
+  [RPC.exportData]: async (): Promise<StillBackup> => {
+    const [subscriptions, decisions, settings] = await Promise.all([
+      repo.listSubscriptions(),
+      repo.listDecisions(),
+      repo.getSettings(),
+    ]);
+    return { app: "still", format: 1, exportedAt: new Date().toISOString(), subscriptions, decisions, settings };
+  },
+
+  /** Merges a backup record by record; newer edits win on both sides. */
+  [RPC.importData]: (backup: unknown) =>
+    exclusive(async (): Promise<ImportResult> => {
+      if (!isStillBackup(backup)) throw new ValidationError(["not a Still backup file"]);
+      const result: ImportResult = { subscriptions: 0, decisions: 0, skipped: 0 };
+      for (const s of backup.subscriptions) {
+        if (await repo.mergeSubscription(s)) result.subscriptions++;
+        else result.skipped++;
+      }
+      for (const d of backup.decisions) {
+        if (await repo.mergeDecision(d)) result.decisions++;
+        else result.skipped++;
+      }
+      await changed();
+      return result;
+    }),
+
+  [RPC.refreshRates]: async () => {
+    await refreshRates(true);
+    return repo.getRates();
+  },
 
   /**
    * Marks reminders delivered and returns the subset this caller won. With

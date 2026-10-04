@@ -119,3 +119,24 @@ export function estimateSaved(
 function compareText(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
 }
+
+export interface ChargeOnDate {
+  subscription: Subscription;
+  date: LocalDate;
+}
+
+/** Every expected charge in `[from, to]` (inclusive), oldest first. Includes past dates. */
+export function chargesInRange(subscriptions: readonly Subscription[], from: LocalDate, to: LocalDate): ChargeOnDate[] {
+  const result: ChargeOnDate[] = [];
+  for (const sub of subscriptions) {
+    if (sub.deletedAt || sub.status === "paused") continue;
+    let date = nextOccurrence(sub.anchorDate, sub.cycle, from);
+    for (let i = 0; i < 400 && compareLocalDate(date, to) <= 0; i++) {
+      const ended = sub.endDate && compareLocalDate(date, sub.endDate) > 0;
+      if (ended || (sub.status === "cancelled" && !sub.endDate)) break;
+      result.push({ subscription: sub, date });
+      date = nextOccurrence(sub.anchorDate, sub.cycle, addDays(date, 1));
+    }
+  }
+  return result.sort((a, b) => compareLocalDate(a.date, b.date) || compareText(a.subscription.name, b.subscription.name));
+}

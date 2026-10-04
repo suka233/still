@@ -112,6 +112,9 @@ importers:
       react-dom:
         specifier: ^19.3.0
         version: 19.3.0(react@19.3.0)
+      simple-icons:
+        specifier: ^16.33.0
+        version: 16.33.0
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3
@@ -1617,6 +1620,10 @@ packages:
 
   scheduler@0.28.0:
     resolution: {integrity: sha512-juorfCmIkIw8tT+p5BXSm6PJjQF/ycEYmKyzURCIt/RaZIhL+PulbQ9Yu2z1HdOJDdqDTlxA1+xKBmHXJsczAw==}
+
+  simple-icons@16.33.0:
+    resolution: {integrity: sha512-z14u6A8ngAg9mgERRsNO8YkjIMefehIpBk7A8Dz3Gd91945qFP19MLPSHgV4z8P5u/MRYd5e07OTzaDoB4d6qA==}
+    engines: {node: '>=0.12.18'}
 
   siyuan@1.2.9:
     resolution: {integrity: sha512-2bZTzTZocnOxPqY4liGtY2ZDhnhkYgySrlVLCCKWHjmGZ4kJYru0T1hFz5Hro0bz7cvecIEAx7XRV4plIvW1jQ==}
@@ -3174,6 +3181,8 @@ snapshots:
       '@rolldown/binding-win32-x64-msvc': 1.2.12
 
   scheduler@0.28.0: {}
+
+  simple-icons@16.33.0: {}
 
   siyuan@1.2.9:
     dependencies:

@@ -13,6 +13,7 @@ import {
   type Settings,
   type Subscription,
 } from "./model.js";
+import type { ExchangeRates } from "./rates.js";
 import { chargeDateOfKey } from "./reminders.js";
 
 /**
@@ -40,6 +41,7 @@ export const PATHS = {
   delivered: (deviceId: string) => `delivered/${deviceId}.json`,
   decisionsDir: "decisions",
   decision: (id: string) => `decisions/${id}.json`,
+  rates: "rates.json",
 } as const;
 
 /** Delivery records are kept this long after their charge date. */
@@ -227,6 +229,39 @@ export class StillRepository {
     await this.#files.write(PATHS.decision(id), JSON.stringify(tombstone, null, 2));
   }
 
+  /**
+   * Last-writer-wins merge of a record from elsewhere (import, sync server).
+   * Returns true when the incoming record replaced the local one.
+   */
+  async mergeSubscription(raw: unknown): Promise<boolean> {
+    const incoming = migrateSubscription(raw);
+    if (!incoming) return false;
+    const local = await this.#readSubscription(PATHS.subscription(incoming.id));
+    this.#clock.observe(incoming.updatedAt);
+    if (local && local.updatedAt >= incoming.updatedAt) return false;
+    await this.#writeSubscription(incoming);
+    return true;
+  }
+
+  async mergeDecision(raw: unknown): Promise<boolean> {
+    const incoming = migrateDecision(raw);
+    if (!incoming) return false;
+    const local = migrateDecision(await this.#readJson(PATHS.decision(incoming.id)));
+    this.#clock.observe(incoming.updatedAt);
+    if (local && local.updatedAt >= incoming.updatedAt) return false;
+    await this.#files.write(PATHS.decision(incoming.id), JSON.stringify(incoming, null, 2));
+    return true;
+  }
+
+  async getRates(): Promise<ExchangeRates | null> {
+    const raw = (await this.#readJson(PATHS.rates)) as ExchangeRates | null;
+    return raw && typeof raw.base === "string" && raw.rates && typeof raw.fetchedAt === "string" ? raw : null;
+  }
+
+  async saveRates(rates: ExchangeRates): Promise<void> {
+    await this.#files.write(PATHS.rates, JSON.stringify(rates));
+  }
+
   async #readJson(path: string): Promise<unknown> {
     const text = await this.#files.read(path);
     if (text === null || text === "") return null;
@@ -294,4 +329,20 @@ export function migrateDecision(raw: unknown): Decision | null {
     deletedAt: typeof r.deletedAt === "string" ? r.deletedAt : null,
     schemaVersion: typeof r.schemaVersion === "number" ? r.schemaVersion : SCHEMA_VERSION,
   };
+}
+
+/** Portable backup format written by "Export" and accepted by "Import". */
+export interface StillBackup {
+  app: "still";
+  format: 1;
+  exportedAt: string;
+  subscriptions: Subscription[];
+  decisions: Decision[];
+  settings: Settings;
+}
+
+export function isStillBackup(value: unknown): value is StillBackup {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return v.app === "still" && v.format === 1 && Array.isArray(v.subscriptions) && Array.isArray(v.decisions);
 }

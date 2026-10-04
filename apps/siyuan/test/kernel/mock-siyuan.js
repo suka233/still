@@ -75,10 +75,17 @@ var __mock = { storage: new Map(), mtimes: new Map(), rpc: new Map(), broadcasts
       },
     },
     client: {
-      fetch: async function (path) {
+      fetch: async function (path, init) {
         if (path === "/api/system/getConf") {
           var body = { code: 0, msg: "", data: { conf: { system: { id: "8d2f-ABC_123-device-xyz" } } } };
           return { ok: true, status: 200, json: async () => body, text: async () => JSON.stringify(body) };
+        }
+        if (path === "/api/network/forwardProxy") {
+          var req = JSON.parse(init.body);
+          __mock.proxied = (__mock.proxied || []).concat([req]);
+          var payload = { result: "success", base_code: "USD", rates: { USD: 1, CNY: 7.2, EUR: 0.9 } };
+          var envelope = { code: 0, msg: "", data: { url: req.url, status: 200, body: JSON.stringify(payload), contentType: "application/json" } };
+          return { ok: true, status: 200, json: async () => envelope, text: async () => JSON.stringify(envelope) };
         }
         throw new Error("unexpected fetch: " + path);
       },

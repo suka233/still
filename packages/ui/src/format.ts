@@ -32,9 +32,14 @@ export function formatDaysLeft(days: number, t: Translate): string {
   return t("inDays", { n: days });
 }
 
-export function formatDate(date: string, locale: string): string {
+/** A civil date as a local-midnight `Date`, for `Intl` formatting only. */
+export function localToDate(date: string): Date {
   const [y, m, d] = date.split("-").map(Number);
-  return new Intl.DateTimeFormat(locale, { year: "numeric", month: "short", day: "numeric" }).format(new Date(y!, m! - 1, d!));
+  return new Date(y!, m! - 1, d!);
+}
+
+export function formatDate(date: string, locale: string, options: Intl.DateTimeFormatOptions = { year: "numeric", month: "short", day: "numeric" }): string {
+  return new Intl.DateTimeFormat(locale, options).format(localToDate(date));
 }
 
 /** Common currencies first; the select still accepts any ISO 4217 code. */

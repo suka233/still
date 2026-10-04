@@ -36,7 +36,7 @@
   --ring: #2f6feb;
 
   color: var(--foreground);
-  font-family: inherit;
+  font-family: var(--font-sans, inherit);
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -74,4 +74,21 @@
 
 .still-root .still-avatar {
   border-radius: var(--avatar-radius, calc(var(--radius) - 2px));
+}
+
+/* Structural hooks used by themes (see themes.css). */
+.still-root .still-panel {
+  background: var(--panel-background, transparent);
+  color: var(--foreground);
+}
+
+.still-root .still-card {
+  -webkit-backdrop-filter: var(--card-backdrop, none);
+  backdrop-filter: var(--card-backdrop, none);
+}
+
+.still-root :where(.still-amount) {
+  font-family: var(--font-display, inherit);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }

@@ -227,3 +227,19 @@ describe("validation", () => {
     expect(result.ok).toBe(false);
   });
 });
+
+describe("charges in range", () => {
+  it("includes past and future charges, stops at the end of service", async () => {
+    const { chargesInRange } = await import("../src/index.js");
+    const subs = [
+      sub({ id: "a", anchorDate: "2026-01-05" }),
+      sub({ id: "b", anchorDate: "2026-01-20", status: "cancelled", endDate: "2026-10-10" }),
+      sub({ id: "c", status: "paused" }),
+    ];
+    expect(chargesInRange(subs, "2026-10-01", "2026-11-30").map((c) => `${c.subscription.id}@${c.date}`)).toEqual([
+      "a@2026-10-05",
+      "a@2026-11-05",
+    ]);
+    expect(chargesInRange(subs, "2026-09-01", "2026-09-30").map((c) => c.subscription.id)).toEqual(["a", "b"]);
+  });
+});

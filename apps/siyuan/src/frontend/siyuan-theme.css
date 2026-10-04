@@ -3,8 +3,8 @@
  * whatever theme (and light/dark mode) the user has installed.
  * Same specificity as the defaults in @still/ui and imported after them.
  */
-.still-root.still-siyuan,
-.still-root.still-portal {
+.still-root.still-siyuan[data-still-theme="host"],
+.still-root.still-siyuan:not([data-still-theme]) {
   --radius: var(--b3-border-radius, 6px);
   --background: var(--b3-theme-background);
   --foreground: var(--b3-theme-on-background);
@@ -28,6 +28,11 @@
   --input: var(--b3-border-color);
   --ring: var(--b3-theme-primary);
   font-family: var(--b3-font-family);
+}
+
+/* Non-host themes use SiYuan's UI font unless they set their own (zero specificity). */
+:where(.still-root.still-siyuan) {
+  --font-sans: var(--b3-font-family);
 }
 
 /* The portal only hosts fixed-position dialogs; it must not take up space. */

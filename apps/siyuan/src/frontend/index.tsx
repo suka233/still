@@ -2,6 +2,7 @@ import { upcomingCharges, type DueReminder, type LocalDate, type Subscription } 
 import {
   ManagerView,
   ReminderDialog,
+  SubscriptionDialog,
   Toaster,
   UpcomingPanel,
   createStillStore,
@@ -13,19 +14,26 @@ import {
   type StillStore,
   type Translate,
 } from "@still/ui";
+import { useState } from "react";
 import { Dialog, Plugin, confirm, getFrontend, openTab, platformUtils } from "siyuan";
+import pluginJson from "../../plugin.json" with { type: "json" };
 import { RPC, type RemindersDueParams } from "../shared/rpc.js";
 import { createRpcClient, type SiyuanStillClient } from "./client.js";
 import { ICONS } from "./icons.js";
 import "./index.css";
-import { mount, type MountContext } from "./mount.js";
+import { ScopeRegistry, mount, type MountContext } from "./mount.js";
 
 const TAB_TYPE = "manager";
 const DOCK_TYPE = "upcoming";
 
+function isSiyuanDark(): boolean {
+  return document.documentElement.dataset.themeMode === "dark";
+}
+
 export default class StillPlugin extends Plugin {
   #client!: SiyuanStillClient;
   #store!: StillStore;
+  #scopes!: ScopeRegistry;
   #ctx!: MountContext;
   #t!: Translate;
   #locale = "en";
@@ -33,6 +41,8 @@ export default class StillPlugin extends Plugin {
   #portal: HTMLElement | null = null;
   #statusBar: HTMLElement | null = null;
   #cleanups: (() => void)[] = [];
+  /** Opens the add dialog from commands; set by the always-mounted portal app. */
+  #openAdd: (() => void) | null = null;
 
   override onload() {
     // Publish (read-only) sessions can't reach the kernel plugin's RPC.
@@ -41,37 +51,48 @@ export default class StillPlugin extends Plugin {
 
     const lang = config.lang;
     const { locale, messages } = resolveMessages(lang);
+    const hostName = locale.startsWith("zh") ? "思源" : "SiYuan";
     this.#locale = locale;
-    this.#t = createTranslate(messages);
+    const base = createTranslate(messages);
+    this.#t = (key, vars) => base(key, { host: hostName, ...vars });
     this.#isMobile = getFrontend() === "mobile" || getFrontend() === "browser-mobile";
 
     this.#client = createRpcClient(this.kernel.rpc);
     this.#store = createStillStore(this.#client);
+    this.#store.setState({ hostDark: isSiyuanDark() });
+    this.#scopes = new ScopeRegistry(this.#store);
+
+    // Follow SiYuan's light/dark switch live.
+    const observer = new MutationObserver(() => this.#store.setState({ hostDark: isSiyuanDark() }));
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme-mode"] });
+    this.#cleanups.push(() => observer.disconnect());
 
     this.#portal = document.createElement("div");
     this.#portal.className = "still-root still-siyuan still-portal";
     document.body.append(this.#portal);
+    this.#scopes.add(this.#portal);
 
     const host: StillHost = {
       openUrl: (url) => window.open(url, "_blank", "noopener"),
       confirm: (text) =>
         new Promise((resolve) => confirm(this.#t("appName"), text, () => resolve(true), () => resolve(false))),
+      openManager: () => this.openManager(),
     };
-    this.#ctx = { store: this.#store, host, lang, portalContainer: this.#portal };
+    this.#ctx = {
+      store: this.#store,
+      client: this.#client,
+      host,
+      lang,
+      hostName,
+      version: pluginJson.version,
+      portalContainer: this.#portal,
+      scopes: this.#scopes,
+    };
 
-    // The reminder card has no visible anchor of its own; it lives in the portal.
-    const reminderAnchor = document.createElement("div");
-    this.#portal.append(reminderAnchor);
-    this.#cleanups.push(
-      mount(
-        reminderAnchor,
-        <>
-          <ReminderDialog />
-          <Toaster />
-        </>,
-        this.#ctx,
-      ),
-    );
+    // Window-level UI (reminder card, toasts, add dialog) lives in the portal.
+    const portalApp = document.createElement("div");
+    this.#portal.append(portalApp);
+    this.#cleanups.push(mount(portalApp, <PortalApp register={(open) => (this.#openAdd = open)} />, this.#ctx, { fill: false }));
 
     this.addIcons(ICONS);
     this.#registerDock();
@@ -84,9 +105,15 @@ export default class StillPlugin extends Plugin {
     });
     this.addCommand({
       langKey: "openManager",
-      langText: this.#t("allSubscriptions"),
+      langText: `${this.#t("appName")}: ${this.#t("allSubscriptions")}`,
       hotkey: "",
       callback: () => this.openManager(),
+    });
+    this.addCommand({
+      langKey: "addSubscription",
+      langText: `${this.#t("appName")}: ${this.#t("addSubscription")}`,
+      hotkey: "",
+      callback: () => this.#openAdd?.(),
     });
     this.#registerStatusBar();
 
@@ -112,6 +139,7 @@ export default class StillPlugin extends Plugin {
     window.removeEventListener("focus", this.#onVisible);
     for (const cleanup of this.#cleanups.splice(0)) cleanup();
     this.#store.getState().dispose();
+    this.#scopes.dispose();
     this.#portal?.remove();
     this.#portal = null;
   }
@@ -120,7 +148,9 @@ export default class StillPlugin extends Plugin {
     if (this.#isMobile) {
       // `openTab` is a no-op on mobile; use a full-screen dialog instead.
       const dialog = new Dialog({ title: this.#t("appName"), content: "<div></div>", width: "100vw", height: "100vh" });
-      const unmount = mount(dialog.element.querySelector(".b3-dialog__body")!, <ManagerView />, this.#ctx);
+      const body = dialog.element.querySelector(".b3-dialog__body") as HTMLElement;
+      body.style.padding = "0";
+      const unmount = mount(body, <ManagerView />, this.#ctx);
       const destroy = dialog.destroy.bind(dialog);
       dialog.destroy = (options) => {
         unmount();
@@ -128,7 +158,7 @@ export default class StillPlugin extends Plugin {
       };
       return;
     }
-    openTab({ app: this.app, custom: { icon: "iconStill", title: this.#t("appName"), id: this.name + TAB_TYPE } });
+    openTab({ app: this.app, custom: { icon: "iconStill", title: this.#t("appName"), id: this.name + TAB_TYPE, data: {} } });
   }
 
   #registerDock() {
@@ -138,7 +168,7 @@ export default class StillPlugin extends Plugin {
       type: DOCK_TYPE,
       config: {
         position: "RightTop",
-        size: { width: 300, height: 0 },
+        size: { width: 320, height: 0 },
         icon: "iconStill",
         title: this.#t("appName"),
       },
@@ -181,9 +211,7 @@ export default class StillPlugin extends Plugin {
       const { subscriptions, today, status } = this.#store.getState();
       if (status !== "ready" || !this.#statusBar) return;
       const next = nextChargeWithinWeek(subscriptions, today);
-      const label = next
-        ? `${next.subscription.name} · ${formatDaysLeft(next.daysLeft, this.#t)}`
-        : "";
+      const label = next ? `${next.subscription.name} · ${formatDaysLeft(next.daysLeft, this.#t)}` : "";
       el.innerHTML = label ? `<svg><use xlink:href="#iconStill"></use></svg><span></span>` : "";
       el.querySelector("span")?.append(label);
       el.title = next ? formatMoney(next.subscription.price, this.#locale) : "";
@@ -191,6 +219,7 @@ export default class StillPlugin extends Plugin {
     this.#cleanups.push(this.#store.subscribe(render));
   }
 
+  #lastSync = 0;
   async #sync() {
     this.#lastSync = Date.now();
     await this.#store.getState().refresh();
@@ -229,7 +258,6 @@ export default class StillPlugin extends Plugin {
     void this.#deliver(params?.reminders ?? []).catch((e) => console.warn("[still] deliver failed", e));
   };
 
-  #lastSync = 0;
   readonly #onVisible = () => {
     if (document.visibilityState !== "visible" || Date.now() - this.#lastSync < 10_000) return;
     void this.#sync();
@@ -238,6 +266,19 @@ export default class StillPlugin extends Plugin {
   readonly #onKernelState = ({ detail }: CustomEvent<{ code: number }>) => {
     if (detail.code === 2) void this.#sync(); // running
   };
+}
+
+/** Window-level UI mounted once: the reminder card, toasts and a command-driven add dialog. */
+function PortalApp({ register }: { register(open: () => void): void }) {
+  const [adding, setAdding] = useState(false);
+  register(() => setAdding(true));
+  return (
+    <>
+      <ReminderDialog />
+      <Toaster />
+      <SubscriptionDialog open={adding} onOpenChange={setAdding} subscription={null} />
+    </>
+  );
 }
 
 /** Soonest charge within the next week, for the status bar. */

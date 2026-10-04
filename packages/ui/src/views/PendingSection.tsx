@@ -22,9 +22,9 @@ export function PendingSection({ className }: { className?: string }) {
         {pending.map(({ subscription: sub, chargeDate, daysLeft, kind }) => (
           <li
             key={`${sub.id}:${chargeDate}`}
-            className="still:flex still:flex-col still:gap-2 still:rounded-lg still:border still:border-border still:bg-card still:p-2.5 still:animate-in still:fade-in-0 still:slide-in-from-top-1"
+            className="still-card still:flex still:flex-wrap still:items-center still:gap-x-3 still:gap-y-2 still:rounded-lg still:border still:border-border still:bg-card still:p-2.5 still:shadow-card still:animate-in still:fade-in-0 still:slide-in-from-top-1"
           >
-            <div className="still:flex still:items-center still:gap-2.5">
+            <div className="still:flex still:min-w-48 still:flex-1 still:items-center still:gap-2.5">
               <SubscriptionAvatar subscription={sub} />
               <div className="still:min-w-0 still:flex-1">
                 <div className="still:truncate still:text-sm still:font-medium">
@@ -35,7 +35,7 @@ export function PendingSection({ className }: { className?: string }) {
                 </div>
               </div>
             </div>
-            <DecisionActions subscription={sub} chargeDate={chargeDate} size="compact" className="still:justify-end" />
+            <DecisionActions subscription={sub} chargeDate={chargeDate} size="compact" className="still:ml-auto still:justify-end" />
           </li>
         ))}
       </ul>

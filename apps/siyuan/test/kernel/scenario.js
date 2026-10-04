@@ -32,7 +32,7 @@
   await life.onload();
   await life.onrunning();
 
-  check("binds all RPC methods", __mock.rpc.size === 9, Array.from(__mock.rpc.keys()));
+  check("binds all RPC methods", __mock.rpc.size === 12, Array.from(__mock.rpc.keys()));
 
   var empty = await call("snapshot");
   check("empty snapshot", empty.subscriptions.length === 0 && empty.settings.notifyAt === "09:00", empty);
@@ -109,6 +109,31 @@
   siyuan.event.handler({ id: "y", type: "fs-notify", detail: {} });
   await sleep(600);
   check("external edit broadcasts changed", __mock.broadcasts.some((b) => b.method === "changed" && b.params.source === "storage"), __mock.broadcasts);
+
+  // --- exchange rates through the forward proxy ---
+  var rates = await call("refreshRates");
+  check("rates fetched via forwardProxy", rates && rates.rates.CNY === 7.2 && __mock.proxied[0].url.indexOf("open.er-api.com") >= 0, rates);
+  check("snapshot carries rates", (await call("snapshot")).rates.base === "USD");
+
+  // --- backup round trip ---
+  var backup = await call("exportData");
+  check("export includes subscriptions and settings", backup.app === "still" && backup.subscriptions.length === 1 && backup.settings.notifyAt === "00:00", backup);
+  var older = JSON.parse(JSON.stringify(backup));
+  older.subscriptions[0].name = "Old name";
+  older.subscriptions[0].updatedAt = "000000001-0000-old";
+  var newcomer = Object.assign({}, backup.subscriptions[0], { id: "11111111-2222-4333-8444-555555555555", name: "Imported", updatedAt: "zzzzzzzzz-0000-other" });
+  older.subscriptions.push(newcomer);
+  var imported = await call("importData", older);
+  var afterImport = await call("snapshot");
+  check("import keeps newer local edits and adds new records", imported.subscriptions === 1 && afterImport.subscriptions.length === 2 && afterImport.subscriptions.some((s) => s.name === "Edited on phone"), { imported: imported, names: afterImport.subscriptions.map((s) => s.name) });
+  var badImport = null;
+  try {
+    await call("importData", { hello: 1 });
+  } catch (e) {
+    badImport = String(e.message);
+  }
+  check("import rejects non-backups", badImport !== null && badImport.indexOf("not a Still backup") >= 0, badImport);
+  await call("deleteSubscription", newcomer.id);
 
   var updated = await call("updateSubscription", created.id, Object.assign({}, input, { name: "Netflix Premium" }));
   check("update bumps hlc", updated.updatedAt > created.updatedAt && updated.name === "Netflix Premium");

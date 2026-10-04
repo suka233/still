@@ -14,6 +14,9 @@ export const RPC = {
   claimReminders: "claimReminders",
   decide: "decide",
   undoDecision: "undoDecision",
+  refreshRates: "refreshRates",
+  exportData: "exportData",
+  importData: "importData",
   // kernel → frontend notifications
   notifyChanged: "changed",
   notifyRemindersDue: "reminders-due",
@@ -27,6 +30,12 @@ export interface DecideResult {
 
 export interface RemindersDueParams {
   reminders: DueReminder[];
+}
+
+export interface ImportResult {
+  subscriptions: number;
+  decisions: number;
+  skipped: number;
 }
 
 /** Errors are thrown as JSON in `Error.message` so the frontend can show field errors. */

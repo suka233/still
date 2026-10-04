@@ -7,6 +7,7 @@ import {
   type Decision,
   type DecisionChoice,
   type DueReminder,
+  type ExchangeRates,
   type LocalDate,
   type ReminderClock,
   type Settings,
@@ -22,12 +23,15 @@ export interface StillState {
   subscriptions: Subscription[];
   settings: Settings;
   decisions: Decision[];
+  rates: ExchangeRates | null;
   /** Civil date the views compute against; rolls over at local midnight. */
   today: LocalDate;
   /** Local date and minute, for "has notifyAt passed?" checks. Updates every minute. */
   clock: ReminderClock;
   /** Reminders waiting for a "Still using it?" card, most urgent first. */
   reminders: DueReminder[];
+  /** Whether the host app is in dark mode (set by the host). */
+  hostDark: boolean;
 }
 
 export interface UndoToken {
@@ -71,9 +75,11 @@ export function createStillStore(client: StillClient, now: () => Date = () => ne
     subscriptions: [],
     settings: { ...DEFAULT_SETTINGS },
     decisions: [],
+    rates: null,
     today: readClock().today,
     clock: readClock(),
     reminders: [],
+    hostDark: false,
 
     refresh() {
       // Coalesce bursts (several `changed` broadcasts, focus + visibility…).
@@ -112,9 +118,22 @@ export function createStillStore(client: StillClient, now: () => Date = () => ne
     },
 
     async saveSettings(patch) {
-      const settings = await client.updateSettings(patch);
-      set({ settings });
-      return settings;
+      // Optimistic, so theme and appearance changes apply instantly.
+      const previous = get().settings;
+      const optimistic = {
+        ...previous,
+        ...patch,
+        appearance: { ...previous.appearance, ...(patch.appearance ?? {}) },
+      };
+      set({ settings: optimistic });
+      try {
+        const settings = await client.updateSettings(patch);
+        set({ settings });
+        return settings;
+      } catch (e) {
+        set({ settings: previous });
+        throw e;
+      }
     },
 
     async decide(subscriptionId, chargeDate, choice, snoozeUntil) {

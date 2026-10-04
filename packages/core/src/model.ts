@@ -1,6 +1,7 @@
 import { isBillingCycle, type BillingCycle } from "./cycle.js";
 import { compareLocalDate, isLocalDate, isTimeOfDay, type LocalDate } from "./date.js";
 import type { Hlc } from "./hlc.js";
+import type { ExchangeRates } from "./rates.js";
 import { isCurrencyCode, isMoney, type Money } from "./money.js";
 
 /** Bump when the stored shape changes; readers migrate older records. */
@@ -47,8 +48,24 @@ export interface RecordMeta {
 
 export type Subscription = SubscriptionInput & RecordMeta;
 
+export type AppearanceMode = "auto" | "light" | "dark";
+
+export interface Appearance {
+  /** Theme ID understood by the UI (e.g. "host", "paper"); unknown IDs fall back to the default. */
+  theme: string;
+  /** "auto" follows the host app's light/dark mode. */
+  mode: AppearanceMode;
+  /** Accent colour override, `#rrggbb`, or `null` for the theme's own. */
+  accent: string | null;
+}
+
+export const DEFAULT_APPEARANCE: Appearance = { theme: "host", mode: "auto", accent: null };
+
 export interface Settings {
   defaultCurrency: string;
+  /** Show totals converted into `defaultCurrency` using fetched exchange rates. */
+  convertCurrency: boolean;
+  appearance: Appearance;
   remindDaysBefore: number[];
   trialRemindDaysBefore: number[];
   /** Local time (`HH:mm`) at which same-day reminders become due. */
@@ -58,6 +75,8 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
   defaultCurrency: "USD",
+  convertCurrency: true,
+  appearance: DEFAULT_APPEARANCE,
   remindDaysBefore: [3, 1],
   trialRemindDaysBefore: [3, 1],
   notifyAt: "09:00",
@@ -179,6 +198,31 @@ export function validateSettingsPatch(patch: unknown, current: Settings): Valida
     if (isTimeOfDay(raw.notifyAt)) next.notifyAt = raw.notifyAt;
     else errors.push("notifyAt must be HH:mm");
   }
+  if (raw.convertCurrency !== undefined) {
+    if (typeof raw.convertCurrency === "boolean") next.convertCurrency = raw.convertCurrency;
+    else errors.push("convertCurrency must be a boolean");
+  }
+  if (raw.appearance !== undefined) {
+    const a = raw.appearance as Record<string, unknown> | null;
+    if (typeof a !== "object" || a === null) {
+      errors.push("appearance must be an object");
+    } else {
+      const appearance = { ...current.appearance };
+      if (a.theme !== undefined) {
+        if (typeof a.theme === "string" && /^[a-z][a-z0-9-]{0,31}$/.test(a.theme)) appearance.theme = a.theme;
+        else errors.push("appearance.theme must be a theme id");
+      }
+      if (a.mode !== undefined) {
+        if (a.mode === "auto" || a.mode === "light" || a.mode === "dark") appearance.mode = a.mode;
+        else errors.push("appearance.mode must be auto, light or dark");
+      }
+      if (a.accent !== undefined) {
+        if (a.accent === null || (typeof a.accent === "string" && /^#[0-9a-fA-F]{6}$/.test(a.accent))) appearance.accent = a.accent;
+        else errors.push("appearance.accent must be #rrggbb or null");
+      }
+      next.appearance = appearance;
+    }
+  }
 
   return errors.length ? { ok: false, errors } : { ok: true, value: next };
 }
@@ -196,6 +240,8 @@ export interface Snapshot {
   settings: Settings;
   /** Live (non-deleted) decisions. */
   decisions: Decision[];
+  /** Cached exchange rates, if any have been fetched. */
+  rates: ExchangeRates | null;
 }
 
 /**

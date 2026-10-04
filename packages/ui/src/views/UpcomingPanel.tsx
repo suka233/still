@@ -1,9 +1,9 @@
 import type { Subscription } from "@still/core";
-import { PlusIcon } from "lucide-react";
+import { ArrowUpRightIcon, PlusIcon } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "../components/ui/badge.js";
 import { Button } from "../components/ui/button.js";
-import { useI18n, useStill } from "../context.js";
+import { useHost, useI18n, useStill } from "../context.js";
 import { formatCycle, formatDaysLeft, formatMoney } from "../format.js";
 import { cn } from "../lib/utils.js";
 import { MoneyList } from "./MoneyList.js";
@@ -22,6 +22,7 @@ function urgency(daysLeft: number): "destructive" | "warning" | "secondary" {
 /** Compact list of upcoming charges, sized for a sidebar / dock. */
 export function UpcomingPanel({ className }: { className?: string }) {
   const { t, locale } = useI18n();
+  const host = useHost();
   const status = useStill((s) => s.status);
   const upcoming = useUpcoming();
   const totals = useTotals();
@@ -34,7 +35,7 @@ export function UpcomingPanel({ className }: { className?: string }) {
   };
 
   return (
-    <div className={cn("still:flex still:h-full still:flex-col still:gap-4 still:overflow-y-auto still:p-3", className)}>
+    <div className={cn("still-panel still:flex still:h-full still:flex-col still:gap-4 still:overflow-y-auto still:p-3", className)}>
       <header className="still:flex still:items-start still:justify-between still:gap-2">
         <div className="still:min-w-0">
           <div className="still:text-xs still:text-muted-foreground">{t("monthlyAverage")}</div>
@@ -56,7 +57,7 @@ export function UpcomingPanel({ className }: { className?: string }) {
 
           {upcoming.length === 0 ? (
             <div className="still:flex still:flex-1 still:flex-col still:items-center still:justify-center still:gap-2 still:px-4 still:text-center">
-              <div className="still:font-medium">{t("noSubscriptions")}</div>
+              <div className="still:font-display still:font-medium">{t("noSubscriptions")}</div>
               <p className="still:text-sm still:text-muted-foreground">{t("emptyHint")}</p>
               <Button size="sm" variant="outline" className="still:mt-1" onClick={() => openEditor(null)}>
                 <PlusIcon />
@@ -65,7 +66,19 @@ export function UpcomingPanel({ className }: { className?: string }) {
             </div>
           ) : (
             <section className="still:flex still:flex-col still:gap-1">
-              <h3 className="still:text-xs still:font-medium still:text-muted-foreground">{t("upcoming")}</h3>
+              <div className="still:flex still:items-center still:justify-between">
+                <h3 className="still:text-xs still:font-medium still:text-muted-foreground">{t("upcoming")}</h3>
+                {host.openManager && (
+                  <button
+                    type="button"
+                    onClick={() => host.openManager!()}
+                    className="still:flex still:items-center still:gap-0.5 still:text-xs still:text-muted-foreground still:hover:text-foreground"
+                  >
+                    {t("viewAll")}
+                    <ArrowUpRightIcon className="still:size-3" />
+                  </button>
+                )}
+              </div>
               <ul className="still:-mx-1 still:flex still:flex-col">
                 {upcoming.map(({ subscription: sub, chargeDate, daysLeft }) => (
                   <li key={sub.id}>

@@ -1,0 +1,301 @@
+/*
+ * Still themes. Each theme sets the colour tokens plus a few structural ones:
+ *
+ *   --radius            base corner radius
+ *   --font-sans         body font (default: inherit from the host)
+ *   --font-display      headings and amounts
+ *   --card-shadow       elevation of cards
+ *   --card-backdrop     backdrop-filter for cards (glass themes)
+ *   --panel-background  background behind a whole view
+ *   --avatar-radius     service icon corners
+ *
+ * A theme applies to `.still-root[data-still-theme=…]`; dark variants add
+ * `[data-still-mode="dark"]`. The "host" theme is defined by each host app.
+ */
+
+/* Every Still theme paints its own panel; only "host" lets the host show through.
+   Zero specificity, so themes that define --panel-background still win. */
+:where(.still-root[data-still-theme]:not([data-still-theme="host"])) {
+  --panel-background: var(--background);
+}
+
+/* Native controls (select popups, date pickers, scrollbars) follow the mode. */
+.still-root[data-still-mode="dark"] {
+  color-scheme: dark;
+}
+.still-root[data-still-mode="light"] {
+  color-scheme: light;
+}
+
+/* ── Clean · 素白 ─────────────────────────────────────────────── */
+.still-root[data-still-theme="clean"] {
+  --radius: 10px;
+  --background: #ffffff;
+  --foreground: #18181b;
+  --card: #ffffff;
+  --card-foreground: #18181b;
+  --popover: #ffffff;
+  --popover-foreground: #18181b;
+  --primary: #18181b;
+  --primary-foreground: #fafafa;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
+  --destructive: #e11d48;
+  --warning: #fef3c7;
+  --warning-foreground: #92400e;
+  --success: #16a34a;
+  --border: #e4e4e7;
+  --input: #d4d4d8;
+  --ring: #a1a1aa;
+  --card-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+.still-root[data-still-theme="clean"][data-still-mode="dark"] {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #111113;
+  --card-foreground: #fafafa;
+  --popover: #18181b;
+  --popover-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #18181b;
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
+  --destructive: #f43f5e;
+  --warning: #422006;
+  --warning-foreground: #fcd34d;
+  --border: #27272a;
+  --input: #3f3f46;
+  --ring: #71717a;
+  --card-shadow: none;
+}
+
+/* ── Paper · 纸墨 ─────────────────────────────────────────────── */
+.still-root[data-still-theme="paper"] {
+  --radius: 4px;
+  --background: #f7f3ea;
+  --foreground: #3b2f2a;
+  --card: #fffdf7;
+  --card-foreground: #3b2f2a;
+  --popover: #fffdf7;
+  --popover-foreground: #3b2f2a;
+  --primary: #a0522d;
+  --primary-foreground: #fffdf7;
+  --secondary: #efe7d6;
+  --secondary-foreground: #3b2f2a;
+  --muted: #efe7d6;
+  --muted-foreground: #8a7b6e;
+  --accent: #f1e9d8;
+  --accent-foreground: #3b2f2a;
+  --destructive: #b3261e;
+  --warning: #f6e3b4;
+  --warning-foreground: #6b4a00;
+  --success: #4d7c0f;
+  --border: #e3d8c3;
+  --input: #d8cbb2;
+  --ring: #a0522d;
+  --card-shadow: 0 1px 0 rgb(59 47 42 / 0.06), 0 2px 8px rgb(59 47 42 / 0.05);
+  --panel-background: #f7f3ea;
+  --font-display: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", Georgia, "Times New Roman", serif;
+  --avatar-radius: 3px;
+}
+.still-root[data-still-theme="paper"][data-still-mode="dark"] {
+  --background: #1f1b16;
+  --foreground: #ece3d3;
+  --card: #29241d;
+  --card-foreground: #ece3d3;
+  --popover: #2e2821;
+  --popover-foreground: #ece3d3;
+  --primary: #d4915e;
+  --primary-foreground: #1f1b16;
+  --secondary: #3a3229;
+  --secondary-foreground: #ece3d3;
+  --muted: #3a3229;
+  --muted-foreground: #a8998a;
+  --accent: #352e26;
+  --accent-foreground: #ece3d3;
+  --destructive: #e5675d;
+  --warning: #4a3914;
+  --warning-foreground: #f1cf7a;
+  --border: #3d352b;
+  --input: #4a4035;
+  --ring: #d4915e;
+  --card-shadow: none;
+  --panel-background: #1f1b16;
+}
+
+/* ── Aurora · 极光 ────────────────────────────────────────────── */
+.still-root[data-still-theme="aurora"] {
+  --radius: 14px;
+  --background: #f5f3ff;
+  --foreground: #1e1b4b;
+  --card: rgb(255 255 255 / 0.62);
+  --card-foreground: #1e1b4b;
+  --popover: rgb(255 255 255 / 0.92);
+  --popover-foreground: #1e1b4b;
+  --primary: #7c3aed;
+  --primary-foreground: #ffffff;
+  --secondary: rgb(124 58 237 / 0.1);
+  --secondary-foreground: #4c1d95;
+  --muted: rgb(124 58 237 / 0.08);
+  --muted-foreground: #6b6890;
+  --accent: rgb(124 58 237 / 0.08);
+  --accent-foreground: #1e1b4b;
+  --destructive: #e11d74;
+  --warning: rgb(251 191 36 / 0.22);
+  --warning-foreground: #92400e;
+  --success: #059669;
+  --border: rgb(124 58 237 / 0.16);
+  --input: rgb(124 58 237 / 0.24);
+  --ring: #a78bfa;
+  --card-shadow: 0 8px 28px rgb(124 58 237 / 0.12);
+  --card-backdrop: blur(16px) saturate(1.4);
+  --panel-background: radial-gradient(120% 80% at 0% 0%, #e0e7ff 0%, transparent 60%),
+    radial-gradient(120% 80% at 100% 0%, #fce7f3 0%, transparent 55%),
+    radial-gradient(120% 90% at 50% 100%, #cffafe 0%, transparent 60%), #f5f3ff;
+  --font-display: "Avenir Next", "SF Pro Rounded", -apple-system, "PingFang SC", sans-serif;
+  --avatar-radius: 10px;
+}
+.still-root[data-still-theme="aurora"][data-still-mode="dark"] {
+  --background: #0f0c29;
+  --foreground: #ede9fe;
+  --card: rgb(255 255 255 / 0.06);
+  --card-foreground: #ede9fe;
+  --popover: rgb(30 27 75 / 0.92);
+  --popover-foreground: #ede9fe;
+  --primary: #a78bfa;
+  --primary-foreground: #160f3a;
+  --secondary: rgb(167 139 250 / 0.14);
+  --secondary-foreground: #ede9fe;
+  --muted: rgb(255 255 255 / 0.06);
+  --muted-foreground: #a5a1d1;
+  --accent: rgb(167 139 250 / 0.12);
+  --accent-foreground: #ede9fe;
+  --destructive: #fb7185;
+  --warning: rgb(251 191 36 / 0.16);
+  --warning-foreground: #fcd34d;
+  --border: rgb(255 255 255 / 0.12);
+  --input: rgb(255 255 255 / 0.18);
+  --ring: #a78bfa;
+  --card-shadow: 0 10px 30px rgb(0 0 0 / 0.35);
+  --panel-background: radial-gradient(120% 80% at 0% 0%, #312e81 0%, transparent 60%),
+    radial-gradient(120% 80% at 100% 0%, #6b21a8 0%, transparent 55%),
+    radial-gradient(120% 90% at 50% 100%, #0e7490 0%, transparent 65%), #0f0c29;
+}
+
+/* ── Terminal · 终端 ──────────────────────────────────────────── */
+.still-root[data-still-theme="terminal"] {
+  --radius: 2px;
+  --background: #fbf7ef;
+  --foreground: #3d2b00;
+  --card: #fffcf5;
+  --card-foreground: #3d2b00;
+  --popover: #fffcf5;
+  --popover-foreground: #3d2b00;
+  --primary: #b45309;
+  --primary-foreground: #fffcf5;
+  --secondary: #f3ead6;
+  --secondary-foreground: #3d2b00;
+  --muted: #f3ead6;
+  --muted-foreground: #8c6d3a;
+  --accent: #f6edd9;
+  --accent-foreground: #3d2b00;
+  --destructive: #b91c1c;
+  --warning: #fde68a;
+  --warning-foreground: #713f12;
+  --success: #15803d;
+  --border: #e6d7b5;
+  --input: #d9c393;
+  --ring: #b45309;
+  --card-shadow: none;
+  --panel-background: #fbf7ef;
+  --font-sans: "JetBrains Mono", "SF Mono", "Cascadia Code", Menlo, Consolas, "PingFang SC", monospace;
+  --font-display: var(--font-sans);
+  --avatar-radius: 0;
+}
+.still-root[data-still-theme="terminal"][data-still-mode="dark"] {
+  --background: #0a0f0a;
+  --foreground: #b8f5b8;
+  --card: #0e150e;
+  --card-foreground: #b8f5b8;
+  --popover: #111a11;
+  --popover-foreground: #b8f5b8;
+  --primary: #4ade80;
+  --primary-foreground: #052e12;
+  --secondary: #132213;
+  --secondary-foreground: #b8f5b8;
+  --muted: #132213;
+  --muted-foreground: #5f8f63;
+  --accent: #142614;
+  --accent-foreground: #d1fad1;
+  --destructive: #f87171;
+  --warning: #3a2e05;
+  --warning-foreground: #facc15;
+  --success: #4ade80;
+  --border: #1d3a1f;
+  --input: #275228;
+  --ring: #4ade80;
+  --panel-background: #0a0f0a;
+}
+
+/* ── Candy · 糖果 ─────────────────────────────────────────────── */
+.still-root[data-still-theme="candy"] {
+  --radius: 18px;
+  --background: #fff7fb;
+  --foreground: #4a2c40;
+  --card: #ffffff;
+  --card-foreground: #4a2c40;
+  --popover: #ffffff;
+  --popover-foreground: #4a2c40;
+  --primary: #ff4f9a;
+  --primary-foreground: #ffffff;
+  --secondary: #ffe4f1;
+  --secondary-foreground: #8a2f60;
+  --muted: #ffeef6;
+  --muted-foreground: #a07390;
+  --accent: #fff0f7;
+  --accent-foreground: #4a2c40;
+  --destructive: #f43f5e;
+  --warning: #fff1c2;
+  --warning-foreground: #8a5a00;
+  --success: #22c55e;
+  --border: #ffd6ea;
+  --input: #ffc2df;
+  --ring: #ff8cc0;
+  --card-shadow: 0 6px 20px rgb(255 79 154 / 0.12);
+  --panel-background: linear-gradient(180deg, #fff7fb 0%, #fdf4ff 100%);
+  --font-display: "SF Pro Rounded", "Nunito", "Varela Round", "PingFang SC", sans-serif;
+  --avatar-radius: 999px;
+}
+.still-root[data-still-theme="candy"][data-still-mode="dark"] {
+  --background: #241621;
+  --foreground: #ffe6f2;
+  --card: #30202c;
+  --card-foreground: #ffe6f2;
+  --popover: #3a2735;
+  --popover-foreground: #ffe6f2;
+  --primary: #ff7ab6;
+  --primary-foreground: #2a0f1f;
+  --secondary: #4a2c40;
+  --secondary-foreground: #ffe6f2;
+  --muted: #3c2836;
+  --muted-foreground: #c99bb5;
+  --accent: #3e2a38;
+  --accent-foreground: #ffe6f2;
+  --destructive: #fb7185;
+  --warning: #4a3a10;
+  --warning-foreground: #fde68a;
+  --border: #4d3346;
+  --input: #5e3f56;
+  --ring: #ff7ab6;
+  --card-shadow: 0 6px 24px rgb(0 0 0 / 0.3);
+  --panel-background: linear-gradient(180deg, #241621 0%, #2a1730 100%);
+}

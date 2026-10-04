@@ -38,8 +38,8 @@ page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
 await page.goto(`${base}/stage/build/${mobile ? "mobile" : "desktop"}/`);
 await page.waitForSelector(mobile ? "#editor, .protyle" : ".layout__center", { timeout: 30_000 });
 await page.waitForTimeout(1500);
-// Dismiss SiYuan's first-run welcome card if present.
-await page.evaluate(() => document.querySelector(".b3-snackbar__close, .block__icon[data-type=close]")?.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+// Hide SiYuan's first-run onboarding card; it isn't part of what we're checking.
+await page.addStyleTag({ content: '[class*="onboarding"]:not(.layout__center) { display: none !important; }' });
 
 async function shot(name, selector) {
   const target = selector ? page.locator(selector).first() : page;
