@@ -27,13 +27,9 @@ export async function seed({ page, locale }) {
   const manager = await openManager(page);
   await manager.getByRole("tab", { name: meta.i18n[locale].settings, exact: true }).click();
   await page.waitForTimeout(500);
-  // Bring the theme cards into view under the stats.
-  const picker = manager.locator("button[aria-pressed]").first();
-  await picker.scrollIntoViewIfNeeded();
-  await page.evaluate(() => {
-    const scroller = document.querySelector(".layout__center .layout-tab-container > div:not(.fn__none)");
-    scroller?.scrollBy({ top: -40 });
-  });
+  // Centre the light/dark switch: the theme cards sit just above it, and the
+  // status bar would cover anything at the very bottom.
+  await manager.getByRole("radio", { name: meta.i18n[locale].dark, exact: true }).evaluate((el) => el.scrollIntoView({ block: "center" }));
   await page.waitForTimeout(400);
   return {};
 }

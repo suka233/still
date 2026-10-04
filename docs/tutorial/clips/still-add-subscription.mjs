@@ -71,10 +71,11 @@ export async function actions(driver) {
   await dock.locator("li", { hasText: strings.service }).first().waitFor({ state: "visible" });
 
   // Rest beside the new row (measured after the list settles) so the result is in frame.
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(800);
   await at(8.6);
-  const newPrice = dock.locator(".stl-row", { hasText: strings.service }).first().locator(".stl-price");
-  await moveTo(await pointWithin(newPrice, 0.3, 2.2), 560);
+  // Charged today, so it's the first row of the "next 7 days" group.
+  const newRow = dock.locator('.stl-group[data-bucket="week"] .stl-row').first();
+  await moveTo(await pointWithin(newRow, 0.55, 1.15), 560);
 }
 
 export async function verify({ page, strings }) {
