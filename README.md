@@ -3,6 +3,10 @@
 Subscription tracker that asks before it renews. SiYuan plugin first; Obsidian,
 self-hosted server (Docker) and mobile clients later.
 
+![Still](docs/media/preview.png)
+
+User docs: [English](apps/siyuan/README.md) · [中文](apps/siyuan/README.zh-CN.md) · [Changelog](CHANGELOG.md)
+
 ## Layout
 
 ```
@@ -10,7 +14,8 @@ packages/core     Platform-independent domain logic (no DOM, no Intl, no crypto)
                   calendar dates, billing cycles, money, HLC timestamps,
                   reminders, file-per-record repository. Runs in goja.
 packages/ui       React + shadcn/ui views shared by every host. Tailwind classes
-                  are prefixed `still:`; no global preflight; theme via tokens.
+                  are prefixed `still:`; no global preflight. Four themes render
+                  one superset markup (`stl-*`) styled per theme with @scope.
 apps/siyuan       SiYuan plugin: kernel.js (goja, owns data + scheduling) and
                   index.js (frontend: dock, tab, status bar, reminder card).
 tools/goja-runner Runs JS in the same goja setup SiYuan uses, for tests.
@@ -25,12 +30,20 @@ pnpm typecheck
 pnpm build       # apps/siyuan/dist + apps/siyuan/package.zip
 ```
 
-Develop against a SiYuan workspace (3.8.5+, with bazaar plugins trusted):
+Develop against a dedicated SiYuan workspace (needs SiYuan 3.8.5+ installed; the
+script uses its kernel binary, trusts bazaar plugins and turns update downloads off):
 
 ```bash
-pnpm --filter @still/siyuan dev
-node apps/siyuan/scripts/link.mjs ~/SiYuan/<workspace>
+pnpm --filter @still/siyuan dev                     # rebuild on change
+node apps/siyuan/scripts/serve.mjs                  # kernel on :6899, workspace ~/SiYuan/still-dev
+node apps/siyuan/scripts/seed.mjs --reset           # demo data
+node tools/snap/snap.mjs /tmp/snaps                 # Playwright screenshots for visual QA
 ```
+
+Or link `dist/` into an existing workspace with `node apps/siyuan/scripts/link.mjs <workspace>`.
+
+Tutorial clips live in `docs/tutorial/clips/` and are recorded with the
+make-kmind-tutorial-slice-lite pipeline against the dev kernel.
 
 ## Design notes
 

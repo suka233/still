@@ -8,8 +8,8 @@ export const meta = {
   host: "still",
   locales: ["zh-CN", "en-US"],
   i18n: {
-    "zh-CN": { add: "添加", query: "spot", service: "Spotify Premium", price: "11.99", save: "保存" },
-    "en-US": { add: "Add", query: "spot", service: "Spotify Premium", price: "11.99", save: "Save" },
+    "zh-CN": { add: "添加订阅", query: "spot", service: "Spotify Premium", price: "11.99", save: "保存" },
+    "en-US": { add: "Add subscription", query: "spot", service: "Spotify Premium", price: "11.99", save: "Save" },
   },
   viewport: { width: 1280, height: 720 },
   durationS: 11.4,
@@ -31,7 +31,7 @@ export async function seed({ page, locale }) {
 export async function actions(driver) {
   const { at, moveTo, jumpTo, click, typeText, centerOf, pointWithin, page, strings } = driver;
   const dock = page.locator(".sy__stillupcoming");
-  const addButton = dock.getByRole("button", { name: strings.add, exact: true });
+  const addButton = dock.locator(".stl-add");
   const addPoint = await pointWithin(addButton, 0.8, 0.55);
   await jumpTo({ x: addPoint.x - 280, y: addPoint.y + 260 });
 
@@ -73,8 +73,8 @@ export async function actions(driver) {
   // Rest beside the new row (measured after the list settles) so the result is in frame.
   await page.waitForTimeout(500);
   await at(8.6);
-  const badge = dock.locator("ul li", { hasText: strings.service }).first().locator("[data-slot=badge]");
-  await moveTo(await pointWithin(badge, 0.5, 1.9), 560);
+  const newPrice = dock.locator(".stl-row", { hasText: strings.service }).first().locator(".stl-price");
+  await moveTo(await pointWithin(newPrice, 0.3, 2.2), 560);
 }
 
 export async function verify({ page, strings }) {

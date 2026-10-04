@@ -80,7 +80,7 @@ export async function reloadStill(page) {
  * Wipes Still's data and seeds a clean demo state, then reloads.
  * `claim: true` marks due reminders as already shown so no card pops up.
  */
-export async function resetStill(page, { locale, subscriptions, claim = true, appearance = { theme: "host", mode: "auto", accent: null } }) {
+export async function resetStill(page, { locale, subscriptions, claim = true, appearance = { theme: "receipt", mode: "light", accent: null } }) {
   await api(page, "/api/file/removeFile", { path: "/data/storage/petal/still" }).catch(() => undefined);
   await page.waitForTimeout(600);
   await rpc(page, "updateSettings", {

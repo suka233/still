@@ -403,10 +403,11 @@
   .stl-meta-trial { color: var(--warm); font-weight: 600; }
   .stl-trial-mark { display: none; }
   .stl-list-empty { padding: 40px 0; text-align: center; font-size: 14px; color: var(--muted-foreground); }
-
-  .stl-thumb { zoom: 0.56; height: 250px; overflow: hidden; pointer-events: none; }
-  .stl-thumb .stl-dock { padding: 16px; gap: 12px; }
 }
+
+/* Theme-picker thumbnails are scope roots themselves, so they're styled outside @scope. */
+.still-root.stl-thumb { zoom: 0.5; height: 270px; overflow: hidden; pointer-events: none; }
+.still-root.stl-thumb .stl-dock { padding: 16px; gap: 12px; min-height: 0; }
 
 /* ───────────────────────── Receipt · 票据 ───────────────────────── */
 @scope (.still-root[data-still-theme="receipt"]) to (.still-root) {

@@ -23,7 +23,7 @@ export function ThemePicker({ appearance, onChange }: { appearance: Appearance; 
 
   return (
     <div className="still:grid still:gap-4">
-      <div className="still:grid still:grid-cols-2 still:gap-3 still:@3xl:grid-cols-4">
+      <div className="still:grid still:grid-cols-2 still:gap-3 still:@xl:grid-cols-4">
         {THEMES.map((theme) => {
           const selected = current.theme === theme.id;
           const preview = resolveAppearance({ ...appearance, theme: theme.id }, hostDark);

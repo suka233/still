@@ -31,7 +31,7 @@ export async function seed({ page, locale, strings }) {
   for (const id of existing ?? []) await api(page, "/api/filetree/removeDocByID", { id });
   const id = await api(page, "/api/filetree/createDocWithMd", { notebook, path: `/${strings.doc}`, markdown: `${strings.intro}\n` });
   // Open the doc by clicking it in the file tree.
-  const toggle = page.locator(".file-tree .b3-list-item .b3-list-item__toggle").first();
+  const toggle = page.locator('.file-tree .b3-list-item[data-type="navigation-root"] .b3-list-item__toggle').first();
   if (!(await page.locator('.file-tree .b3-list-item[data-type="navigation-file"]').count())) await toggle.click();
   await page.locator('.file-tree .b3-list-item[data-type="navigation-file"]', { hasText: strings.doc }).first().click();
   await page.locator(".layout__center .protyle:not(.fn__none) .protyle-wysiwyg [data-type=NodeParagraph]").first().waitFor({ state: "visible" });

@@ -7,11 +7,11 @@ export const meta = {
   host: "still",
   locales: ["zh-CN", "en-US"],
   i18n: {
-    "zh-CN": { settings: "设置", themes: ["纸墨", "极光", "终端", "糖果", "素白"], dark: "深色" },
-    "en-US": { settings: "Settings", themes: ["Paper", "Aurora", "Terminal", "Candy", "Clean"], dark: "Dark" },
+    "zh-CN": { settings: "设置", themes: ["静谧", "卡片墙", "时间线", "票据"], dark: "深色" },
+    "en-US": { settings: "Settings", themes: ["Calm", "Wallet", "Timeline", "Receipt"], dark: "Dark" },
   },
   viewport: { width: 1280, height: 720 },
-  durationS: 14.4,
+  durationS: 12.0,
   cursorStyle: "device-mouse",
   hide: [],
   camera: null,
@@ -45,30 +45,27 @@ export async function actions(driver) {
   const first = await pointWithin(card(strings.themes[0]), 0.5, 0.4);
   await jumpTo({ x: first.x - 120, y: first.y + 160 });
 
+  // Start on Receipt (the default), visit the other three, come back.
   let t = 0.6;
-  for (const name of strings.themes.slice(0, 4)) {
+  for (const name of strings.themes) {
     await at(t);
     await moveTo(await pointWithin(card(name), 0.5, 0.4), 480);
     await at(t + 0.75);
     await click();
-    t += 2.1;
+    t += 2.2;
   }
-  // Finish on Clean in dark mode.
-  await at(t);
-  await moveTo(await pointWithin(card(strings.themes[4]), 0.5, 0.4), 480);
-  await at(t + 0.75);
-  await click();
-  await at(t + 1.8);
+  // Finish in dark mode.
+  await at(t - 0.4);
   const dark = manager.getByRole("radio", { name: strings.dark, exact: true });
   await moveTo(await pointWithin(dark, 0.6, 0.5), 480);
-  await at(t + 2.5);
+  await at(t + 0.6);
   await click();
-  await at(t + 3.1);
+  await at(t + 1.3);
   await moveTo({ x: 640, y: 690 }, 520);
 }
 
 export async function verify({ page }) {
   const settings = (await rpc(page, "snapshot")).settings;
-  const ok = settings.appearance.theme === "clean" && settings.appearance.mode === "dark";
+  const ok = settings.appearance.theme === "receipt" && settings.appearance.mode === "dark";
   return { ok, operation: "still-themes", appearance: settings.appearance, reason: ok ? null : "theme not applied" };
 }
