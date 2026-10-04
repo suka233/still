@@ -8,7 +8,15 @@ const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
 const DialogClose = DialogPrimitive.Close;
 
-function DialogContent({ className, children, ...props }: ComponentProps<typeof DialogPrimitive.Content>) {
+function DialogContent({
+  className,
+  children,
+  bare = false,
+  ...props
+}: ComponentProps<typeof DialogPrimitive.Content> & {
+  /** Keep only positioning and motion; the caller draws the surface. */
+  bare?: boolean;
+}) {
   const container = usePortalContainer();
   return (
     <DialogPrimitive.Portal container={container}>
@@ -16,13 +24,14 @@ function DialogContent({ className, children, ...props }: ComponentProps<typeof 
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "still:fixed still:top-1/2 still:left-1/2 still:z-[1001] still:grid still:max-h-[calc(100dvh-2rem)] still:w-[calc(100%-2rem)] still:max-w-md still:-translate-x-1/2 still:-translate-y-1/2 still:gap-4 still:overflow-y-auto still:rounded-lg still:border still:border-border still:bg-popover still:p-5 still:text-popover-foreground still:shadow-lg still:data-[state=open]:animate-in still:data-[state=open]:fade-in-0 still:data-[state=open]:zoom-in-95 still:data-[state=closed]:animate-out still:data-[state=closed]:fade-out-0 still:data-[state=closed]:zoom-out-95",
+          "still:fixed still:top-1/2 still:left-1/2 still:z-[1001] still:max-h-[calc(100dvh-2rem)] still:w-[calc(100%-2rem)] still:-translate-x-1/2 still:-translate-y-1/2 still:overflow-y-auto still:outline-none still:data-[state=open]:animate-in still:data-[state=open]:fade-in-0 still:data-[state=open]:zoom-in-95 still:data-[state=closed]:animate-out still:data-[state=closed]:fade-out-0 still:data-[state=closed]:zoom-out-95",
+          bare ? "still:max-w-sm" : "stl-dialog still:grid still:max-w-md still:gap-4 still:rounded-xl still:border still:border-border still:bg-popover still:p-5 still:text-popover-foreground still:shadow-lg",
           className,
         )}
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="still:absolute still:top-4 still:right-4 still:rounded-sm still:text-muted-foreground still:opacity-70 still:transition-opacity still:hover:opacity-100 still:cursor-pointer">
+        <DialogPrimitive.Close className="stl-dialog-close still:absolute still:top-4 still:right-4 still:z-10 still:rounded-sm still:text-muted-foreground still:opacity-70 still:transition-opacity still:hover:opacity-100 still:cursor-pointer">
           <XIcon className="still:size-4" />
           <span className="still:sr-only">Close</span>
         </DialogPrimitive.Close>

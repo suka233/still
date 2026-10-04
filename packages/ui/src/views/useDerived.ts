@@ -78,3 +78,64 @@ export function usePending() {
   const index = useDecisionIndex();
   return useMemo(() => pendingDecisions(subscriptions, settings, clock, index), [subscriptions, settings, clock, index]);
 }
+
+function sumCharges(charges: { subscription: { price: { amount: number; currency: string } } }[]): Record<string, number> {
+  const totals: Record<string, number> = {};
+  for (const c of charges) totals[c.subscription.price.currency] = (totals[c.subscription.price.currency] ?? 0) + c.subscription.price.amount;
+  return totals;
+}
+
+function monthBounds(date: string) {
+  const [y, m] = date.split("-").map(Number) as [number, number];
+  const last = new Date(y, m, 0).getDate();
+  return { start: `${date.slice(0, 7)}-01`, end: `${date.slice(0, 7)}-${String(last).padStart(2, "0")}` };
+}
+
+/** This calendar month: what's already been charged and what's still to come. */
+export function useMonthOverview() {
+  const subscriptions = useStill((s) => s.subscriptions);
+  const today = useStill((s) => s.today);
+  return useMemo(() => {
+    const { start, end } = monthBounds(today);
+    const paid = today === start ? {} : sumCharges(chargesInRange(subscriptions, start, addDays(today, -1)));
+    const upcoming = chargesInRange(subscriptions, today, end);
+    return { paid, remaining: sumCharges(upcoming), remainingCount: upcoming.length };
+  }, [subscriptions, today]);
+}
+
+/** Expected charges per calendar month, starting with the current one. */
+export function useForecast(months = 6) {
+  const subscriptions = useStill((s) => s.subscriptions);
+  const today = useStill((s) => s.today);
+  return useMemo(() => {
+    const out: { month: string; totals: Record<string, number> }[] = [];
+    let cursor = `${today.slice(0, 7)}-01`;
+    for (let i = 0; i < months; i++) {
+      const { start, end } = monthBounds(cursor);
+      out.push({ month: cursor.slice(0, 7), totals: sumCharges(chargesInRange(subscriptions, i === 0 ? today : start, end)) });
+      const [y, m] = cursor.split("-").map(Number) as [number, number];
+      cursor = m === 12 ? `${y + 1}-01-01` : `${y}-${String(m + 1).padStart(2, "0")}-01`;
+    }
+    return out;
+  }, [subscriptions, today, months]);
+}
+
+/** Folds per-currency totals into one number in the default currency when possible. */
+export function useFold() {
+  const settings = useStill((s) => s.settings);
+  const rates = useStill((s) => s.rates);
+  return useMemo(
+    () => (totals: Record<string, number>) => {
+      const entries = Object.entries(totals);
+      if (entries.length === 0) return { amount: 0, currency: settings.defaultCurrency, exact: true, partial: false };
+      if (entries.length === 1) return { amount: entries[0]![1], currency: entries[0]![0], exact: true, partial: false };
+      if (settings.convertCurrency && rates) {
+        const { amount, unconverted } = convertTotals(totals, settings.defaultCurrency, rates);
+        return { amount, currency: settings.defaultCurrency, exact: false, partial: Object.keys(unconverted).length > 0 };
+      }
+      const [currency, amount] = entries.sort((a, b) => b[1] - a[1])[0]!;
+      return { amount, currency, exact: true, partial: true };
+    },
+    [settings.convertCurrency, settings.defaultCurrency, rates],
+  );
+}

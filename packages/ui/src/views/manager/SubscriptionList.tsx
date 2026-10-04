@@ -3,12 +3,11 @@ import { SearchIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { categoryLabel } from "../../catalog/category.js";
 import { Badge } from "../../components/ui/badge.js";
-import { Card } from "../../components/ui/card.js";
 import { NativeSelect } from "../../components/ui/native-select.js";
 import { Segmented } from "../../components/ui/segmented.js";
 import { useI18n, useStill } from "../../context.js";
 import { formatCycle, formatDate, formatDaysLeft, formatMoney } from "../../format.js";
-import { SubscriptionAvatar } from "../SubscriptionAvatar.js";
+import { SubscriptionAvatar, accentOf } from "../SubscriptionAvatar.js";
 import { useMonthlyCostIn } from "../useDerived.js";
 
 type Filter = "all" | "active" | "trial" | "paused" | "cancelled";
@@ -71,52 +70,70 @@ export function SubscriptionList({ onEdit }: { onEdit(sub: Subscription): void }
         </NativeSelect>
       </div>
 
-      <Card className="still-card still:shadow-card still:p-1.5">
-        {rows.length === 0 ? (
-          <p className="still:py-10 still:text-center still:text-sm still:text-muted-foreground">{subscriptions.length ? t("manager.empty") : t("emptyHint")}</p>
-        ) : (
-          <ul className="still:flex still:flex-col">
-            {rows.map(({ sub, next, monthly, trial }) => {
-              const paid = estimatePaid(sub, today);
-              const daysLeft = next ? diffDays(today, next) : null;
-              return (
-                <li key={sub.id}>
-                  <button
-                    type="button"
-                    onClick={() => onEdit(sub)}
-                    className="still:flex still:w-full still:items-center still:gap-3 still:rounded-md still:px-2.5 still:py-2.5 still:text-left still:transition-colors still:hover:bg-accent"
-                  >
-                    <SubscriptionAvatar subscription={sub} className="still:size-9" />
-                    <span className="still:min-w-0 still:flex-1">
-                      <span className="still:flex still:flex-wrap still:items-center still:gap-1.5">
-                        <span className="still:truncate still:font-medium">{sub.name}</span>
-                        {trial && <Badge variant="warning">{t("trial")}</Badge>}
-                        {sub.status !== "active" && <Badge variant="outline">{t(`status.${sub.status}`)}</Badge>}
-                        {sub.category && <Badge variant="secondary">{categoryLabel(sub.category, t)}</Badge>}
-                      </span>
-                      <span className="still:block still:truncate still:text-xs still:text-muted-foreground">
-                        {formatCycle(sub.cycle, t)}
-                        {next && daysLeft !== null && ` · ${formatDaysLeft(daysLeft, t)} · ${formatDate(next, locale)}`}
-                        {!next && sub.endDate && ` · ${t("manager.endsOn", { date: formatDate(sub.endDate, locale) })}`}
-                        {paid.count > 0 && ` · ${t("manager.paidSoFar", { amount: formatMoney({ amount: paid.amount, currency: sub.price.currency }, locale) })}`}
-                      </span>
-                    </span>
-                    <span className="still:flex still:flex-col still:items-end still:gap-0.5">
-                      <span className="still-amount still:text-sm still:font-semibold">{formatMoney(sub.price, locale)}</span>
-                      {sub.cycle.unit !== "month" || sub.cycle.every !== 1 ? (
-                        <span className="still:text-[11px] still:text-muted-foreground still:tabular-nums">
-                          ≈ {formatMoney({ amount: Math.round(monthlyEquivalent(sub.price.amount, sub.cycle)), currency: sub.price.currency }, locale)}
-                          {t("perMonth")}
-                        </span>
-                      ) : null}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </Card>
+      {rows.length === 0 ? (
+        <p className="stl-list-empty">{subscriptions.length ? t("manager.empty") : t("emptyHint")}</p>
+      ) : (
+        <div className="stl-table" role="list">
+          <div className="stl-thead" aria-hidden>
+            <span className="stl-c-service">{t("col.service")}</span>
+            <span className="stl-c-cycle">{t("fact.cycle")}</span>
+            <span className="stl-c-next">{t("col.next")}</span>
+            <span className="stl-c-paid">{t("fact.paid")}</span>
+            <span className="stl-c-price">{t("col.price")}</span>
+          </div>
+          {rows.map(({ sub, next, trial }) => {
+            const paid = estimatePaid(sub, today);
+            const daysLeft = next ? diffDays(today, next) : null;
+            const monthly = sub.cycle.unit !== "month" || sub.cycle.every !== 1 ? Math.round(monthlyEquivalent(sub.price.amount, sub.cycle)) : null;
+            return (
+              <button
+                key={sub.id}
+                type="button"
+                role="listitem"
+                className="stl-mrow"
+                data-status={sub.status}
+                data-urgency={daysLeft === null ? "none" : daysLeft <= 2 ? "hot" : daysLeft <= 7 ? "warm" : "calm"}
+                style={{ "--brand": accentOf(sub) } as React.CSSProperties}
+                onClick={() => onEdit(sub)}
+              >
+                <span className="stl-c-service">
+                  <SubscriptionAvatar subscription={sub} className="stl-icon" />
+                  <span className="stl-name">
+                    <span className="stl-name-text">{sub.name}</span>
+                    {trial && <Badge variant="soft-warning">{t("trial")}</Badge>}
+                    {sub.status !== "active" && <Badge variant="soft">{t(`status.${sub.status}`)}</Badge>}
+                    {sub.category && <span className="stl-cat">{categoryLabel(sub.category, t)}</span>}
+                  </span>
+                </span>
+                <span className="stl-c-cycle">{formatCycle(sub.cycle, t)}</span>
+                <span className="stl-c-next">
+                  {next && daysLeft !== null ? (
+                    <>
+                      {formatDate(next, locale, { month: "short", day: "numeric" })}
+                      <span className="stl-when"> · {formatDaysLeft(daysLeft, t)}</span>
+                      <span className="stl-tminus">T-{daysLeft}</span>
+                    </>
+                  ) : sub.endDate ? (
+                    t("manager.endsOn", { date: formatDate(sub.endDate, locale) })
+                  ) : (
+                    t("list.ended")
+                  )}
+                </span>
+                <span className="stl-c-paid">{paid.count > 0 ? formatMoney({ amount: paid.amount, currency: sub.price.currency }, locale) : "—"}</span>
+                <span className="stl-c-price still-amount">
+                  {formatMoney(sub.price, locale)}
+                  {monthly !== null && (
+                    <small>
+                      ≈ {formatMoney({ amount: monthly, currency: sub.price.currency }, locale)}
+                      {t("perMonth")}
+                    </small>
+                  )}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

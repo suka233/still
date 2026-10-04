@@ -75,3 +75,10 @@ export function SubscriptionAvatar({ subscription, className }: { subscription: 
     </span>
   );
 }
+
+/** A representative colour for a subscription: its brand, else its name tint. */
+export function accentOf(subscription: Pick<Subscription, "icon" | "name">): string {
+  const service = getService(serviceIdOfIcon(subscription.icon));
+  if (service) return service.color;
+  return `hsl(${hueOf(subscription.name)} 65% 50%)`;
+}

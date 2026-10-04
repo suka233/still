@@ -59,7 +59,7 @@ export interface Appearance {
   accent: string | null;
 }
 
-export const DEFAULT_APPEARANCE: Appearance = { theme: "host", mode: "auto", accent: null };
+export const DEFAULT_APPEARANCE: Appearance = { theme: "receipt", mode: "auto", accent: null };
 
 export interface Settings {
   defaultCurrency: string;

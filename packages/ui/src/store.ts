@@ -50,6 +50,8 @@ export interface StillActions {
   decide(subscriptionId: string, chargeDate: LocalDate, choice: DecisionChoice, snoozeUntil?: LocalDate): Promise<UndoToken>;
   undo(token: UndoToken): Promise<void>;
   enqueueReminders(reminders: DueReminder[]): void;
+  /** Opens the decision card for charges already waiting (e.g. from the dock banner). */
+  reviewPending(items: { subscription: Subscription; kind: DueReminder["kind"]; chargeDate: LocalDate; daysLeft: number }[]): void;
   dismissReminder(key: string): void;
   /** Stops the clock timer. */
   dispose(): void;
@@ -161,6 +163,19 @@ export function createStillStore(client: StillClient, now: () => Date = () => ne
       const known = new Set(get().reminders.map((r) => r.key));
       const merged = [...get().reminders, ...incoming.filter((r) => !known.has(r.key))];
       set({ reminders: merged.sort((a, b) => a.daysLeft - b.daysLeft) });
+    },
+
+    reviewPending(items) {
+      get().enqueueReminders(
+        items.map((p) => ({
+          key: `${p.subscription.id}:${p.chargeDate}:review`,
+          subscriptionId: p.subscription.id,
+          kind: p.kind,
+          chargeDate: p.chargeDate,
+          threshold: null,
+          daysLeft: p.daysLeft,
+        })),
+      );
     },
 
     dismissReminder(key) {

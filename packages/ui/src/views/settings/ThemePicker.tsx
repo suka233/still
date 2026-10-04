@@ -4,10 +4,17 @@ import { Segmented } from "../../components/ui/segmented.js";
 import { useHostInfo, useI18n } from "../../context.js";
 import { cn } from "../../lib/utils.js";
 import { ACCENTS, THEMES, applyAppearance, resolveAppearance, type ThemeId } from "../../theme.js";
+import { SubscriptionAvatar } from "../SubscriptionAvatar.js";
+
+const DEMO = [
+  { name: "Netflix", icon: "service:netflix", color: "#E50914", price: "$15.49", when: 2, day: "6" },
+  { name: "Spotify", icon: "service:spotify", color: "#1DB954", price: "$11.99", when: 6, day: "10" },
+];
 
 /**
- * Theme cards that preview themselves: each card is its own `.still-root`
- * scope with that theme applied, so what you see is what you get.
+ * Theme cards that preview themselves: each thumbnail is its own `.still-root`
+ * scope with that theme applied, rendering the same dock markup the real
+ * dock uses — so the preview is the theme, not a picture of it.
  */
 export function ThemePicker({ appearance, onChange }: { appearance: Appearance; onChange(patch: Partial<Appearance>): void }) {
   const { t } = useI18n();
@@ -16,7 +23,7 @@ export function ThemePicker({ appearance, onChange }: { appearance: Appearance; 
 
   return (
     <div className="still:grid still:gap-4">
-      <div className="still:grid still:grid-cols-2 still:gap-2 still:@xl:grid-cols-3">
+      <div className="still:grid still:grid-cols-2 still:gap-3 still:@3xl:grid-cols-4">
         {THEMES.map((theme) => {
           const selected = current.theme === theme.id;
           const preview = resolveAppearance({ ...appearance, theme: theme.id }, hostDark);
@@ -27,22 +34,22 @@ export function ThemePicker({ appearance, onChange }: { appearance: Appearance; 
               aria-pressed={selected}
               onClick={() => onChange({ theme: theme.id })}
               className={cn(
-                "still:group still:relative still:flex still:flex-col still:overflow-hidden still:rounded-lg still:border-2 still:text-left still:transition-all still:cursor-pointer",
-                selected ? "still:border-primary" : "still:border-transparent still:hover:border-border",
+                "still:group still:relative still:flex still:flex-col still:overflow-hidden still:rounded-xl still:border-2 still:text-left still:transition-all still:cursor-pointer still:hover:-translate-y-0.5",
+                selected ? "still:border-primary still:shadow-lg" : "still:border-border/60 still:hover:border-border",
               )}
             >
               <div
                 ref={(el) => {
                   if (el) applyAppearance(el, preview);
                 }}
-                className={cn("still-root still-panel", scopeClassName, "still:pointer-events-none still:flex still:flex-col still:gap-1.5 still:p-2.5")}
+                className={cn("still-root", scopeClassName, "stl-thumb")}
+                aria-hidden
               >
-                <PreviewRow />
-                <PreviewRow short />
+                <ThumbDock theme={theme.id} />
               </div>
-              <div className="still:flex still:items-center still:justify-between still:gap-1 still:border-t still:border-border still:bg-card still:px-2.5 still:py-2">
+              <div className="still:flex still:items-center still:justify-between still:gap-1 still:border-t still:border-border/60 still:bg-card still:px-3 still:py-2">
                 <span className="still:min-w-0">
-                  <span className="still:block still:truncate still:text-sm still:font-medium">{t(`theme.${theme.id}` as const)}</span>
+                  <span className="still:block still:truncate still:text-sm still:font-semibold">{t(`theme.${theme.id}` as const)}</span>
                   <span className="still:block still:truncate still:text-[11px] still:text-muted-foreground">{t(`theme.${theme.id}.desc` as const)}</span>
                 </span>
                 {selected && <CheckIcon className="still:size-4 still:shrink-0 still:text-primary" />}
@@ -58,9 +65,8 @@ export function ThemePicker({ appearance, onChange }: { appearance: Appearance; 
           size="sm"
           value={appearance.mode}
           onChange={(mode) => onChange({ mode })}
-          options={(["auto", "light", "dark"] as const).map((v) => ({ value: v, label: t(`settings.mode.${v}`), disabled: current.theme === "host" && v !== "auto" }))}
+          options={(["auto", "light", "dark"] as const).map((v) => ({ value: v, label: t(`settings.mode.${v}`) }))}
         />
-        {current.theme === "host" && <p className="still:text-xs still:text-muted-foreground">{t("settings.modeHostHint")}</p>}
       </div>
 
       <div className="still:grid still:gap-1.5">
@@ -92,18 +98,52 @@ export function ThemePicker({ appearance, onChange }: { appearance: Appearance; 
   );
 }
 
-/** A miniature subscription row drawn with the scope's own tokens. */
-function PreviewRow({ short }: { short?: boolean }) {
+/** A miniature dock in the real dock markup, for theme thumbnails. */
+function ThumbDock({ theme }: { theme: ThemeId }) {
+  const { t } = useI18n();
   return (
-    <div className="still-card still:flex still:items-center still:gap-2 still:rounded-md still:border still:border-border still:bg-card still:px-2 still:py-1.5 still:shadow-card">
-      <span className="still-avatar still:size-5 still:shrink-0 still:bg-primary" />
-      <span className="still:flex still:flex-1 still:flex-col still:gap-1">
-        <span className={cn("still:h-1.5 still:rounded-full still:bg-foreground/70", short ? "still:w-1/2" : "still:w-3/4")} />
-        <span className="still:h-1.5 still:w-1/3 still:rounded-full still:bg-muted-foreground/40" />
-      </span>
-      <span className="still:rounded still:bg-primary/15 still:px-1.5 still:text-[9px] still:font-semibold still:text-primary">{short ? "12" : "3"}</span>
+    <div className="still-panel stl-dock" data-thumb={theme}>
+      <header className="stl-head">
+        <div className="stl-brandline">STILL · {t("appName")}</div>
+        <div className="stl-head-main">
+          <div className="stl-head-figure">
+            <div className="stl-eyebrow">{t("dock.remainingThisMonth")}</div>
+            <div className="stl-big still-amount">¥407.27</div>
+          </div>
+        </div>
+        <div className="stl-progress" style={{ "--p": "18%" } as React.CSSProperties}>
+          <i />
+        </div>
+      </header>
+      <section className="stl-group" data-bucket="week">
+        <ul className="stl-list">
+          {DEMO.map((d) => (
+            <li key={d.name}>
+              <span className="stl-row" data-urgency={d.when <= 2 ? "hot" : "warm"} style={{ "--brand": d.color } as React.CSSProperties}>
+                <span className="stl-date">
+                  <b>{d.day}</b>10
+                </span>
+                <span className="stl-dot" />
+                <span className="stl-card">
+                  <SubscriptionAvatar subscription={{ icon: d.icon, name: d.name }} className="stl-icon" />
+                  <span className="stl-main">
+                    <span className="stl-name">
+                      <span className="stl-name-text">{d.name}</span>
+                    </span>
+                    <span className="stl-meta">{t("cycle.month.1")}</span>
+                  </span>
+                  <span className="stl-leader" />
+                  <span className="stl-price still-amount">
+                    {d.price}
+                    <small className="stl-when">{t("inDays", { n: d.when })}</small>
+                  </span>
+                  <span className="stl-tminus">T-{d.when}</span>
+                </span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 }
-
-export type { ThemeId };
