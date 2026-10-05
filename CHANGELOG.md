@@ -12,6 +12,6 @@ First release of Still (续了么) for SiYuan.
 - Manager with totals, savings, a six-month forecast, calendar, insights and settings
 - ~90 built-in services with brand icons
 - Exchange rates to combine multi-currency totals
-- Four themes — Receipt (default), Calm, Wallet, Timeline — each with light and dark
+- Eight themes — five receipt styles (Thermal, the default; Boutique; Ticket; Riso; Swiss) plus Calm, Wallet and Timeline — each with light and dark
 - Daily-note entries for charges and cancellations, a `/续了么` overview table, and a tool for SiYuan's AI agent
 - JSON backup export and import; data syncs with your SiYuan workspace

@@ -15,7 +15,7 @@
 - **管理页**：月均与年度支出、已省下多少、未来 6 个月预测、日历、分类洞察。
 - **90+ 常用服务**，带品牌图标，搜索即添加。
 - **多币种**，按汇率合并计算。
-- **四套主题**：票据（默认）、静谧、卡片墙、时间线，都支持浅色和深色。
+- **八套主题**：五种小票风格——热敏（默认）、精品店、票根、孔版印刷、极简——加上静谧、卡片墙、时间线，都支持浅色和深色。
 - **思源特色**：扣费和「不续了」可自动写进日记；输入 `/续了么` 插入订阅概览表；思源 AI 智能体可以直接查询你的订阅。
 - 数据保存在工作空间的 `data/storage/petal/still/`，随思源同步；支持 JSON 导入导出。
 
@@ -24,7 +24,7 @@
 | 添加订阅 | 续了么？ |
 |---|---|
 | ![添加订阅](https://raw.githubusercontent.com/suka233/still/main/docs/media/still-add-subscription.zh-CN.webp) | ![续了么](https://raw.githubusercontent.com/suka233/still/main/docs/media/still-decide.zh-CN.webp) |
-| **再想想** | **四套主题** |
+| **再想想** | **主题** |
 | ![再想想](https://raw.githubusercontent.com/suka233/still/main/docs/media/still-snooze.zh-CN.webp) | ![主题](https://raw.githubusercontent.com/suka233/still/main/docs/media/still-themes.zh-CN.webp) |
 | **日历与洞察** | **在笔记里插入概览** |
 | ![日历](https://raw.githubusercontent.com/suka233/still/main/docs/media/still-calendar.zh-CN.webp) | ![斜杠命令](https://raw.githubusercontent.com/suka233/still/main/docs/media/still-slash.zh-CN.webp) |

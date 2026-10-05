@@ -15,7 +15,7 @@ Still keeps track of your subscriptions and free trials. Before each charge it s
 - **Manager** — monthly and yearly spend, savings, six-month forecast, calendar and category insights.
 - **90+ services** with brand icons; search and add.
 - **Multi-currency** totals combined with exchange rates.
-- **Four themes** — Receipt (default), Calm, Wallet, Timeline — each in light and dark.
+- **Eight themes** — five receipt styles (Thermal, the default; Boutique; Ticket; Riso; Swiss) plus Calm, Wallet and Timeline — each in light and dark.
 - **Made for SiYuan** — optional daily-note entries for charges and cancellations, a `/still` overview table, and a tool for SiYuan's AI agent.
 - Data lives in `data/storage/petal/still/` and syncs with your workspace; JSON export/import.
 

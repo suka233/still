@@ -14,7 +14,7 @@ packages/core     Platform-independent domain logic (no DOM, no Intl, no crypto)
                   calendar dates, billing cycles, money, HLC timestamps,
                   reminders, file-per-record repository. Runs in goja.
 packages/ui       React + shadcn/ui views shared by every host. Tailwind classes
-                  are prefixed `still:`; no global preflight. Four themes render
+                  are prefixed `still:`; no global preflight. Eight themes render
                   one superset markup (`stl-*`) styled per theme with @scope.
 apps/siyuan       SiYuan plugin: kernel.js (goja, owns data + scheduling) and
                   index.js (frontend: dock, tab, status bar, reminder card).

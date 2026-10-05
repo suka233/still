@@ -3,7 +3,7 @@ import { ArrowUpRightIcon, MoreHorizontalIcon, PlusIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { SERVICE_ICON_PREFIX, displayName, searchServices } from "../catalog/services.js";
 import { useHost, useI18n, useStill } from "../context.js";
-import { formatCycle, formatDaysLeft, formatMoney, localToDate } from "../format.js";
+import { formatCycle, formatDate, formatDaysLeft, formatMoney, localToDate } from "../format.js";
 import { cn } from "../lib/utils.js";
 import { PendingSection } from "./PendingSection.js";
 import type { PickResult } from "./ServicePicker.js";
@@ -30,6 +30,7 @@ export function UpcomingPanel({ className }: { className?: string }) {
   const status = useStill((s) => s.status);
   const subscriptions = useStill((s) => s.subscriptions);
   const defaultCurrency = useStill((s) => s.settings.defaultCurrency);
+  const today = useStill((s) => s.today);
   const upcoming = useUpcoming();
   const totals = useTotals();
   const month = useMonthOverview();
@@ -71,8 +72,15 @@ export function UpcomingPanel({ className }: { className?: string }) {
 
   return (
     <div className={cn("still-panel stl-dock", className)}>
+      {/* sheet/paper are layout-neutral (display: contents) unless a theme turns the dock into one slip */}
+      <div className="stl-sheet">
+      <div className="stl-paper">
       <header className="stl-head">
+        <span className="stl-seal" aria-hidden>
+          {t("appName").slice(0, 1)}
+        </span>
         <div className="stl-brandline">STILL · {t("appName")}</div>
+        <div className="stl-head-date">{t("dock.printed", { date: formatDate(today, locale, { year: "numeric", month: "short", day: "numeric", weekday: "short" }) })}</div>
         <div className="stl-head-main">
           <div className="stl-head-figure">
             <div className="stl-eyebrow">{remaining ? t("dock.remainingThisMonth") : t("monthlyAverage")}</div>
@@ -143,7 +151,7 @@ export function UpcomingPanel({ className }: { className?: string }) {
                         >
                           <span className="stl-date">
                             <b>{date.getDate()}</b>
-                            {monFmt.format(date)}
+                            <span>{monFmt.format(date)}</span>
                           </span>
                           <span className="stl-dot" aria-hidden />
                           <span className="stl-card">
@@ -153,7 +161,13 @@ export function UpcomingPanel({ className }: { className?: string }) {
                                 <span className="stl-name-text">{sub.name}</span>
                               </span>
                               <span className="stl-meta">
-                                {trial && <span className="stl-meta-trial">{t("trial")} · </span>}
+                                <span className="stl-meta-date">{formatDate(chargeDate, locale, { month: "short", day: "numeric" })} · </span>
+                                {trial && (
+                                  <>
+                                    <span className="stl-meta-trial">{t("trial")}</span>
+                                    <span className="stl-meta-sep"> · </span>
+                                  </>
+                                )}
                                 {formatCycle(sub.cycle, t)}
                                 <span className="stl-meta-when"> · {formatDaysLeft(daysLeft, t)}</span>
                               </span>
@@ -199,6 +213,8 @@ export function UpcomingPanel({ className }: { className?: string }) {
           )}
         </>
       )}
+      </div>
+      </div>
 
       <SubscriptionDialog open={open} onOpenChange={setOpen} subscription={editing} initialPick={pick} />
     </div>

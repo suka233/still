@@ -103,47 +103,53 @@ function ThumbDock({ theme }: { theme: ThemeId }) {
   const { t } = useI18n();
   return (
     <div className="still-panel stl-dock" data-thumb={theme}>
-      <header className="stl-head">
-        <div className="stl-brandline">STILL · {t("appName")}</div>
-        <div className="stl-head-main">
-          <div className="stl-head-figure">
-            <div className="stl-eyebrow">{t("dock.remainingThisMonth")}</div>
-            <div className="stl-big still-amount">¥407.27</div>
-          </div>
-        </div>
-        <div className="stl-progress" style={{ "--p": "18%" } as React.CSSProperties}>
-          <i />
-        </div>
-      </header>
-      <section className="stl-group" data-bucket="week">
-        <ul className="stl-list">
-          {DEMO.map((d) => (
-            <li key={d.name}>
-              <span className="stl-row" data-urgency={d.when <= 2 ? "hot" : "warm"} style={{ "--brand": d.color } as React.CSSProperties}>
-                <span className="stl-date">
-                  <b>{d.day}</b>10
-                </span>
-                <span className="stl-dot" />
-                <span className="stl-card">
-                  <SubscriptionAvatar subscription={{ icon: d.icon, name: d.name }} className="stl-icon" />
-                  <span className="stl-main">
-                    <span className="stl-name">
-                      <span className="stl-name-text">{d.name}</span>
+      <div className="stl-sheet">
+        <div className="stl-paper">
+          <header className="stl-head">
+            <span className="stl-seal">{t("appName").slice(0, 1)}</span>
+            <div className="stl-brandline">STILL · {t("appName")}</div>
+            <div className="stl-head-main">
+              <div className="stl-head-figure">
+                <div className="stl-eyebrow">{t("dock.remainingThisMonth")}</div>
+                <div className="stl-big still-amount">¥407.27</div>
+              </div>
+            </div>
+            <div className="stl-progress" style={{ "--p": "18%" } as React.CSSProperties}>
+              <i />
+            </div>
+          </header>
+          <section className="stl-group" data-bucket="week">
+            <ul className="stl-list">
+              {DEMO.map((d) => (
+                <li key={d.name}>
+                  <span className="stl-row" data-urgency={d.when <= 2 ? "hot" : "warm"} style={{ "--brand": d.color } as React.CSSProperties}>
+                    <span className="stl-date">
+                      <b>{d.day}</b>
+                      <span>10</span>
                     </span>
-                    <span className="stl-meta">{t("cycle.month.1")}</span>
+                    <span className="stl-dot" />
+                    <span className="stl-card">
+                      <SubscriptionAvatar subscription={{ icon: d.icon, name: d.name }} className="stl-icon" />
+                      <span className="stl-main">
+                        <span className="stl-name">
+                          <span className="stl-name-text">{d.name}</span>
+                        </span>
+                        <span className="stl-meta">{t("cycle.month.1")}</span>
+                      </span>
+                      <span className="stl-leader" />
+                      <span className="stl-price still-amount">
+                        {d.price}
+                        <small className="stl-when">{t("inDays", { n: d.when })}</small>
+                      </span>
+                      <span className="stl-tminus">T-{d.when}</span>
+                    </span>
                   </span>
-                  <span className="stl-leader" />
-                  <span className="stl-price still-amount">
-                    {d.price}
-                    <small className="stl-when">{t("inDays", { n: d.when })}</small>
-                  </span>
-                  <span className="stl-tminus">T-{d.when}</span>
-                </span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+      </div>
     </div>
   );
 }

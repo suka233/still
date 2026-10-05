@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-CN" data-mode="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>小票 R1 · 热敏</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--desk:#e6e3dd;--paper:#fcfbf8;--ink:#1c1c1e;--ink2:#75716a;--rule:#bdb8ae;--hot:#d23a1f;--shadow:rgb(40 30 10/.22)}
+[data-mode=dark]{--desk:#0d0d0e;--paper:#1e1e21;--ink:#ecebe6;--ink2:#8e8a83;--rule:#45423e;--hot:#ff6b4f;--shadow:rgb(0 0 0/.6)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+body{background:var(--desk);color:var(--ink);min-height:100vh;transition:background .3s,color .3s;-webkit-font-smoothing:antialiased}
+
+/* preview chrome */
+.bar{max-width:900px;margin:0 auto;padding:28px 24px 0;display:flex;gap:16px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;font-family:system-ui,-apple-system,"PingFang SC",sans-serif}
+.bar h1{font-size:18px;font-weight:700}.bar p{font-size:13px;color:var(--ink2);margin-top:4px;max-width:600px;line-height:1.6}
+.seg{display:flex;border:1px solid var(--rule);border-radius:999px;padding:3px}
+.seg button{padding:5px 14px;border-radius:999px;font-size:12px;color:var(--ink2)}.seg button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+.stage{max-width:900px;margin:0 auto;padding:28px 24px 64px;display:flex;flex-wrap:wrap;gap:44px;align-items:flex-start;justify-content:center}
+.lab{font:600 11px system-ui,sans-serif;letter-spacing:.08em;color:var(--ink2);margin:0 0 12px 2px}
+.dock-w{width:300px}.card-w{width:360px}
+
+/* ── thermal paper ── */
+.shadow{filter:drop-shadow(0 14px 18px var(--shadow))}
+.paper{
+  position:relative;background:var(--paper);color:var(--ink);
+  font:400 12.5px/1.6 "JetBrains Mono","Noto Sans SC",ui-monospace,monospace;
+  padding:24px 18px 28px;
+  /* torn zig-zag on both edges */
+  -webkit-mask:
+    conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) bottom/12px 51% repeat-x,
+    conic-gradient(from 135deg at top,#0000,#000 1deg 89deg,#0000 90deg) top/12px 51% repeat-x;
+          mask:
+    conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) bottom/12px 51% repeat-x,
+    conic-gradient(from 135deg at top,#0000,#000 1deg 89deg,#0000 90deg) top/12px 51% repeat-x;
+  font-variant-numeric:tabular-nums;
+}
+.c{text-align:center}
+.brand{font-weight:800;letter-spacing:.12em}
+.small{font-size:11px;color:var(--ink2)}
+.rule{border-top:1.5px dashed var(--rule);margin:12px 0}
+.rule.dbl{border-top:3px double var(--ink);opacity:.8}
+.big{font-size:30px;font-weight:800;letter-spacing:-.03em;line-height:1.15;margin:2px 0 4px}
+.meter{letter-spacing:-.5px;color:var(--ink2);font-size:11px;white-space:nowrap}
+.add{position:absolute;right:14px;top:16px;font-size:11px;font-weight:700;border:1.5px solid var(--ink);padding:1px 6px}
+.add:hover{background:var(--ink);color:var(--paper)}
+
+.inv{display:flex;align-items:center;gap:10px;width:100%;background:var(--ink);color:var(--paper);padding:9px 10px;margin:14px 0 4px;text-align:left}
+.inv b{font-size:22px;font-weight:800;line-height:1}
+.inv span{flex:1;min-width:0}.inv small{display:block;font-size:11px;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inv:hover{background:var(--hot)}
+
+.sec{display:flex;align-items:center;gap:8px;margin:16px 0 4px;font-weight:700;font-size:11.5px}
+.sec::before{content:"■";font-size:8px}
+.sec::after{content:"";flex:1;border-top:1.5px dashed var(--rule)}
+.sec em{font-style:normal;color:var(--ink2);font-weight:400;order:2}
+
+.item{padding:6px 0;border-radius:2px;cursor:pointer}
+.item+.item{border-top:1px dotted var(--rule)}
+.item:hover .nm{text-decoration:underline;text-underline-offset:3px}
+.l1,.l2{display:flex;justify-content:space-between;gap:10px}
+.nm{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pr{font-weight:700;white-space:nowrap}
+.l2{font-size:11px;color:var(--ink2)}
+.tag{font-style:normal;border:1px solid currentColor;padding:0 3px;margin-left:2px}
+.cd{white-space:nowrap}
+.hot .cd{background:var(--hot);color:var(--paper);padding:0 5px;font-weight:700}
+.hot .tag{color:var(--hot)}
+
+.tot{display:flex;justify-content:space-between;font-weight:700}
+.barcode{height:38px;margin:14px 6px 6px;color:var(--ink)}.barcode svg{width:100%;height:100%}
+.link{display:block;margin:8px auto 0;font-size:12px;font-weight:700;border-bottom:1.5px solid var(--ink)}
+.link:hover{color:var(--hot);border-color:var(--hot)}
+
+/* card */
+.card .ttl{font-family:"Noto Sans SC",sans-serif;font-size:20px;font-weight:900;line-height:1.3;margin:6px 0 2px}
+.kv div{display:flex;justify-content:space-between;padding:2px 0}
+.kv dt{color:var(--ink2)}
+.kv .hl{color:var(--hot);font-weight:700}
+.grand{display:flex;justify-content:space-between;align-items:baseline;font-weight:800}
+.grand b{font-size:24px;letter-spacing:-.02em}
+.ask{text-align:center;font-weight:700;margin:16px 0 10px}
+.btns{display:flex;gap:10px}
+.btn{flex:1;height:48px;border:2px solid var(--ink);font-weight:800;font-size:15px;letter-spacing:.08em;display:grid;place-items:center;line-height:1.1}
+.btn small{display:block;font-size:9.5px;font-weight:500;letter-spacing:.2em;opacity:.7}
+.btn.keep{background:var(--ink);color:var(--paper)}
+.btn.keep:hover{transform:translateY(-1px)}
+.btn.drop:hover{border-color:var(--hot);color:var(--hot)}
+.later{display:block;margin:12px auto 0;font-size:12px;color:var(--ink2)}
+.later:hover{color:var(--ink)}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div>
+    <h1>R1 · 热敏小票</h1>
+    <p>超市收银机的热敏纸。全等宽字体、黑白两色加一抹打印红，紧急项用反白印刷；每项两行排布，不再挤在一行里拉点线。</p>
+  </div>
+  <div class="seg"><button data-m="light">浅色</button><button data-m="dark">深色</button></div>
+</header>
+
+<main class="stage">
+  <section class="dock-w">
+    <div class="lab">侧栏 DOCK</div>
+    <div class="shadow"><div class="paper" id="dock"></div></div>
+  </section>
+  <section class="card-w">
+    <div class="lab">续费决定卡</div>
+    <div class="shadow"><div class="paper card" id="card"></div></div>
+  </section>
+</main>
+
+<script>
+const SUBS=[
+  {n:"ChatGPT Plus",p:"US$20.00",d:"10-05",t:1,cyc:"每月",trial:true,g:0},
+  {n:"Netflix",p:"US$15.49",d:"10-06",t:2,cyc:"每月",g:0},
+  {n:"Spotify Premium",p:"US$11.99",d:"10-09",t:5,cyc:"每月",g:0},
+  {n:"iCloud+",p:"¥21.00",d:"10-16",t:12,cyc:"每月",g:1},
+  {n:"GitHub Copilot",p:"US$10.00",d:"10-22",t:18,cyc:"每月",g:1},
+  {n:"B 站大会员",p:"¥148.00",d:"11-13",t:40,cyc:"每年",g:2},
+  {n:"Notion Plus",p:"US$96.00",d:"01-07",t:95,cyc:"每年",g:2},
+  {n:"域名 still.app",p:"US$14.00",d:"03-03",t:150,cyc:"每年",g:2},
+];
+const GROUPS=["7 天内","30 天内","更晚"];
+const when=t=>t===1?"明天":t===2?"后天":`${t} 天后`;
+
+function barcode(seed,w=220){let x=0,s=seed,r="";while(x<w){s=(s*9301+49297)%233280;const bw=1+(s%3);if((s>>4)%3)r+=`<rect x="${x}" width="${bw}" height="40"/>`;x+=bw+1}
+  return `<svg viewBox="0 0 ${x} 40" preserveAspectRatio="none" fill="currentColor">${r}</svg>`}
+
+document.getElementById("dock").innerHTML=`
+  <button class="add">+ 添加</button>
+  <div class="c brand">续了么 · STILL</div>
+  <div class="c small">订阅续费单 · 2026-10-04 周日</div>
+  <div class="rule dbl"></div>
+  <div class="c small">本月还要付</div>
+  <div class="c big">≈¥407.27</div>
+  <div class="c meter">已付 ${"░".repeat(18)} 0%</div>
+  <div class="c small">本月共 ≈¥407.27 · 已付 ¥0.00</div>
+  <button class="inv"><b>2</b><span>个续费等你决定<small>ChatGPT Plus、Netflix</small></span>›</button>
+  ${GROUPS.map((g,i)=>{const list=SUBS.filter(s=>s.g===i);return `
+    <div class="sec">${g}<em>${list.length} 项</em></div>
+    ${list.map(s=>`
+      <div class="item ${s.t<=2?"hot":""}">
+        <div class="l1"><span class="nm">${s.n}</span><span class="pr">${s.p}</span></div>
+        <div class="l2"><span>${s.d} · ${s.cyc}${s.trial?' <i class="tag">试用</i>':""}</span><span class="cd">${when(s.t)}</span></div>
+      </div>`).join("")}`}).join("")}
+  <div class="rule dbl"></div>
+  <div class="tot"><span>月均支出</span><span>≈¥481.22</span></div>
+  <div class="barcode">${barcode(7)}</div>
+  <div class="c small">* 用得着，再续 *</div>
+  <button class="link">查看全部账目 →</button>`;
+
+document.getElementById("card").innerHTML=`
+  <div class="c brand">*** 续费提醒 ***</div>
+  <div class="c small">RENEWAL NOTICE · 第 1 / 2 笔</div>
+  <div class="rule dbl"></div>
+  <div class="ttl">ChatGPT Plus 的试用快结束了</div>
+  <div class="small">明天试用结束，并开始第一次扣费</div>
+  <div class="rule"></div>
+  <dl class="kv">
+    <div><dt>扣费日</dt><dd class="hl">2026-10-05 · 明天</dd></div>
+    <div><dt>周期</dt><dd>每月</dd></div>
+    <div><dt>状态</dt><dd>试用中</dd></div>
+  </dl>
+  <div class="rule"></div>
+  <div class="grand"><span>首次扣费</span><b>US$20.00</b></div>
+  <div class="ask">— 这一笔，还续吗？ —</div>
+  <div class="btns">
+    <button class="btn keep"><span>续<small>KEEP</small></span></button>
+    <button class="btn drop"><span>不续了<small>DROP</small></span></button>
+  </div>
+  <button class="later">再想想 · 稍后提醒我</button>
+  <div class="barcode" style="height:30px">${barcode(31)}</div>
+  <div class="c small">No. CHATGPT-20261005</div>`;
+
+const root=document.documentElement;
+function setMode(m){root.dataset.mode=m;document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===m))}
+document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+setMode(new URLSearchParams(location.search).has("dark")?"dark":"light");
+</script>
+</body>
+</html>

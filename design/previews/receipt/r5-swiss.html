@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-CN" data-mode="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>小票 R5 · 极简</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--desk:#ebebea;--paper:#ffffff;--ink:#111111;--ink2:#8a8a8a;--hair:#ececec;--accent:#ff4f00;--soft:#f4f4f3;--shadow:rgb(0 0 0/.09)}
+[data-mode=dark]{--desk:#050505;--paper:#151515;--ink:#f4f4f4;--ink2:#8c8c8c;--hair:#262626;--accent:#ff6a2b;--soft:#1f1f1f;--shadow:rgb(0 0 0/.7)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+body{background:var(--desk);color:var(--ink);min-height:100vh;transition:background .3s,color .3s;-webkit-font-smoothing:antialiased}
+
+.bar{max-width:900px;margin:0 auto;padding:28px 24px 0;display:flex;gap:16px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;font-family:system-ui,-apple-system,"PingFang SC",sans-serif}
+.bar h1{font-size:18px;font-weight:700}.bar p{font-size:13px;color:var(--ink2);margin-top:4px;max-width:600px;line-height:1.6}
+.seg{display:flex;background:var(--paper);border-radius:999px;padding:3px}
+.seg button{padding:5px 14px;border-radius:999px;font-size:12px;color:var(--ink2)}.seg button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+.stage{max-width:900px;margin:0 auto;padding:28px 24px 64px;display:flex;flex-wrap:wrap;gap:44px;align-items:flex-start;justify-content:center}
+.lab{font:600 11px system-ui,sans-serif;letter-spacing:.08em;color:var(--ink2);margin:0 0 12px 2px}
+.dock-w{width:300px}.card-w{width:360px}
+
+/* ── swiss slip ── */
+.shadow{filter:drop-shadow(0 1px 1px var(--shadow)) drop-shadow(0 10px 20px var(--shadow))}
+.paper{background:var(--paper);color:var(--ink);padding:18px 18px 26px;
+  font:400 13px/1.45 "Inter","Noto Sans SC",sans-serif;font-variant-numeric:tabular-nums;font-feature-settings:"tnum","ss01","cv11";
+  /* fine zig-zag only on the bottom edge */
+  -webkit-mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) bottom/8px 100% repeat-x;
+          mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) bottom/8px 100% repeat-x}
+
+.top{display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:2px solid var(--ink)}
+.logo{font-weight:700;font-size:13px;letter-spacing:-.01em}.logo span{color:var(--ink2);font-weight:500;margin-left:4px}
+.add{width:24px;height:24px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-size:16px;line-height:1}
+.add:hover{background:var(--accent)}
+.lbl{font-size:11px;font-weight:500;color:var(--ink2);margin-top:16px}
+.big{font-size:44px;font-weight:600;letter-spacing:-.045em;line-height:1;margin:4px 0 0}
+.big small{font-size:.42em;letter-spacing:-.01em;font-weight:500;color:var(--ink2);margin-right:2px;vertical-align:.95em}
+.prog{display:grid;grid-template-columns:repeat(31,1fr);gap:2px;margin:16px 0 6px;height:14px}
+.prog i{background:var(--hair)}.prog i.past{background:var(--ink)}.prog i.due{background:var(--accent)}
+.legend{display:flex;justify-content:space-between;font-size:11px;color:var(--ink2)}
+
+.pend{display:flex;align-items:center;gap:12px;width:100%;margin:16px 0 0;padding:11px 12px;background:var(--accent);color:#fff;text-align:left;border-radius:2px}
+.pend b{font-size:26px;font-weight:600;letter-spacing:-.04em;line-height:1}
+.pend span{flex:1;min-width:0;font-weight:600}.pend small{display:block;font-weight:400;font-size:11px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pend:hover{filter:brightness(1.05)}
+
+.sec{display:flex;justify-content:space-between;font-size:11px;font-weight:600;margin:20px 0 0;padding-bottom:6px;border-bottom:1px solid var(--ink)}
+.sec em{font-style:normal;color:var(--ink2);font-weight:500}
+.row{display:grid;grid-template-columns:38px 1fr auto;gap:0 8px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--hair);cursor:pointer}
+.row:hover{background:var(--soft);margin:0 -6px;padding-left:6px;padding-right:6px}
+.dt{font-size:11.5px;color:var(--ink2);font-weight:500}
+.nm{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pr{font-weight:600;text-align:right;white-space:nowrap}
+.sub{grid-column:2;font-size:11px;color:var(--ink2)}
+.cd{font-size:11px;color:var(--ink2);text-align:right}
+.hot .dt,.hot .cd{color:var(--accent);font-weight:600}
+.tag{font-style:normal;color:var(--accent);margin-left:6px;font-weight:600}
+
+.foot{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;padding-top:10px;border-top:2px solid var(--ink)}
+.foot b{font-size:20px;font-weight:600;letter-spacing:-.03em}
+.more{display:flex;justify-content:space-between;width:100%;margin-top:12px;font-size:12px;font-weight:600}
+.more:hover{color:var(--accent)}
+
+/* card */
+.card{padding:22px 22px 30px}
+.chead{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--ink2);font-weight:500}
+.ic{width:44px;height:44px;border-radius:10px;background:#10a37f;color:#fff;display:grid;place-items:center;font-weight:700;font-size:18px;margin-top:20px}
+.ttl{font-size:26px;font-weight:600;letter-spacing:-.03em;line-height:1.15;margin:16px 0 6px}
+.ttl em{font-style:normal;color:var(--accent)}
+.lead{font-size:13px;color:var(--ink2)}
+table{width:100%;border-collapse:collapse;margin-top:20px}
+td{padding:8px 0;border-bottom:1px solid var(--hair);font-size:13px}td:last-child{text-align:right;font-weight:500}
+tr:first-child td{border-top:2px solid var(--ink)}
+td:first-child{color:var(--ink2)}
+.total td{border-bottom:2px solid var(--ink);padding:14px 0}.total td:first-child{color:var(--ink);font-weight:600}
+.total td:last-child{font-size:30px;font-weight:600;letter-spacing:-.04em}
+.btns{display:grid;grid-template-columns:1.3fr 1fr;gap:8px;margin-top:22px}
+.btn{height:48px;border-radius:6px;font-weight:600;font-size:15px;transition:transform .1s,background .15s}
+.btn.keep{background:var(--ink);color:var(--paper)}
+.btn.drop{background:var(--soft);color:var(--ink)}
+.btn.drop:hover{color:var(--accent)}
+.btn:active{transform:scale(.98)}
+.later{display:block;width:100%;margin-top:8px;height:40px;font-size:13px;font-weight:500;color:var(--ink2);border-radius:6px}
+.later:hover{background:var(--soft);color:var(--ink)}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div>
+    <h1>R5 · 极简 Swiss</h1>
+    <p>Apple Store / 设计工作室那种电子小票。纯白纸、Inter 等宽数字、黑色粗细线做网格，只在底边留一圈细锯齿。整月用 31 格日历条表示，今天之前涂黑、待扣费日标橙。最克制、最好读。</p>
+  </div>
+  <div class="seg"><button data-m="light">浅色</button><button data-m="dark">深色</button></div>
+</header>
+
+<main class="stage">
+  <section class="dock-w">
+    <div class="lab">侧栏 DOCK</div>
+    <div class="shadow"><div class="paper" id="dock"></div></div>
+  </section>
+  <section class="card-w">
+    <div class="lab">续费决定卡</div>
+    <div class="shadow"><div class="paper card" id="card"></div></div>
+  </section>
+</main>
+
+<script>
+const SUBS=[
+  {n:"ChatGPT Plus",p:"US$20.00",d:"10.05",t:1,cyc:"每月",trial:true,g:0},
+  {n:"Netflix",p:"US$15.49",d:"10.06",t:2,cyc:"每月",g:0},
+  {n:"Spotify Premium",p:"US$11.99",d:"10.09",t:5,cyc:"每月",g:0},
+  {n:"iCloud+",p:"¥21.00",d:"10.16",t:12,cyc:"每月",g:1},
+  {n:"GitHub Copilot",p:"US$10.00",d:"10.22",t:18,cyc:"每月",g:1},
+  {n:"B 站大会员",p:"¥148.00",d:"11.13",t:40,cyc:"每年",g:2},
+  {n:"Notion Plus",p:"US$96.00",d:"01.07",t:95,cyc:"每年",g:2},
+  {n:"域名 still.app",p:"US$14.00",d:"03.03",t:150,cyc:"每年",g:2},
+];
+const GROUPS=["7 天内","30 天内","更晚"];
+const when=t=>t===1?"明天":t===2?"后天":`${t} 天后`;
+const DUE=new Set([5,6,9,16,22]);
+
+document.getElementById("dock").innerHTML=`
+  <div class="top"><span class="logo">Still<span>续了么</span></span><button class="add" title="添加">+</button></div>
+  <div class="lbl">十月还要付</div>
+  <div class="big"><small>≈¥</small>407.27</div>
+  <div class="prog">${Array.from({length:31},(_,i)=>`<i class="${i<3?"past":DUE.has(i+1)?"due":""}"></i>`).join("")}</div>
+  <div class="legend"><span>已付 ¥0.00</span><span>共 ≈¥407.27</span></div>
+  <button class="pend"><b>2</b><span>个续费等你决定<small>ChatGPT Plus、Netflix</small></span>→</button>
+  ${GROUPS.map((g,i)=>{const list=SUBS.filter(s=>s.g===i);return `
+    <div class="sec"><span>${g}</span><em>${list.length}</em></div>
+    ${list.map(s=>`
+      <div class="row ${s.t<=2?"hot":""}">
+        <span class="dt">${s.d}</span><span class="nm">${s.n}</span><span class="pr">${s.p}</span>
+        <span class="sub">${s.cyc}${s.trial?'<i class="tag">试用</i>':""}</span><span class="cd">${when(s.t)}</span>
+      </div>`).join("")}`}).join("")}
+  <div class="foot"><span style="font-size:11px;font-weight:600">月均支出</span><b>≈¥481.22</b></div>
+  <button class="more"><span>查看全部订阅</span><span>↗</span></button>`;
+
+document.getElementById("card").innerHTML=`
+  <div class="chead"><span>续费提醒</span><span>1 / 2</span></div>
+  <span class="ic">C</span>
+  <div class="ttl">ChatGPT Plus 的试用<br><em>明天结束</em></div>
+  <div class="lead">试用结束后会开始第一次扣费</div>
+  <table>
+    <tr><td>扣费日</td><td>2026.10.05</td></tr>
+    <tr><td>周期</td><td>每月</td></tr>
+    <tr><td>状态</td><td>试用中</td></tr>
+    <tr class="total"><td>首次扣费</td><td>US$20.00</td></tr>
+  </table>
+  <div class="btns"><button class="btn keep">续</button><button class="btn drop">不续了</button></div>
+  <button class="later">再想想 · 稍后提醒我</button>`;
+
+const root=document.documentElement;
+function setMode(m){root.dataset.mode=m;document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===m))}
+document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+setMode(new URLSearchParams(location.search).has("dark")?"dark":"light");
+</script>
+</body>
+</html>

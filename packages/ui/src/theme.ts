@@ -5,7 +5,7 @@ import type { Appearance } from "@still/core";
  * one superset markup (`stl-*` classes) and each theme's CSS decides what's
  * shown and how it's laid out (see themes.css).
  */
-export type ThemeId = "receipt" | "calm" | "wallet" | "timeline";
+export type ThemeId = "thermal" | "boutique" | "ticket" | "riso" | "swiss" | "calm" | "wallet" | "timeline";
 
 export interface ThemeInfo {
   id: ThemeId;
@@ -15,13 +15,20 @@ export interface ThemeInfo {
 }
 
 export const THEMES: readonly ThemeInfo[] = [
-  { id: "receipt", light: ["#e9e2d4", "#fffdf6", "#c2410c", "#2b2621"], dark: ["#15120e", "#24201a", "#f0855e", "#ece3d3"] },
+  { id: "thermal", light: ["#e6e3dd", "#fcfbf8", "#d23a1f", "#1c1c1e"], dark: ["#0d0d0e", "#1e1e21", "#ff6b4f", "#ecebe6"] },
+  { id: "boutique", light: ["#e8e2d6", "#fdfaf4", "#8e2f3a", "#2a2521"], dark: ["#11100e", "#1f1b18", "#e08a7c", "#efe6d7"] },
+  { id: "ticket", light: ["#eee3cf", "#fffaf0", "#e2553f", "#1e2a45"], dark: ["#0d1220", "#1a2235", "#ff7a5c", "#f3ebda"] },
+  { id: "riso", light: ["#e9e3d6", "#f7f2e8", "#ff4fa3", "#0a5fb4"], dark: ["#0c0c12", "#17171f", "#ff6ec0", "#6fb6ff"] },
+  { id: "swiss", light: ["#ebebea", "#ffffff", "#ff4f00", "#111111"], dark: ["#050505", "#151515", "#ff6a2b", "#f4f4f4"] },
   { id: "calm", light: ["#f2f2f7", "#ffffff", "#007aff", "#1c1c1e"], dark: ["#000000", "#1c1c1e", "#0a84ff", "#f2f2f7"] },
   { id: "wallet", light: ["#efeefb", "#ffffff", "#7c5cfa", "#1d1b2e"], dark: ["#0b0d13", "#171a24", "#9b5cf6", "#eef0f6"] },
   { id: "timeline", light: ["#f7f7f8", "#ffffff", "#5b5bd6", "#18181b"], dark: ["#0f0f11", "#18181b", "#8b8bf0", "#fafafa"] },
 ];
 
-export const DEFAULT_THEME: ThemeId = "receipt";
+export const DEFAULT_THEME: ThemeId = "thermal";
+
+/** Retired theme IDs and the theme that replaced them. */
+const LEGACY_THEMES: Record<string, ThemeId> = { receipt: "thermal" };
 
 export function isThemeId(id: string): id is ThemeId {
   return THEMES.some((t) => t.id === id);
@@ -51,9 +58,9 @@ export interface ResolvedAppearance {
   style: Record<string, string>;
 }
 
-/** Unknown or retired theme IDs fall back to the default theme. */
+/** Retired theme IDs map to their replacement; unknown ones fall back to the default theme. */
 export function resolveAppearance(appearance: Appearance, hostDark: boolean): ResolvedAppearance {
-  const theme = isThemeId(appearance.theme) ? appearance.theme : DEFAULT_THEME;
+  const theme = isThemeId(appearance.theme) ? appearance.theme : (LEGACY_THEMES[appearance.theme] ?? DEFAULT_THEME);
   const dark = appearance.mode === "auto" ? hostDark : appearance.mode === "dark";
   const style: Record<string, string> = {};
   if (appearance.accent) {

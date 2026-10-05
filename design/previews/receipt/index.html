@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>续了么 · 小票风格对比</title>
+<style>
+*{box-sizing:border-box;margin:0}
+body{font:14px system-ui,-apple-system,"PingFang SC",sans-serif;background:#1c1c1e;color:#f2f2f2;height:100vh;display:flex;flex-direction:column}
+nav{display:flex;gap:6px;align-items:center;padding:10px 16px;flex-wrap:wrap;border-bottom:1px solid #333}
+nav b{margin-right:10px}
+nav button{font:inherit;color:#bbb;background:#2c2c2e;border:0;border-radius:999px;padding:6px 14px;cursor:pointer}
+nav button[aria-pressed=true]{background:#f2f2f2;color:#111}
+nav span{margin-left:auto;color:#888;font-size:12px}
+iframe{flex:1;border:0;width:100%;background:#fff}
+</style>
+</head>
+<body>
+<nav>
+  <b>小票风格</b>
+  <button data-f="r1-thermal">R1 热敏</button>
+  <button data-f="r2-boutique">R2 精品店</button>
+  <button data-f="r3-ticket">R3 票根</button>
+  <button data-f="r4-riso">R4 孔版印刷</button>
+  <button data-f="r5-swiss">R5 极简</button>
+  <span>← → 切换 · 每页右上角可切换深浅色</span>
+</nav>
+<iframe id="f" title="预览"></iframe>
+<script>
+const btns=[...document.querySelectorAll("nav button")],f=document.getElementById("f");
+function show(i){btns.forEach((b,j)=>b.setAttribute("aria-pressed",i===j));f.src=btns[i].dataset.f+".html";location.hash=btns[i].dataset.f}
+btns.forEach((b,i)=>b.onclick=()=>show(i));
+addEventListener("keydown",e=>{const i=btns.findIndex(b=>b.getAttribute("aria-pressed")==="true");if(e.key==="ArrowRight")show((i+1)%btns.length);if(e.key==="ArrowLeft")show((i+btns.length-1)%btns.length)});
+show(Math.max(0,btns.findIndex(b=>"#"+b.dataset.f===location.hash)));
+</script>
+</body>
+</html>

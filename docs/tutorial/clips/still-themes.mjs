@@ -7,11 +7,11 @@ export const meta = {
   host: "still",
   locales: ["zh-CN", "en-US"],
   i18n: {
-    "zh-CN": { settings: "设置", themes: ["静谧", "卡片墙", "时间线", "票据"], dark: "深色" },
-    "en-US": { settings: "Settings", themes: ["Calm", "Wallet", "Timeline", "Receipt"], dark: "Dark" },
+    "zh-CN": { settings: "设置", themes: ["精品店", "票根", "孔版印刷", "极简", "热敏"], dark: "深色" },
+    "en-US": { settings: "Settings", themes: ["Boutique", "Ticket", "Riso", "Swiss", "Thermal"], dark: "Dark" },
   },
   viewport: { width: 1280, height: 720 },
-  durationS: 12.0,
+  durationS: 15.0,
   cursorStyle: "device-mouse",
   hide: [],
   camera: null,
@@ -41,7 +41,7 @@ export async function actions(driver) {
   const first = await pointWithin(card(strings.themes[0]), 0.5, 0.4);
   await jumpTo({ x: first.x - 120, y: first.y + 160 });
 
-  // Start on Receipt (the default), visit the other three, come back.
+  // Start on Thermal (the default), visit the other paper themes, come back.
   let t = 0.6;
   for (const name of strings.themes) {
     await at(t);
@@ -62,6 +62,6 @@ export async function actions(driver) {
 
 export async function verify({ page }) {
   const settings = (await rpc(page, "snapshot")).settings;
-  const ok = settings.appearance.theme === "receipt" && settings.appearance.mode === "dark";
+  const ok = settings.appearance.theme === "thermal" && settings.appearance.mode === "dark";
   return { ok, operation: "still-themes", appearance: settings.appearance, reason: ok ? null : "theme not applied" };
 }

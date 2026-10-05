@@ -28,7 +28,12 @@ export function PendingSection({ className }: { className?: string }) {
         </span>
         <span className="stl-pending-count">{pending.length}</span>
         <span className="stl-pending-text">
-          <b>{pending.length === 1 ? t("pending.bannerOne", { name: pending[0]!.subscription.name }) : t("pending.banner", { n: pending.length })}</b>
+          <b>
+            <span className="stl-pending-full">
+              {pending.length === 1 ? t("pending.bannerOne", { name: pending[0]!.subscription.name }) : t("pending.banner", { n: pending.length })}
+            </span>
+            <span className="stl-pending-short">{t(pending.length === 1 ? "pending.tailOne" : "pending.tail")}</span>
+          </b>
           <small>{names}</small>
         </span>
         <span className="stl-pending-go">

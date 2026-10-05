@@ -21,7 +21,8 @@ const stepsPath = args.includes("--steps") ? args[args.indexOf("--steps") + 1] :
 const base = `http://127.0.0.1:${process.env.STILL_PORT ?? "6899"}`;
 mkdirSync(out, { recursive: true });
 
-const browser = await chromium.launch();
+// Fall back to the installed Chrome when Playwright's own browser isn't downloaded.
+const browser = await chromium.launch().catch(() => chromium.launch({ channel: "chrome" }));
 const context = await browser.newContext({
   viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 900 },
   deviceScaleFactor: 2,
