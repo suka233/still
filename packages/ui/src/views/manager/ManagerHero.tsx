@@ -2,6 +2,7 @@ import { addDays, chargesInRange } from "@still/core";
 import { useMemo } from "react";
 import { useI18n, useStill } from "../../context.js";
 import { formatDate, localToDate } from "../../format.js";
+import { RollingTotals } from "../RollingTotals.js";
 import { accentOf } from "../SubscriptionAvatar.js";
 import { useFold, useForecast, useTotals, useUpcoming } from "../useDerived.js";
 import { useFormatTotals } from "../useMoney.js";
@@ -39,7 +40,9 @@ export function ManagerHero() {
           <span className="stl-eyebrow-brand">MONTHLY · </span>
           {t("hero.monthly")}
         </div>
-        <div className="stl-big still-amount">{fmt(totals.monthly)}</div>
+        <div className="stl-big still-amount">
+          <RollingTotals totals={totals.monthly} />
+        </div>
         <dl className="stl-kv">
           <div data-k="monthly">
             <dt>{t("hero.monthly")}</dt>

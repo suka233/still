@@ -14,6 +14,7 @@
  */
 @import "./base.css";
 @import "./themes.css";
+@import "./motion.css";
 @import "tailwindcss/theme.css" prefix(still);
 @import "tailwindcss/utilities.css" prefix(still);
 @import "tw-animate-css";

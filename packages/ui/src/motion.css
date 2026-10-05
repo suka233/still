@@ -1,0 +1,167 @@
+/*
+ * Motion. Everything here answers something the user did or something that
+ * changed: the first open of the dock, an answer on the decision card, a total
+ * rolling down, a cancelled row folding away. Nothing loops.
+ *
+ * Hooks set by the views:
+ *   .stl-dock[data-enter]            first open in this session (~0.4s)
+ *   li[style=--i]                    row index, for staggering
+ *   li[data-leaving]                 a cancelled row playing out
+ *   .stl-mark[data-fresh]            a mark that just appeared
+ *   [data-flip]                      a count that just changed
+ *   .stl-pending[data-done]          "all decided", then folds away
+ *   .stl-decide[data-next]           a card that arrived while the dialog was open
+ *   .stl-decide[data-phase=answer]   the verdict is landing (.stl-verdict, [data-picked])
+ *   .stl-decide[data-phase=leave]    the card is leaving
+ */
+
+@keyframes stl-rise { from { opacity: 0; transform: translateY(6px); } }
+@keyframes stl-fade { from { opacity: 0; } }
+@keyframes stl-flip { from { opacity: 0; transform: translateY(70%); } }
+@keyframes stl-pop { from { opacity: 0; transform: scale(0.4) rotate(-12deg); } }
+@keyframes stl-press { 40% { transform: scale(0.95); } }
+@keyframes stl-draw { from { stroke-dashoffset: 40; } }
+@keyframes stl-strike { to { background-size: 100% 1.5px; } }
+@keyframes stl-collapse { from { max-height: 120px; } to { max-height: 0; opacity: 0; margin-top: 0; margin-bottom: 0; } }
+@keyframes stl-done { from { opacity: 0; transform: scale(0.97); } 12% { opacity: 1; transform: none; max-height: 120px; } 80% { opacity: 1; max-height: 120px; } to { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; } }
+@keyframes stl-card-in { from { opacity: 0; transform: translateX(26px); } }
+@keyframes stl-card-out { to { opacity: 0; transform: translateX(-26px); } }
+
+/* theme-specific keyframes */
+@keyframes stl-tear { 20% { transform: translateY(5px) rotate(-0.6deg); } to { opacity: 0; transform: translate(28px, 80px) rotate(8deg); } }
+@keyframes stl-settle { from { opacity: 0; transform: translateY(14px) rotate(-0.8deg); } }
+@keyframes stl-seal-in { from { opacity: 0; transform: scale(1.5) rotate(-24deg); } 70% { opacity: 1; transform: scale(0.94); } }
+@keyframes stl-wax { from { opacity: 0; transform: translateY(-36px) scale(1.7) rotate(-34deg); } 55% { opacity: 1; transform: scale(0.9) rotate(-6deg); } 78% { transform: scale(1.04) rotate(-9deg); } to { opacity: 1; transform: rotate(-8deg); } }
+@keyframes stl-ring { from { opacity: 0.6; transform: scale(0.9); } to { opacity: 0; transform: scale(1.9); } }
+@keyframes stl-fold { to { opacity: 0; transform: perspective(1000px) rotateX(22deg) translateY(-22px) scale(0.96); } }
+@keyframes stl-deal { from { opacity: 0; transform: translate(-22px, -4px) rotate(-4deg); } }
+@keyframes stl-tear-half { 20% { transform: translate(var(--dx), 3px) rotate(var(--r1)); } to { opacity: 0; transform: translate(calc(var(--dx) * 8), 70px) rotate(var(--r2)); } }
+@keyframes stl-ticket-stamp { from { opacity: 0; transform: rotate(-12deg) scale(2.2); } }
+@keyframes stl-ticket-in { from { opacity: 0; transform: translateX(-46px) rotate(-4deg); } }
+@keyframes stl-ticket-out { to { opacity: 0; transform: translateX(70px) rotate(5deg); } }
+@keyframes stl-register { from { text-shadow: 14px 10px 0 color-mix(in oklab, var(--pink) 85%, transparent); } }
+@keyframes stl-slap { from { opacity: 0; transform: rotate(-14deg) scale(1.3); } }
+@keyframes stl-flyer-in { from { opacity: 0; transform: translateY(-26px) rotate(-4deg) scale(1.04); } }
+@keyframes stl-flyer-out { to { opacity: 0; transform: translate(-60px, -36px) rotate(-12deg); } }
+@keyframes stl-wipe { from { opacity: 0; clip-path: inset(0 100% 0 0); } to { opacity: 1; clip-path: inset(0 0 0 0); } }
+
+/* ───────────────────────── Shared ───────────────────────── */
+@scope (.still-root) to (.still-root) {
+  /* first open: the parts rise in, rows a beat apart */
+  .stl-dock[data-enter] :is(.stl-head, .stl-pending, .stl-group-label, .stl-foot, .stl-empty) { animation: stl-rise 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .stl-dock[data-enter] .stl-list > li { animation: stl-rise 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(min(var(--i, 0), 6) * 18ms + 60ms); }
+
+  /* counts and marks */
+  /* no display change here: themes decide which of the count/full/short labels show */
+  [data-flip] { animation: stl-flip 0.34s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .stl-mark { flex: none; display: inline-block; padding: 0 6px; border-radius: 99px; font-size: 10.5px; font-weight: 600; line-height: 1.6; white-space: nowrap; color: var(--success); background: color-mix(in oklab, var(--success) 14%, transparent); }
+  .stl-mark[data-choice="snooze"] { color: var(--muted-foreground); background: var(--muted); }
+  .stl-mark[data-fresh] { animation: stl-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+  /* a cancelled row: struck out, then folded away */
+  .stl-list > li[data-leaving] { overflow: hidden; pointer-events: none; animation: stl-collapse 0.34s cubic-bezier(0.4, 0, 0.2, 1) 0.58s forwards; }
+  .stl-list > li[data-leaving] .stl-row { opacity: 0.5; transition: opacity 0.3s; }
+  .stl-list > li[data-leaving] .stl-name-text { background: linear-gradient(currentColor, currentColor) no-repeat 0 56% / 0 1.5px; animation: stl-strike 0.42s cubic-bezier(0.65, 0, 0.35, 1) 0.05s forwards; }
+
+  /* "all decided" */
+  .stl-pending[data-done] { overflow: hidden; animation: stl-done 2.2s ease both; }
+  .stl-pending[data-done] .stl-pending-head { cursor: default; color: var(--success); background: color-mix(in oklab, var(--success) 10%, var(--card)); }
+  .stl-pending[data-done] .stl-stack, .stl-pending[data-done] .stl-pending-go, .stl-pending[data-done] .stl-pending-text small { display: none; }
+  .stl-pending[data-done] .stl-pending-count svg { width: 1em; height: 1em; }
+
+  /* decision card: the picked answer confirms itself, the card moves on */
+  .stl-decide[data-next] { animation: stl-card-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .stl-decide[data-phase="leave"] { animation: stl-card-out 0.3s cubic-bezier(0.55, 0, 0.75, 0.2) forwards; }
+  .stl-act[data-picked] { opacity: 1 !important; animation: stl-press 0.26s ease; }
+  .stl-act[data-dimmed] { opacity: 0.35 !important; }
+  .stl-decide .stl-act[data-picked] svg { display: block; stroke-dasharray: 40; animation: stl-draw 0.4s ease-out both; }
+  .stl-verdict { display: none; }
+}
+
+/* ───────────────────────── Paper themes ───────────────────────── */
+@keyframes stl-slam { from { opacity: 0; transform: translate(-50%, -50%) scale(2.4) rotate(-16deg); } 60% { opacity: 1; transform: translate(-50%, -50%) scale(0.93) rotate(-10deg); } to { opacity: 1; transform: translate(-50%, -50%) rotate(-10deg); } }
+@keyframes stl-print { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+
+@scope (.still-root[data-still-theme="thermal"]) to (.still-root) {
+  /* the slip feeds out of the printer */
+  .stl-dock[data-enter] :is(.stl-head, .stl-pending, .stl-group-label, .stl-foot, .stl-empty), .stl-dock[data-enter] .stl-list > li { animation: none; }
+  .stl-dock[data-enter] .stl-paper { animation: stl-print 0.4s steps(12, end) both; }
+  /* rubber stamp, then the slip is torn off and the next one prints */
+  .stl-verdict { display: block; position: absolute; left: 50%; top: 50%; z-index: 5; padding: 6px 18px 4px; border: 3px double currentColor; border-radius: 4px; text-align: center; pointer-events: none; font: 900 27px/1.1 var(--font-heading); letter-spacing: 0.14em; white-space: nowrap; background: color-mix(in oklab, currentColor 7%, transparent); mix-blend-mode: multiply; transform: translate(-50%, -50%) rotate(-10deg); animation: stl-slam 0.36s cubic-bezier(0.55, 0, 0.75, 0.2) both; }
+  :scope[data-still-mode="dark"] .stl-verdict { mix-blend-mode: screen; }
+  .stl-verdict b { font-weight: inherit; }
+  .stl-verdict small { display: block; font: 700 10px var(--font-mono); letter-spacing: 0.32em; }
+  .stl-verdict[data-answer="keep"] { color: var(--success); }
+  .stl-verdict[data-answer="cancel"] { color: var(--hot); }
+  .stl-verdict[data-answer="later"] { color: var(--muted-foreground); }
+  .stl-decide[data-next] { animation: stl-print 0.38s steps(10, end) both; }
+  .stl-decide[data-phase="leave"] { animation: stl-tear 0.34s cubic-bezier(0.55, 0, 0.75, 0.2) forwards; }
+}
+
+@scope (.still-root[data-still-theme="boutique"]) to (.still-root) {
+  /* the slip settles on the desk and the seal is pressed */
+  .stl-dock[data-enter] :is(.stl-head, .stl-pending, .stl-group-label, .stl-foot, .stl-empty), .stl-dock[data-enter] .stl-list > li { animation: none; }
+  .stl-dock[data-enter] .stl-sheet { animation: stl-settle 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .stl-dock[data-enter] .stl-seal { animation: stl-seal-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s both; }
+  /* a wax seal is pressed onto the answer, then the slip is folded away */
+  .stl-verdict { --w: var(--success); display: grid; place-content: center; position: absolute; right: 18px; top: 30%; z-index: 5; width: 84px; height: 84px; color: #fff; text-align: center; pointer-events: none; font: 700 18px/1.15 var(--font-sans); letter-spacing: 0.04em; border-radius: 47% 53% 50% 50% / 52% 48% 52% 48%; background: radial-gradient(circle at 34% 30%, color-mix(in oklab, var(--w) 60%, #fff), var(--w) 45%, color-mix(in oklab, var(--w) 70%, #000)); box-shadow: inset 0 0 0 5px color-mix(in oklab, var(--w) 80%, #000), inset 0 0 0 6px rgb(255 255 255 / 0.18), inset 0 -4px 8px rgb(0 0 0 / 0.3), 0 8px 14px -6px rgb(0 0 0 / 0.45); transform: rotate(-8deg); animation: stl-wax 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .stl-verdict::after { content: ""; position: absolute; inset: -2px; border-radius: 50%; border: 2px solid var(--w); animation: stl-ring 0.7s ease-out 0.25s both; }
+  .stl-verdict small { display: block; margin-top: 2px; font: italic 400 9px var(--font-display); letter-spacing: 0.16em; text-transform: lowercase; opacity: 0.85; }
+  .stl-verdict[data-answer="cancel"] { --w: var(--hot); }
+  .stl-verdict[data-answer="later"] { --w: var(--warm); }
+  .stl-decide[data-next] { animation: stl-settle 0.36s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .stl-decide[data-phase="leave"] { animation: stl-fold 0.32s cubic-bezier(0.55, 0, 0.75, 0.2) forwards; }
+}
+
+@scope (.still-root[data-still-theme="ticket"]) to (.still-root) {
+  /* tickets are dealt onto the desk */
+  .stl-dock[data-enter] :is(.stl-group-label, .stl-foot, .stl-empty), .stl-dock[data-enter] .stl-list > li { animation: none; }
+  .stl-dock[data-enter] :is(.stl-head, .stl-pending-head) { animation: stl-deal 0.3s cubic-bezier(0.34, 1.4, 0.64, 1) both; }
+  .stl-dock[data-enter] .stl-pending-head { animation-delay: 50ms; }
+  .stl-dock[data-enter] .stl-row { animation: stl-deal 0.28s cubic-bezier(0.34, 1.4, 0.64, 1) both; animation-delay: calc(min(var(--i, 0), 6) * 22ms + 90ms); }
+  .stl-dock[data-enter] .stl-group-label { animation: stl-fade 0.3s both 80ms; }
+  /* the half you pick is torn off the stub; the ticket gets stamped and slides away */
+  .stl-decide .stl-act[data-picked]:is(.stl-keep, .stl-cancel) { animation: stl-tear-half 0.6s cubic-bezier(0.45, 0, 0.8, 0.4) 0.08s forwards; }
+  .stl-decide .stl-keep[data-picked] { --dx: -4px; --r1: -3deg; --r2: -16deg; }
+  .stl-decide .stl-cancel[data-picked] { --dx: 4px; --r1: 3deg; --r2: 16deg; }
+  .stl-verdict { display: block; position: absolute; right: 22px; top: 70px; z-index: 5; padding: 4px 12px; border: 2.5px solid currentColor; border-radius: 6px; pointer-events: none; font: 800 20px var(--font-sans); letter-spacing: 0.1em; background: color-mix(in oklab, currentColor 8%, var(--card)); transform: rotate(-12deg); animation: stl-ticket-stamp 0.28s cubic-bezier(0.55, 0, 0.75, 0.2) 0.2s both; }
+  .stl-verdict small { display: none; }
+  .stl-verdict[data-answer="keep"] { color: var(--success); }
+  .stl-verdict[data-answer="cancel"] { color: var(--hot); }
+  .stl-verdict[data-answer="later"] { color: var(--muted-foreground); }
+  .stl-decide[data-next] { animation: stl-ticket-in 0.36s cubic-bezier(0.34, 1.4, 0.64, 1) both; }
+  .stl-decide[data-phase="leave"] { animation: stl-ticket-out 0.3s cubic-bezier(0.55, 0, 0.75, 0.2) forwards; }
+}
+
+@scope (.still-root[data-still-theme="riso"]) to (.still-root) {
+  /* the second colour lands off register and slides into place; the pending sticker is slapped on */
+  .stl-dock[data-enter] .stl-big { animation: stl-register 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+  .stl-dock[data-enter] .stl-pending { animation: none; }
+  .stl-dock[data-enter] .stl-pending-head { animation: stl-slap 0.34s cubic-bezier(0.34, 1.56, 0.64, 1) 0.12s both; }
+  /* a two-colour rubber stamp slams down, the flyer is flung away */
+  .stl-verdict { --v1: var(--foreground); --v2: var(--pink); display: block; position: absolute; left: 50%; top: 50%; z-index: 5; padding: 4px 14px; border: 5px solid var(--v1); color: var(--v1); pointer-events: none; font: 900 50px/1 var(--font-display); letter-spacing: -0.03em; white-space: nowrap; text-shadow: 5px 4px 0 var(--v2); mix-blend-mode: multiply; transform: translate(-50%, -50%) rotate(-10deg); animation: stl-slam 0.3s cubic-bezier(0.55, 0, 0.75, 0.2) both; }
+  .stl-verdict::after { content: ""; position: absolute; inset: -5px; border: 5px solid var(--v2); transform: translate(5px, 4px); mix-blend-mode: multiply; }
+  :scope[data-still-mode="dark"] .stl-verdict, :scope[data-still-mode="dark"] .stl-verdict::after { mix-blend-mode: screen; }
+  .stl-verdict small { display: none; }
+  .stl-verdict[data-answer="cancel"] { --v1: var(--pink); --v2: var(--foreground); }
+  .stl-verdict[data-answer="later"] { --v2: var(--yellow); }
+  .stl-decide[data-next] { animation: stl-flyer-in 0.36s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+  .stl-decide[data-phase="leave"] { animation: stl-flyer-out 0.3s cubic-bezier(0.55, 0, 0.75, 0.2) forwards; }
+}
+
+@scope (.still-root[data-still-theme="wallet"]) to (.still-root) {
+  /* marks sit on brand-coloured cards in the next-7-days group */
+  .stl-group[data-bucket="week"] .stl-mark { color: #fff; background: rgb(255 255 255 / 0.22); }
+}
+
+@scope (.still-root[data-still-theme="swiss"]) to (.still-root) {
+  /* rows are wiped in left to right */
+  .stl-dock[data-enter] .stl-list > li { animation: stl-wipe 0.32s cubic-bezier(0.65, 0, 0.35, 1) both; animation-delay: calc(min(var(--i, 0), 6) * 20ms + 60ms); }
+  /* the picked button turns into its own confirmation */
+  .stl-keep[data-picked] { background: var(--success); color: #fff; }
+  .stl-cancel[data-picked] { background: var(--hot); color: #fff; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .still-root :is(.stl-dock, .stl-decide, .stl-pending, .stl-pending *, .stl-dock *, .stl-decide *) { animation: none !important; transition: none !important; }
+}

@@ -12,6 +12,7 @@ First release of Still (续了么) for SiYuan.
 - Manager with totals, savings, a six-month forecast, calendar, insights and settings
 - ~90 built-in services with brand icons
 - Exchange rates to combine multi-currency totals
+- Answers play out before the card moves on — a rubber stamp, a wax seal, a torn-off ticket stub, a two-colour stamp or a ticked button, depending on the theme — while the dock follows: a kept charge is marked, a cancelled one is struck out and folded away, totals roll to their new value and the pending count flips. A short entrance on first open; all motion respects reduced-motion settings
 - Eight themes — five receipt styles (Thermal, the default; Boutique; Ticket; Riso; Swiss) plus Calm, Wallet and Timeline — each with light and dark
 - Daily-note entries for charges and cancellations, a `/续了么` overview table, and a tool for SiYuan's AI agent
 - JSON backup export and import; data syncs with your SiYuan workspace

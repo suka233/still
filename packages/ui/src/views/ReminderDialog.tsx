@@ -1,18 +1,28 @@
-import { estimatePaid, monthlyEquivalent } from "@still/core";
+import { estimatePaid, monthlyEquivalent, type DueReminder } from "@still/core";
+import { useRef, useState } from "react";
 import { BRAND_ICON_PATHS } from "../catalog/icons.generated.js";
 import { getService, serviceIdOfIcon } from "../catalog/services.js";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../components/ui/dialog.js";
 import { useI18n, useStill } from "../context.js";
 import { formatCycle, formatDate, formatDaysLeft, formatMoney } from "../format.js";
+import { pause } from "../motion.js";
 import { readableOn } from "../theme.js";
-import { DecisionActions } from "./DecisionActions.js";
+import { DecisionActions, type Answer } from "./DecisionActions.js";
 import { SubscriptionAvatar, accentOf } from "./SubscriptionAvatar.js";
 
 /**
  * The "Still using it?" card. One superset markup; each theme lays it out
  * (centered sheet, paper slip, brand card, split panel). Closing without an
  * answer leaves the charge in "Waiting for you".
+ *
+ * Answering plays out on the card before it moves on: the store drops the
+ * reminder as soon as the answer is saved, so the card being answered is held
+ * here until its verdict (stamp, seal, tick…) and exit have played.
  */
+const VERDICT_MS = 700;
+const LEAVE_MS = 320;
+const CODE: Record<Answer, string> = { keep: "RENEWED", cancel: "CANCELLED", later: "LATER" };
+type Held = { reminder: DueReminder; answer: Answer; at: number; total: number; leaving: boolean };
 export function ReminderDialog() {
   const { t, locale } = useI18n();
   const reminders = useStill((s) => s.reminders);
@@ -20,10 +30,41 @@ export function ReminderDialog() {
   const today = useStill((s) => s.today);
   const dismiss = useStill((s) => s.dismissReminder);
 
+  const [held, setHeldState] = useState<Held | null>(null);
+  /* the async answer callbacks outlive the render they were created in */
+  const heldRef = useRef<Held | null>(null);
+  const setHeld = (next: Held | null | ((h: Held | null) => Held | null)) => {
+    heldRef.current = typeof next === "function" ? next(heldRef.current) : next;
+    setHeldState(heldRef.current);
+  };
+  /* cards that arrived while the dialog was already open slide in */
+  const seen = useRef<{ last: string | null; next: Set<string> }>({ last: null, next: new Set() });
+
   const queue = reminders.filter((r) => subscriptions.some((s) => s.id === r.subscriptionId));
-  const reminder = queue[0];
+  const reminder = held?.reminder ?? queue[0];
   const sub = reminder && subscriptions.find((s) => s.id === reminder.subscriptionId);
-  if (!reminder || !sub) return null;
+  if (!reminder || !sub) {
+    seen.current = { last: null, next: new Set() };
+    return null;
+  }
+  if (seen.current.last && seen.current.last !== reminder.key) seen.current.next.add(reminder.key);
+  seen.current.last = reminder.key;
+  const total = held?.total ?? queue.length;
+
+  const onAnswer = (answer: Answer | null) =>
+    setHeld(answer ? { reminder, answer, at: performance.now(), total: queue.length, leaving: false } : null);
+  const onDone = async () => {
+    const current = heldRef.current;
+    if (current) {
+      /* let the verdict land, then send the card off */
+      const shown = performance.now() - current.at;
+      await pause(Math.max(0, VERDICT_MS - shown));
+      setHeld((h) => h && { ...h, leaving: true });
+      await pause(LEAVE_MS);
+    }
+    dismiss(reminder.key);
+    setHeld(null);
+  };
 
   const paid = estimatePaid(sub, today);
   const brand = accentOf(sub);
@@ -36,11 +77,22 @@ export function ReminderDialog() {
   const money = (amount: number) => formatMoney({ amount, currency: sub.price.currency }, locale);
 
   return (
-    <Dialog open onOpenChange={(open) => !open && dismiss(reminder.key)}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (open) return;
+        dismiss(reminder.key);
+        setHeld(null);
+      }}
+    >
       <DialogContent bare onOpenAutoFocus={(e) => e.preventDefault()}>
         <article
+          key={reminder.key}
           className="stl-decide"
           data-kind={reminder.kind}
+          data-next={seen.current.next.has(reminder.key) || undefined}
+          data-answer={held?.answer}
+          data-phase={held ? (held.leaving ? "leave" : "answer") : undefined}
           style={{ "--brand": brand, "--brand-ink": /^#/.test(brand) ? readableOn(brand) : "#fff" } as React.CSSProperties}
         >
           <div className="stl-band">
@@ -98,9 +150,22 @@ export function ReminderDialog() {
                 <dd>{formatMoney(sub.price, locale)}</dd>
               </div>
             </dl>
-            <DecisionActions subscription={sub} chargeDate={reminder.chargeDate} closable onDone={() => dismiss(reminder.key)} />
-            {queue.length > 1 && <p className="stl-queue">{t("reminder.counter", { index: 1, total: queue.length })}</p>}
+            <DecisionActions
+              subscription={sub}
+              chargeDate={reminder.chargeDate}
+              closable
+              answered={held?.answer}
+              onAnswer={onAnswer}
+              onDone={() => void onDone()}
+            />
+            {total > 1 && <p className="stl-queue">{t("reminder.counter", { index: 1, total })}</p>}
           </div>
+          {held && (
+            <div className="stl-verdict" data-answer={held.answer} aria-hidden>
+              <b>{t(`decided.${held.answer}`)}</b>
+              <small>{CODE[held.answer]}</small>
+            </div>
+          )}
         </article>
       </DialogContent>
     </Dialog>

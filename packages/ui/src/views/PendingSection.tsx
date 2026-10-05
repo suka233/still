@@ -1,22 +1,60 @@
-import { ChevronRightIcon } from "lucide-react";
+import { CheckIcon, ChevronRightIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useI18n, useStill } from "../context.js";
 import { formatDaysLeft, formatMoney } from "../format.js";
 import { cn } from "../lib/utils.js";
+import { reducedMotion, useSettled } from "../motion.js";
 import { DecisionActions } from "./DecisionActions.js";
 import { SubscriptionAvatar } from "./SubscriptionAvatar.js";
 import { usePending } from "./useDerived.js";
 
+const DONE_MS = 2200;
+
 /**
  * Charges the user was reminded about but hasn't answered. The head opens the
  * decision card for all of them; the item list (shown by some themes) answers
- * inline.
+ * inline. The count flips as answers come in, and the last one leaves a brief
+ * "all decided" before the section folds away.
  */
 export function PendingSection({ className }: { className?: string }) {
   const { t, locale } = useI18n();
   const pending = usePending();
   const review = useStill((s) => s.reviewPending);
-  if (pending.length === 0) return null;
+  const settled = useSettled();
+  const [done, setDone] = useState(false);
+  const previous = useRef(pending.length);
+
+  useEffect(() => {
+    const before = previous.current;
+    previous.current = pending.length;
+    if (before > 0 && pending.length === 0 && !reducedMotion()) {
+      setDone(true);
+      const timer = setTimeout(() => setDone(false), DONE_MS);
+      return () => clearTimeout(timer);
+    }
+  }, [pending.length]);
+
+  if (pending.length === 0) {
+    if (!done) return null;
+    return (
+      <section aria-label={t("pending")} className={cn("stl-pending", className)} data-done>
+        <div className="stl-pending-head" role="status">
+          <span className="stl-pending-count" data-flip>
+            <CheckIcon aria-hidden />
+          </span>
+          <span className="stl-pending-text">
+            <b>
+              <span className="stl-pending-full">{t("pending.allDone")}</span>
+              <span className="stl-pending-short">{t("pending.allDone")}</span>
+            </b>
+          </span>
+        </div>
+      </section>
+    );
+  }
+
   const names = pending.map((p) => p.subscription.name).join("、");
+  const flip = settled || undefined;
 
   return (
     <section aria-label={t("pending")} className={cn("stl-pending", className)}>
@@ -26,10 +64,12 @@ export function PendingSection({ className }: { className?: string }) {
             <SubscriptionAvatar key={p.subscription.id} subscription={p.subscription} className="stl-icon" />
           ))}
         </span>
-        <span className="stl-pending-count">{pending.length}</span>
+        <span key={pending.length} className="stl-pending-count" data-flip={flip}>
+          {pending.length}
+        </span>
         <span className="stl-pending-text">
           <b>
-            <span className="stl-pending-full">
+            <span key={pending.length} className="stl-pending-full" data-flip={flip}>
               {pending.length === 1 ? t("pending.bannerOne", { name: pending[0]!.subscription.name }) : t("pending.banner", { n: pending.length })}
             </span>
             <span className="stl-pending-short">{t(pending.length === 1 ? "pending.tailOne" : "pending.tail")}</span>
