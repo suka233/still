@@ -11,7 +11,7 @@
 [data-mode=dark]{--desk:#0d1220;--paper:#1a2235;--ink:#f3ebda;--ink2:#8e95a8;--hair:#2c3550;--hot:#ff7a5c;--warm:#f4c25b;--keep:#4fc3b4;--shadow:rgb(0 0 0/.55)}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
-body{background:var(--desk);color:var(--ink);min-height:100vh;transition:background .3s,color .3s;-webkit-font-smoothing:antialiased}
+body{background:var(--desk);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 
 .bar{max-width:900px;margin:0 auto;padding:28px 24px 0;display:flex;gap:16px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;font-family:system-ui,-apple-system,"PingFang SC",sans-serif}
 .bar h1{font-size:18px;font-weight:700}.bar p{font-size:13px;color:var(--ink2);margin-top:4px;max-width:600px;line-height:1.6}
@@ -24,16 +24,13 @@ body{background:var(--desk);color:var(--ink);min-height:100vh;transition:backgro
 /* ── tickets ── */
 .tk-root{font:400 13px/1.45 "Space Grotesk","Noto Sans SC",sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)}
 .shadow{filter:drop-shadow(0 1px 0 var(--shadow)) drop-shadow(0 8px 12px var(--shadow))}
-/* a ticket with two punched notches on the perforation at x = --x */
 .tk{position:relative;background:var(--paper);border-radius:10px;display:grid;
   --r:7px;
-  -webkit-mask:radial-gradient(circle var(--r) at var(--x) 0,#0000 97%,#000) ,radial-gradient(circle var(--r) at var(--x) 100%,#0000 97%,#000);
+  -webkit-mask:radial-gradient(circle var(--r) at var(--x) 0,#0000 97%,#000),radial-gradient(circle var(--r) at var(--x) 100%,#0000 97%,#000);
   -webkit-mask-composite:source-in;
   mask:radial-gradient(circle var(--r) at var(--x) 0,#0000 97%,#000),radial-gradient(circle var(--r) at var(--x) 100%,#0000 97%,#000);
   mask-composite:intersect}
-.perf{border-left:2px dashed var(--hair)}
 
-/* head ticket */
 .head{--x:calc(100% - 54px);grid-template-columns:1fr 54px}
 .head .main{padding:16px 16px 14px}
 .head .stub{display:grid;place-items:center;border-left:2px dashed var(--hair)}
@@ -43,51 +40,57 @@ body{background:var(--desk);color:var(--ink);min-height:100vh;transition:backgro
 .add:hover{background:var(--hot)}
 .big{font-size:32px;font-weight:700;letter-spacing:-.03em;line-height:1.1;margin:10px 0 2px}
 .big small{font-size:.5em;color:var(--ink2);font-weight:500;margin-right:3px}
-.punch{display:flex;gap:4px;margin:10px 0 6px}.punch i{flex:1;height:6px;border-radius:3px;background:var(--hair)}.punch i.on{background:var(--ink)}
+.punch{display:flex;gap:4px;margin:10px 0 6px}.punch i{flex:1;height:6px;border-radius:3px;background:var(--hair)}
 .meta{font-size:11px;color:var(--ink2)}
 
-/* pending */
-.pend{--x:46px;grid-template-columns:46px 1fr auto;align-items:center;width:100%;margin-top:10px;background:var(--hot);color:#fff;text-align:left}
+.pend{--x:46px;grid-template-columns:46px 1fr auto;align-items:center;width:100%;margin-top:10px;background:var(--hot);color:#fff;text-align:left;transition:background .4s}
 .pend .n{font-size:24px;font-weight:700;text-align:center;line-height:52px;border-right:2px dashed rgb(255 255 255/.45)}
-.pend span{padding:9px 12px;min-width:0;font-weight:700}
+.pend>span{padding:9px 12px;min-width:0;font-weight:700}
 .pend small{display:block;font-weight:500;font-size:11px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pend .go{padding-right:14px;font-size:16px}
 .pend:hover{filter:brightness(1.06)}
+.pend.done{background:var(--keep)}
 
 .sec{display:flex;align-items:center;gap:8px;margin:18px 2px 8px;font-size:11px;font-weight:700;letter-spacing:.08em}
 .sec .chip{background:var(--ink);color:var(--paper);border-radius:999px;padding:1px 9px}
 .sec em{font-style:normal;color:var(--ink2);font-weight:500}
 .list{display:grid;gap:7px}
 
-.row{--x:52px;grid-template-columns:52px 1fr;cursor:pointer;transition:transform .15s}
+.row{--x:52px;grid-template-columns:52px 1fr;cursor:pointer;transition:transform .3s,opacity .5s,filter .5s}
 .row:hover{transform:translateX(2px)}
 .row .stub{display:grid;place-content:center;text-align:center;background:color-mix(in oklab,var(--b) 14%,var(--paper));border-radius:10px 0 0 10px;position:relative}
 .row .stub::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 2px 2px 0;background:var(--b)}
 .row .stub b{font-size:19px;font-weight:700;line-height:1}
 .row .stub small{font-size:9.5px;font-weight:600;letter-spacing:.08em;color:var(--ink2)}
-.row .main{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;padding:9px 12px 9px 12px;border-left:2px dashed var(--hair)}
+.row .main{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;padding:9px 12px;border-left:2px dashed var(--hair)}
 .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pr{font-weight:700;text-align:right;white-space:nowrap}
 .sub{font-size:11px;color:var(--ink2);white-space:nowrap}
 .tag{font-style:normal;font-size:10px;font-weight:700;color:var(--hot);border:1.5px solid currentColor;border-radius:4px;padding:0 4px;margin-left:4px}
-.cd{justify-self:end;font-size:10.5px;font-weight:700;border-radius:999px;padding:0 7px;color:var(--ink2);background:var(--hair)}
+.cd{justify-self:end;font-size:10.5px;font-weight:700;border-radius:999px;padding:0 7px;color:var(--ink2);background:var(--hair);transition:background .3s,color .3s}
 .hot .cd{background:var(--hot);color:#fff}
 .warm .cd{background:var(--warm);color:#3b2a05}
+.row.is-cancel{opacity:.55;filter:grayscale(1);transform:rotate(-1.2deg)}
+.row.is-cancel .cd{background:var(--hair);color:var(--ink2)}
+/* a conductor's punch through the stub */
+.hole{position:absolute;right:6px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--desk);box-shadow:inset 0 1px 2px rgb(0 0 0/.3)}
+.mk{margin-left:6px;font-size:10px;font-weight:700;border-radius:4px;padding:0 5px;color:#fff}
+.mk-keep{background:var(--keep)}.mk-cancel{background:var(--ink2)}.mk-later{background:var(--warm);color:#3b2a05}
 
 .foot{display:flex;justify-content:space-between;align-items:center;margin:16px 2px 0;font-size:12px;color:var(--ink2)}
 .foot b{color:var(--ink);font-size:15px}
 .more{font-weight:700;color:var(--ink);border-bottom:2px solid var(--warm)}
 
-/* card: one tall ticket with a tear-off stub at the bottom */
+/* card: one ticket with a tear-off stub */
 .ct{background:var(--paper);border-radius:14px 14px 0 0;padding:22px 22px 20px;position:relative;--r:11px;
   -webkit-mask:radial-gradient(circle var(--r) at 0 100%,#0000 97%,#000),radial-gradient(circle var(--r) at 100% 100%,#0000 97%,#000);-webkit-mask-composite:source-in;
   mask:radial-gradient(circle var(--r) at 0 100%,#0000 97%,#000),radial-gradient(circle var(--r) at 100% 100%,#0000 97%,#000);mask-composite:intersect}
-.ct::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,#10a37f 0 70%,var(--warm) 70% 85%,var(--hot) 85%);border-radius:14px 14px 0 0}
+.ct::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,var(--b,#10a37f) 0 70%,var(--warm) 70% 85%,var(--hot) 85%);border-radius:14px 14px 0 0}
 .cb{background:var(--paper);border-radius:0 0 14px 14px;display:grid;grid-template-columns:1fr 1fr;border-top:2px dashed var(--hair);--r:11px;
   -webkit-mask:radial-gradient(circle var(--r) at 0 0,#0000 97%,#000),radial-gradient(circle var(--r) at 100% 0,#0000 97%,#000);-webkit-mask-composite:source-in;
   mask:radial-gradient(circle var(--r) at 0 0,#0000 97%,#000),radial-gradient(circle var(--r) at 100% 0,#0000 97%,#000);mask-composite:intersect}
 .top{display:flex;align-items:center;gap:12px}
-.ic{width:42px;height:42px;border-radius:10px;background:#10a37f;color:#fff;display:grid;place-items:center;font-weight:700;font-size:18px}
+.ic{width:42px;height:42px;border-radius:10px;background:var(--b);color:#fff;display:grid;place-items:center;font-weight:700;font-size:18px}
 .eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.16em;color:var(--ink2)}
 .ttl{font-family:"Noto Sans SC",sans-serif;font-size:21px;font-weight:900;line-height:1.3;margin:14px 0 4px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;margin-top:18px}
@@ -99,15 +102,35 @@ body{background:var(--desk);color:var(--ink);min-height:100vh;transition:backgro
 .half.keep{color:var(--keep)}.half.drop{color:var(--hot);border-left:2px dashed var(--hair)}
 .half.keep:hover{background:color-mix(in oklab,var(--keep) 10%,transparent)}.half.drop:hover{background:color-mix(in oklab,var(--hot) 10%,transparent)}
 .cb .half.keep{border-radius:0 0 0 14px}.cb .half.drop{border-radius:0 0 14px 0}
+.ghost{position:fixed;z-index:50;margin:0;background:var(--paper);border-top:2px dashed var(--hair);pointer-events:none;filter:drop-shadow(0 10px 14px var(--shadow))}
 .hint{text-align:center;font-size:11px;color:var(--ink2);margin:12px 0 0}
 .later{display:block;margin:6px auto 0;font-weight:700;font-size:13px;border-bottom:2px solid var(--warm)}
+.ok{position:absolute;right:20px;top:44px;padding:4px 12px;border:2.5px solid currentColor;border-radius:6px;font:900 20px "Noto Sans SC",sans-serif;letter-spacing:.1em;transform:rotate(-12deg);pointer-events:none;background:color-mix(in oklab,currentColor 8%,var(--paper))}
+.ok.s-keep{color:var(--keep)}.ok.s-cancel{color:var(--hot)}
+.ct .hole{right:auto;left:50%;top:auto;bottom:16px;width:18px;height:18px;margin-left:-9px}
+.again{grid-column:1/-1;padding:18px;font-weight:800;font-size:15px;color:var(--ink)}
+.again:hover{background:color-mix(in oklab,var(--warm) 14%,transparent)}
+/*<motion-core-css>*/
+.stage{visibility:hidden}
+.embedded .seg{display:none}
+.mk{display:inline-block;font-style:normal;white-space:nowrap;animation:mk-in .5s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes mk-in{from{transform:scale(.3) rotate(-14deg);opacity:0}}
+[data-pcount]{display:inline-block}
+/* strike-through drawn left to right on cancelled rows */
+.st{background:linear-gradient(currentColor,currentColor) no-repeat 0 56%/0 1.5px;transition:background-size .5s cubic-bezier(.65,0,.35,1)}
+.is-cancel .st{background-size:100% 1.5px}
+::view-transition-old(root){animation:none}
+::view-transition-new(root){animation:vt-reveal .6s cubic-bezier(.65,0,.35,1)}
+@keyframes vt-reveal{from{clip-path:circle(0 at var(--vx,100%) var(--vy,0))}to{clip-path:circle(150vmax at var(--vx,100%) var(--vy,0))}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;transition-duration:1ms!important}}
+/*</motion-core-css>*/
 </style>
 </head>
 <body>
 <header class="bar">
   <div>
     <h1>R3 · 票根</h1>
-    <p>每个订阅是一张电影票/车票：左边票根印扣费日，中间齿孔分隔。决定卡是一张整票，下半截撕下来——撕「续」还是「不续了」。复古、好玩，色彩更多。</p>
+    <p>每个订阅一张票，像发牌一样一张张发下来。做决定就是撕票：你选的那半张被撕下来掉走，票面打一个孔，下一张滑进来。</p>
   </div>
   <div class="seg"><button data-m="light">浅色</button><button data-m="dark">深色</button></div>
 </header>
@@ -137,57 +160,245 @@ const SUBS=[
 const GROUPS=["7 天内","30 天内","更晚"];
 const when=t=>t===1?"明天":t===2?"后天":`${t} 天`;
 
-document.getElementById("dock").innerHTML=`
+const dockHTML=()=>`
   <div class="shadow"><div class="tk head">
     <div class="main">
       <div class="brandl"><span>STILL · 续了么</span><button class="add">+ 添加</button></div>
-      <div class="big"><small>≈ ¥</small>407.27</div>
+      <div class="big"><small>≈ ¥</small><span data-num>407.27</span></div>
       <div class="meta">本月还要付 · 共 ≈ ¥407.27</div>
       <div class="punch">${Array.from({length:10},()=>"<i></i>").join("")}</div>
       <div class="meta">已付 ¥0.00</div>
     </div>
     <div class="stub"><b>十月 · 2026</b></div>
   </div></div>
-  <div class="shadow"><button class="tk pend"><b class="n">2</b><span>个续费等你决定<small>ChatGPT Plus、Netflix</small></span><b class="go">→</b></button></div>
+  <div class="shadow"><button class="tk pend" data-pending><b class="n" data-pcount>2</b><span><span data-ptext>个续费等你决定</span><small data-pnames>ChatGPT Plus、Netflix</small></span><b class="go">→</b></button></div>
   ${GROUPS.map((g,i)=>{const list=SUBS.filter(s=>s.g===i);return `
     <div class="sec"><span class="chip">${g}</span><em>${list.length} 张</em></div>
     <div class="list shadow">
     ${list.map(s=>`
-      <div class="tk row ${s.t<=2?"hot":s.t<=7?"warm":""}" style="--b:${s.b}">
+      <div class="tk row ${s.t<=2?"hot":s.t<=7?"warm":""}" style="--b:${s.b}" data-row="${s.n}">
         <div class="stub"><b>${s.dd}</b><small>${s.mm}</small></div>
         <div class="main">
-          <span class="nm">${s.n}</span><span class="pr">${s.p}</span>
-          <span class="sub">${s.cyc}${s.trial?'<i class="tag">试用</i>':""}</span><span class="cd">${when(s.t)}</span>
+          <span class="nm"><span class="st">${s.n}</span></span><span class="pr st">${s.p}</span>
+          <span class="sub" data-mark>${s.cyc}${s.trial?'<i class="tag">试用</i>':""}</span><span class="cd">${when(s.t)}</span>
         </div>
       </div>`).join("")}
     </div>`}).join("")}
-  <div class="foot"><span>月均 <b>≈ ¥481.22</b></span><button class="more">全部票夹 →</button></div>`;
+  <div class="foot"><span>月均 <b>≈ ¥<span data-monthly>481.22</span></b></span><button class="more">全部票夹 →</button></div>`;
 
-document.getElementById("card").innerHTML=`
+const cardHTML=(it)=>`
   <div class="shadow">
-    <div class="ct">
-      <div class="top"><span class="ic">C</span><div><div class="eyebrow">RENEWAL · 续费通知</div><div class="sub" style="font-size:12px">第 1 / 2 张</div></div></div>
-      <div class="ttl">ChatGPT Plus 的试用快结束了</div>
-      <div class="sub" style="white-space:normal;font-size:13px">明天试用结束，并开始第一次扣费</div>
+    <div class="ct" style="--b:${it.b}">
+      <div class="top"><span class="ic" style="--b:${it.b}">${it.l}</span><div><div class="eyebrow">RENEWAL · 续费通知</div><div class="sub" style="font-size:12px">第 ${demo.index+1} / ${demo.total} 张</div></div></div>
+      <div class="ttl">${titleOf(it)}</div>
+      <div class="sub" style="white-space:normal;font-size:13px">${subOf(it)}</div>
       <dl class="grid">
-        <div><dt>扣费日</dt><dd>10/05 <span style="color:var(--hot)">明天</span></dd></div>
-        <div><dt>周期</dt><dd>每月</dd></div>
-        <div><dt>状态</dt><dd>试用中</dd></div>
-        <div><dt>首次扣费</dt><dd class="amt">US$20.00</dd></div>
+        <div><dt>扣费日</dt><dd>${it.day.replace("-","/")} <span style="color:var(--hot)">${it.when}</span></dd></div>
+        <div><dt>周期</dt><dd>${it.cyc}</dd></div>
+        <div><dt>状态</dt><dd>${statusOf(it)}</dd></div>
+        <div><dt>${chargeOf(it)}</dt><dd class="amt">${it.p}</dd></div>
       </dl>
     </div>
     <div class="cb">
-      <button class="half keep">续<small>KEEP</small></button>
-      <button class="half drop">不续了<small>DROP</small></button>
+      <button class="half keep" data-choice="keep">续<small>KEEP</small></button>
+      <button class="half drop" data-choice="cancel">不续了<small>DROP</small></button>
     </div>
   </div>
   <p class="hint">撕下你要的那一半</p>
-  <button class="later">再想想 · 稍后提醒我</button>`;
+  <button class="later" data-choice="later">再想想 · 稍后提醒我</button>`;
 
-const root=document.documentElement;
-function setMode(m){root.dataset.mode=m;document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===m))}
-document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>setMode(b.dataset.m));
-setMode(new URLSearchParams(location.search).has("dark")?"dark":"light");
+const doneHTML=()=>`
+  <div class="shadow">
+    <div class="ct" style="--b:var(--keep)">
+      <div class="eyebrow">ALL CHECKED · 全部检票完毕</div>
+      <div class="ttl">这个月的票，都检完了</div>
+      <dl class="grid">
+        <div><dt>续</dt><dd>${demo.tally.keep} 张</dd></div>
+        <div><dt>不续了</dt><dd>${demo.tally.cancel} 张</dd></div>
+        <div><dt>稍后</dt><dd>${demo.tally.later} 张</dd></div>
+        <div><dt>每月省下</dt><dd class="amt">${savedText()}</dd></div>
+      </dl>
+    </div>
+    <div class="cb"><button class="again" data-replay>↻ 再发一遍票</button></div>
+  </div>`;
+
+/* dealt like cards */
+window.dockIn=()=>stagger($$("#dock .tk, #dock .sec, #dock .foot"),[{opacity:0,transform:"translate(-34px,-6px) rotate(-5deg)"},{opacity:1,transform:"none"}],{gap:60,duration:520,easing:EASE.back});
+window.cardIn=(first)=>Promise.all([
+  play($("#card .shadow"),[{opacity:0,transform:first?"translate(-30px,10px) rotate(-4deg)":"translateX(-60px) rotate(-5deg)"},{opacity:1,transform:"none"}],{duration:560,delay:first?250:0,easing:EASE.back}),
+  stagger($$("#card .hint, #card .later"),[{opacity:0},{opacity:1}],{gap:80,delay:first?600:300,duration:300}),
+]);
+window.cardFx=async(choice,btn)=>{
+  const wrap=$("#card .shadow");
+  if(choice==="later"){
+    await play(wrap,[{opacity:1,transform:"none"},{opacity:0,transform:"translateY(30px) scale(.92) rotate(2deg)"}],{duration:440,easing:EASE.in,fill:"forwards"});
+    return;
+  }
+  /* lift the chosen half out of the masked ticket and let it fall */
+  const r=btn.getBoundingClientRect(),dir=choice==="keep"?-1:1;
+  const ghost=btn.cloneNode(true);
+  ghost.classList.add("ghost");
+  Object.assign(ghost.style,{left:r.left+"px",top:r.top+"px",width:r.width+"px",height:r.height+"px",borderRadius:choice==="keep"?"0 0 0 14px":"0 0 14px 0"});
+  document.body.append(ghost);
+  btn.style.visibility="hidden";
+  play($("#card .cb"),[{borderTopColor:"var(--ink2)"},{borderTopColor:"var(--hair)"}],{duration:500});
+  await play(ghost,[
+    {transform:"none"},
+    {transform:`translate(${dir*5}px,3px) rotate(${dir*4}deg)`,offset:.18},
+    {transform:`translate(${dir*70}px,240px) rotate(${dir*38}deg)`,opacity:0}],{duration:820,easing:"cubic-bezier(.45,0,.8,.4)",fill:"forwards"});
+  ghost.remove();
+  const ct=$("#card .ct");
+  ct.insertAdjacentHTML("beforeend",`<i class="hole"></i><div class="ok s-${choice}">${choice==="keep"?"已续":"不续了"}</div>`);
+  play($(".hole",ct),[{transform:"scale(0)"},{transform:"scale(1)"}],{duration:240,easing:EASE.back,fill:"forwards"});
+  await play($(".ok",ct),[{transform:"rotate(-12deg) scale(2.2)",opacity:0},{transform:"rotate(-12deg) scale(1)",opacity:1}],{duration:260,easing:EASE.in,fill:"forwards"});
+  await wait(420);
+  await play(wrap,[{opacity:1,transform:"none"},{opacity:0,transform:"translateX(90px) rotate(6deg)"}],{duration:460,easing:EASE.in,fill:"forwards"});
+};
+window.rowFx=(row,choice)=>{
+  if(choice!=="keep")return;
+  const stub=$(".stub",row);
+  stub.insertAdjacentHTML("beforeend",'<i class="hole"></i>');
+  return play($(".hole",stub),[{transform:"scale(0)"},{transform:"scale(1.3)",offset:.6},{transform:"scale(1)"}],{duration:380,easing:EASE.out});
+};
+/*<motion-core> shared by every receipt preview; each page defines dockHTML/cardHTML/doneHTML and dockIn/cardIn/cardFx/rowFx */
+const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const wait = (ms) => new Promise((r) => setTimeout(r, RM ? 0 : ms));
+const EASE = { out: "cubic-bezier(.2,.8,.2,1)", back: "cubic-bezier(.34,1.56,.64,1)", in: "cubic-bezier(.55,0,.75,.2)", io: "cubic-bezier(.65,0,.35,1)" };
+/* Enter animations fill backwards (they hand back to the stylesheet when done); exits pass fill:"forwards". */
+function play(el, kf, opts = {}) {
+  if (!el) return Promise.resolve();
+  const a = el.animate(kf, { duration: 420, easing: EASE.out, fill: "backwards", ...opts, ...(RM ? { duration: 1, delay: 0 } : {}) });
+  return a.finished.then(() => a, () => a);
+}
+const stagger = (els, kf, { gap = 40, delay = 0, ...o } = {}) => Promise.all([...els].map((el, i) => play(el, kf, { ...o, delay: delay + i * gap })));
+const fmtNum = (v) => v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function countTo(el, from, to, ms = 900) {
+  if (RM) { el.textContent = fmtNum(to); return Promise.resolve(); }
+  return new Promise((res) => {
+    const t0 = performance.now();
+    const tick = (t) => { const k = Math.min(1, (t - t0) / ms); el.textContent = fmtNum(from + (to - from) * (1 - Math.pow(1 - k, 4))); k < 1 ? requestAnimationFrame(tick) : res(); };
+    requestAnimationFrame(tick);
+  });
+}
+
+/* Demo data: the two renewals waiting for a decision */
+const RATE = { "US$": 7.12, "¥": 1 };
+const cny = (p) => { const m = /^(US\$|¥)([\d.]+)$/.exec(p); return m ? +m[2] * RATE[m[1]] : 0; };
+const PENDING = [
+  { n: "ChatGPT Plus", b: "#10a37f", l: "C", p: "US$20.00", day: "10-05", dayZh: "10 月 5 日", when: "明天", cyc: "每月", trial: true },
+  { n: "Netflix", b: "#e50914", l: "N", p: "US$15.49", day: "10-06", dayZh: "10 月 6 日", when: "后天", cyc: "每月", trial: false },
+];
+const titleOf = (it) => (it.trial ? `${it.n} 的试用快结束了` : `还在用 ${it.n} 吗？`);
+const subOf = (it) => (it.trial ? `${it.when}试用结束，并开始第一次扣费` : `${it.when}自动续费，每月 ${it.p}`);
+const statusOf = (it) => (it.trial ? "试用中" : "生效中");
+const chargeOf = (it) => (it.trial ? "首次扣费" : "本次扣费");
+const MARK = { keep: "已续", cancel: "已取消", later: "稍后" };
+const demo = {};
+function resetDemo() {
+  Object.assign(demo, { remaining: 407.27, monthly: 481.22, queue: PENDING.slice(), index: 0, total: PENDING.length, busy: false, tally: { keep: 0, cancel: 0, later: 0, saved: 0 } });
+}
+const tallyText = () => [demo.tally.keep && `续 ${demo.tally.keep}`, demo.tally.cancel && `不续 ${demo.tally.cancel}`, demo.tally.later && `稍后 ${demo.tally.later}`].filter(Boolean).join(" · ");
+const savedText = () => `≈¥${fmtNum(demo.tally.saved)}`;
+
+/* A decision ripples into the dock: the row, the totals and the pending banner */
+async function applyDecision(item, choice) {
+  demo.tally[choice]++;
+  const jobs = [];
+  if (choice === "cancel") {
+    const v = cny(item.p);
+    demo.tally.saved += v;
+    $$("[data-num]").forEach((el) => jobs.push(countTo(el, demo.remaining, demo.remaining - v)));
+    $$("[data-monthly]").forEach((el) => jobs.push(countTo(el, demo.monthly, demo.monthly - v)));
+    demo.remaining -= v;
+    demo.monthly -= v;
+  }
+  const row = $(`[data-row="${item.n}"]`);
+  if (row) {
+    row.classList.add("is-" + choice);
+    ($("[data-mark]", row) || row).insertAdjacentHTML("beforeend", `<i class="mk mk-${choice}">${MARK[choice]}</i>`);
+    jobs.push(Promise.resolve(window.rowFx?.(row, choice, item)));
+  }
+  jobs.push(updatePending());
+  await Promise.all(jobs);
+}
+async function updatePending() {
+  const banner = $("[data-pending]");
+  if (!banner) return;
+  const left = demo.queue.slice(1);
+  const count = $("[data-pcount]", banner);
+  await play(count, [{ transform: "none", opacity: 1 }, { transform: "translateY(-80%)", opacity: 0 }], { duration: 170, easing: EASE.in, fill: "forwards" });
+  if (left.length) {
+    count.textContent = left.length;
+    $("[data-pnames]", banner).textContent = left.map((x) => x.n).join("、");
+  } else {
+    banner.classList.add("done");
+    count.textContent = "✓";
+    $("[data-ptext]", banner).textContent = "都处理好了";
+    $("[data-pnames]", banner).textContent = tallyText();
+  }
+  count.getAnimations().forEach((a) => a.cancel());
+  await play(count, [{ transform: "translateY(80%)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 340, easing: EASE.back });
+}
+
+async function decide(choice, btn) {
+  if (demo.busy || !demo.queue.length) return;
+  demo.busy = true;
+  const item = demo.queue[0];
+  const fx = applyDecision(item, choice);
+  await window.cardFx(choice, btn, item);
+  demo.queue.shift();
+  demo.index++;
+  renderCard();
+  $(".card-w").getAnimations({ subtree: true }).forEach((a) => a.cancel());
+  await Promise.all([window.cardIn(false), fx]);
+  demo.busy = false;
+}
+function renderCard() {
+  const el = $("#card");
+  el.innerHTML = demo.queue.length ? cardHTML(demo.queue[0]) : doneHTML();
+  $$("[data-choice]", el).forEach((b) => (b.onclick = () => decide(b.dataset.choice, b)));
+  $("[data-replay]", el)?.addEventListener("click", () => replay());
+}
+const nudge = (el) => play(el, [{ transform: "none" }, { transform: "translateX(-7px)" }, { transform: "translateX(6px)" }, { transform: "translateX(-3px)" }, { transform: "none" }], { duration: 420, easing: "linear" });
+async function replay() {
+  resetDemo();
+  document.getAnimations().forEach((a) => a.cancel());
+  $("#dock").innerHTML = dockHTML();
+  $("[data-pending]")?.addEventListener("click", () => nudge($(".card-w")));
+  renderCard();
+  $(".stage").style.visibility = "visible";
+  $$("[data-num]").forEach((el) => countTo(el, 0, demo.remaining, 1100));
+  $$("[data-monthly]").forEach((el) => countTo(el, 0, demo.monthly, 1100));
+  await Promise.all([window.dockIn(), window.cardIn(true)]);
+}
+
+/* Light/dark with a circular reveal from wherever the switch happened */
+const root = document.documentElement;
+const params = new URLSearchParams(location.search);
+if (window.top !== window || params.has("embed")) root.classList.add("embedded");
+function setMode(m, origin) {
+  const apply = () => { root.dataset.mode = m; $$(".seg button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.m === m)); };
+  if (root.dataset.mode === m || !document.startViewTransition || RM) return apply();
+  root.style.setProperty("--vx", origin ? origin.x + "px" : "100%");
+  root.style.setProperty("--vy", origin ? origin.y + "px" : "0px");
+  document.startViewTransition(apply);
+}
+$$(".seg button").forEach((b) => (b.onclick = (e) => setMode(b.dataset.m, { x: e.clientX, y: e.clientY })));
+addEventListener("message", (e) => {
+  const d = e.data || {};
+  if (d.type === "mode") setMode(d.mode, d.origin);
+  if (d.type === "replay") replay();
+});
+/* inside the index page, shortcut keys go to the switcher */
+if (root.classList.contains("embedded")) addEventListener("keydown", (e) => {
+  if (!e.metaKey && !e.ctrlKey && !e.altKey && /^(ArrowLeft|ArrowRight|[1-5]|r|R|d|D)$/.test(e.key)) parent.postMessage({ type: "key", key: e.key }, "*");
+});
+root.dataset.mode = params.has("dark") ? "dark" : "light";
+$$(".seg button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.m === root.dataset.mode));
+Promise.race([document.fonts.ready, wait(800)]).then(replay);
+/*</motion-core>*/
 </script>
 </body>
 </html>

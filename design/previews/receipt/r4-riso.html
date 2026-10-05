@@ -11,7 +11,7 @@
 [data-mode=dark]{--desk:#0c0c12;--paper:#17171f;--blue:#6fb6ff;--pink:#ff6ec0;--yellow:#ffd95e;--ink2:#7f93b5;--blend:screen;--shadow:rgb(0 0 0/.6)}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
-body{background:var(--desk);color:var(--blue);min-height:100vh;transition:background .3s,color .3s;-webkit-font-smoothing:antialiased}
+body{background:var(--desk);color:var(--blue);min-height:100vh;-webkit-font-smoothing:antialiased}
 
 .bar{max-width:900px;margin:0 auto;padding:28px 24px 0;display:flex;gap:16px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;font-family:system-ui,-apple-system,"PingFang SC",sans-serif}
 .bar h1{font-size:18px;font-weight:700}.bar p{font-size:13px;color:var(--ink2);margin-top:4px;max-width:600px;line-height:1.6}
@@ -22,16 +22,13 @@ body{background:var(--desk);color:var(--blue);min-height:100vh;transition:backgr
 .dock-w{width:300px}.card-w{width:360px}
 
 /* ── riso print ── */
-.paper{position:relative;background:var(--paper);color:var(--blue);padding:20px 18px 24px;overflow:hidden;
+.paper{position:relative;background:var(--paper);color:var(--blue);padding:20px 18px 30px;overflow:hidden;
   font:500 13px/1.45 "Archivo","Noto Sans SC",sans-serif;font-variant-numeric:tabular-nums;
-  padding-bottom:30px;
   -webkit-mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) bottom/14px 100% repeat-x;
           mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) bottom/14px 100% repeat-x}
 .shadow{filter:drop-shadow(0 1px 0 var(--shadow)) drop-shadow(0 12px 16px var(--shadow))}
-/* paper grain + halftone corner */
 .paper::before{content:"";position:absolute;right:-30px;top:-30px;width:150px;height:150px;border-radius:50%;
   background:radial-gradient(var(--yellow) 30%,transparent 32%) 0 0/7px 7px;mix-blend-mode:var(--blend);opacity:.9;pointer-events:none}
-.ink{mix-blend-mode:var(--blend)}
 .mono{font-family:"Space Mono",monospace}
 
 .top{display:flex;justify-content:space-between;align-items:center;position:relative}
@@ -42,29 +39,30 @@ body{background:var(--desk);color:var(--blue);min-height:100vh;transition:backgr
 .label{font:700 10px "Space Mono";letter-spacing:.14em;margin-top:16px;position:relative}
 /* misregistered two-colour number */
 .big{position:relative;font:900 44px/1 "Archivo";letter-spacing:-.04em;margin:4px 0 6px}
-.big .p,.big .b{display:block}
+.big .p,.big .b{display:block;white-space:nowrap}
 .big .p{color:var(--pink);position:absolute;inset:0;transform:translate(3px,2px)}
 .big .b{position:relative;color:var(--blue)}
-.big .p small{visibility:hidden}
 .big small{font-size:.45em;letter-spacing:0;vertical-align:.75em;margin-right:2px}
+.big .p small{visibility:hidden}
 .bars{display:flex;gap:2px;height:10px;margin:8px 0 6px}.bars i{flex:1;border:1.5px solid var(--blue)}
 .meta{font:400 11px "Space Mono";opacity:.85}
 
 .pend{position:relative;display:flex;align-items:center;gap:10px;width:100%;margin:16px 0 6px;padding:10px 12px;text-align:left;background:var(--pink);color:var(--paper);transform:rotate(-1.5deg);
-  box-shadow:3px 3px 0 var(--blue)}
+  box-shadow:3px 3px 0 var(--blue);transition:transform .2s,background .4s}
 [data-mode=dark] .pend{color:#17171f}
-.pend b{font:900 28px/1 "Archivo"}
-.pend span{flex:1;min-width:0;font-weight:900}
+.pend b{font:900 28px/1 "Archivo";min-width:18px;text-align:center}
+.pend>span{flex:1;min-width:0;font-weight:900}
 .pend small{display:block;font:700 11px "Space Mono";opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pend:hover{transform:rotate(0)}
+.pend.done{background:var(--blue);box-shadow:3px 3px 0 var(--pink)}
 
 .sec{display:flex;align-items:baseline;justify-content:space-between;margin:18px 0 4px;padding-bottom:4px;border-bottom:2.5px solid var(--blue)}
 .sec b{font:900 16px "Archivo","Noto Sans SC";letter-spacing:-.01em}
 .sec em{font:700 10px "Space Mono";font-style:normal}
-.row{display:grid;grid-template-columns:1fr auto;gap:0 10px;padding:7px 0;border-bottom:1.5px dashed color-mix(in oklab,var(--blue) 45%,transparent);cursor:pointer}
+.row{display:grid;grid-template-columns:1fr auto;gap:0 10px;padding:7px 0;border-bottom:1.5px dashed color-mix(in oklab,var(--blue) 45%,transparent);cursor:pointer;transition:opacity .5s}
 .row:hover .nm span{background-size:100% 100%}
 .nm{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nm span{background:linear-gradient(transparent 55%,color-mix(in oklab,var(--yellow) 85%,transparent) 55%) no-repeat 0 0/0 100%;transition:background-size .25s}
+.nm span{background:linear-gradient(transparent 62%,color-mix(in oklab,var(--yellow) 85%,transparent) 62% 94%,transparent 94%) no-repeat 0 0/0 100%;transition:background-size .3s}
 .hot .nm span{background-image:linear-gradient(transparent 62%,color-mix(in oklab,var(--pink) 60%,transparent) 62% 94%,transparent 94%);background-size:100% 100%}
 [data-mode=dark] .hot .nm span{color:var(--pink);background-image:none}
 .pr{font:700 13px "Space Mono";text-align:right;white-space:nowrap}
@@ -72,6 +70,12 @@ body{background:var(--desk);color:var(--blue);min-height:100vh;transition:backgr
 .tag{font-style:normal;background:var(--blue);color:var(--paper);padding:0 4px;margin-left:4px;font-weight:700}
 .cd{font:700 10.5px "Space Mono";text-align:right}
 .hot .cd{color:var(--pink)}
+.is-cancel{opacity:.5}
+.is-cancel .nm span{text-decoration:line-through 3px var(--pink);background-size:0 100%}
+.is-cancel .pr{text-decoration:line-through 2px var(--pink)}
+.is-keep .nm span{background-image:linear-gradient(transparent 62%,color-mix(in oklab,var(--yellow) 85%,transparent) 62% 94%,transparent 94%);background-size:100% 100%}
+.mk{margin-left:6px;padding:0 5px;font:700 10px "Space Mono";color:var(--paper);transform:rotate(-3deg)}
+.mk-keep{background:var(--blue)}.mk-cancel{background:var(--pink)}.mk-later{background:var(--ink2)}
 
 .foot{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
 .foot b{font:900 20px "Archivo";letter-spacing:-.02em}
@@ -79,9 +83,9 @@ body{background:var(--desk);color:var(--blue);min-height:100vh;transition:backgr
 .more:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--pink)}
 
 /* card */
-.card{padding:24px 22px 24px}
+.card{padding:24px 22px 30px}
 .card::before{width:190px;height:190px;right:-50px;top:-50px}
-.ic{width:46px;height:46px;background:#10a37f;color:#fff;display:grid;place-items:center;font:900 20px "Archivo";position:relative;box-shadow:4px 4px 0 var(--pink)}
+.ic{width:46px;height:46px;background:var(--b);color:#fff;display:grid;place-items:center;font:900 20px "Archivo";position:relative;box-shadow:4px 4px 0 var(--pink)}
 .eyebrow{font:700 10px "Space Mono";letter-spacing:.16em;margin-top:16px;position:relative}
 .ttl{position:relative;font:900 25px/1.2 "Archivo","Noto Sans SC";letter-spacing:-.01em;margin:6px 0 6px}
 .ttl em{font-style:normal;color:var(--pink)}
@@ -101,13 +105,34 @@ body{background:var(--desk);color:var(--blue);min-height:100vh;transition:backgr
 .btn:active{transform:translate(2px,2px);box-shadow:none}
 .later{display:block;margin:16px auto 0;font:700 12px "Space Mono";text-decoration:underline wavy var(--pink);text-underline-offset:5px}
 .pager{text-align:center;font:400 10px "Space Mono";margin-top:10px;opacity:.7}
+/* two-colour rubber stamp, printed slightly off register */
+.rs{position:absolute;left:50%;top:50%;z-index:4;pointer-events:none;font:900 60px/1 "Archivo","Noto Sans SC";letter-spacing:-.03em;white-space:nowrap;transform:translate(-50%,-50%) rotate(-10deg)}
+.rs span{display:block;padding:4px 14px;border:5px solid currentColor;mix-blend-mode:var(--blend)}
+.rs .a{position:absolute;inset:0}
+.rs-keep .b{color:var(--blue)}.rs-keep .a{color:var(--pink)}
+.rs-cancel .b{color:var(--pink)}.rs-cancel .a{color:var(--blue)}
+.rs-later .b{color:var(--blue)}.rs-later .a{color:var(--yellow)}
+/*<motion-core-css>*/
+.stage{visibility:hidden}
+.embedded .seg{display:none}
+.mk{display:inline-block;font-style:normal;white-space:nowrap;animation:mk-in .5s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes mk-in{from{transform:scale(.3) rotate(-14deg);opacity:0}}
+[data-pcount]{display:inline-block}
+/* strike-through drawn left to right on cancelled rows */
+.st{background:linear-gradient(currentColor,currentColor) no-repeat 0 56%/0 1.5px;transition:background-size .5s cubic-bezier(.65,0,.35,1)}
+.is-cancel .st{background-size:100% 1.5px}
+::view-transition-old(root){animation:none}
+::view-transition-new(root){animation:vt-reveal .6s cubic-bezier(.65,0,.35,1)}
+@keyframes vt-reveal{from{clip-path:circle(0 at var(--vx,100%) var(--vy,0))}to{clip-path:circle(150vmax at var(--vx,100%) var(--vy,0))}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;transition-duration:1ms!important}}
+/*</motion-core-css>*/
 </style>
 </head>
 <body>
 <header class="bar">
   <div>
     <h1>R4 · 孔版印刷 Riso</h1>
-    <p>独立杂志/音乐节小票的 Risograph 双色印刷：钢蓝 + 荧光粉，加一点黄色网点。大数字有套印错位，紧急项用荧光笔划过，按钮是硬朗的偏移投影。最有个性、最年轻。</p>
+    <p>双色 Risograph 印刷：入场时套印错位慢慢归位，待决定标签像贴纸一样拍上去。做决定时砸下一个双色大印章，这张传单被甩走。</p>
   </div>
   <div class="seg"><button data-m="light">浅色</button><button data-m="dark">深色</button></div>
 </header>
@@ -136,44 +161,218 @@ const SUBS=[
 ];
 const GROUPS=["7 天内","30 天内","更晚"];
 const when=t=>t===1?"明天!":t===2?"后天!":`T-${t}`;
-const big=(txt,cur)=>`<div class="big ink"><span class="p" aria-hidden="true"><small>${cur}</small>${txt}</span><span class="b"><small>${cur}</small>${txt}</span></div>`;
+const big=(num,cur,attr="")=>`<div class="big"><span class="p" aria-hidden="true"><small>${cur}</small><span ${attr}>${num}</span></span><span class="b"><small>${cur}</small><span ${attr}>${num}</span></span></div>`;
 
-document.getElementById("dock").innerHTML=`
+const dockHTML=()=>`
   <div class="top"><span class="logo">续了么<i>.</i> STILL</span><button class="add">+ 添加</button></div>
   <div class="label">本月还要付 ≈</div>
-  ${big("407.27","¥")}
+  ${big("407.27","¥","data-num")}
   <div class="bars">${Array.from({length:12},()=>"<i></i>").join("")}</div>
   <div class="meta">共 ≈¥407.27 / 已付 ¥0.00</div>
-  <button class="pend"><b>2</b><span>个续费等你决定<small>ChatGPT Plus、Netflix</small></span>→</button>
+  <button class="pend" data-pending><b data-pcount>2</b><span><span data-ptext>个续费等你决定</span><small data-pnames>ChatGPT Plus、Netflix</small></span>→</button>
   ${GROUPS.map((g,i)=>{const list=SUBS.filter(s=>s.g===i);return `
     <div class="sec"><b>${g}</b><em>${String(list.length).padStart(2,"0")} 项</em></div>
     ${list.map(s=>`
-      <div class="row ${s.t<=2?"hot":""}">
+      <div class="row ${s.t<=2?"hot":""}" data-row="${s.n}">
         <span class="nm"><span>${s.n}</span></span><span class="pr">${s.p}</span>
-        <span class="sub">${s.d} · ${s.cyc}${s.trial?'<i class="tag">试用</i>':""}</span><span class="cd">${when(s.t)}</span>
+        <span class="sub" data-mark>${s.d} · ${s.cyc}${s.trial?'<i class="tag">试用</i>':""}</span><span class="cd">${when(s.t)}</span>
       </div>`).join("")}`}).join("")}
-  <div class="foot"><span class="meta">月均支出</span><b>≈¥481.22</b></div>
+  <div class="foot"><span class="meta">月均支出</span><b>≈¥<span data-monthly>481.22</span></b></div>
   <button class="more">查看全部 →</button>`;
 
-document.getElementById("card").innerHTML=`
-  <span class="ic">C</span>
+const cardHTML=(it)=>`
+  <span class="ic" style="--b:${it.b}">${it.l}</span>
   <div class="eyebrow">RENEWAL NOTICE · 续费通知</div>
-  <div class="ttl">ChatGPT Plus<br>的试用<em>快结束了</em></div>
-  <div class="lead">明天试用结束，并开始第一次扣费</div>
+  <div class="ttl">${it.trial?`${it.n}<br>的试用<em>快结束了</em>`:`还在用<br><em>${it.n}</em> 吗？`}</div>
+  <div class="lead">${subOf(it)}</div>
   <dl class="kv">
-    <div><dt>扣费日</dt><dd>10.05 <span style="color:var(--pink)">明天</span></dd></div>
-    <div><dt>周期</dt><dd>每月</dd></div>
-    <div><dt>状态</dt><dd>试用中</dd></div>
+    <div><dt>扣费日</dt><dd>${it.day.replace("-",".")} <span style="color:var(--pink)">${it.when}</span></dd></div>
+    <div><dt>周期</dt><dd>${it.cyc}</dd></div>
+    <div><dt>状态</dt><dd>${statusOf(it)}</dd></div>
   </dl>
-  <div class="amount"><span class="meta">首次扣费</span>${big("20.00","US$")}</div>
-  <div class="btns"><button class="btn keep">续！</button><button class="btn drop">不续了</button></div>
-  <button class="later">再想想，稍后提醒我</button>
-  <div class="pager">01 / 02</div>`;
+  <div class="amount"><span class="meta">${chargeOf(it)}</span>${big(it.p.replace(/^(US\$|¥)/,""),it.p.startsWith("US$")?"US$":"¥")}</div>
+  <div class="btns"><button class="btn keep" data-choice="keep">续！</button><button class="btn drop" data-choice="cancel">不续了</button></div>
+  <button class="later" data-choice="later">再想想，稍后提醒我</button>
+  <div class="pager">${String(demo.index+1).padStart(2,"0")} / ${String(demo.total).padStart(2,"0")}</div>`;
 
-const root=document.documentElement;
-function setMode(m){root.dataset.mode=m;document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===m))}
-document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>setMode(b.dataset.m));
-setMode(new URLSearchParams(location.search).has("dark")?"dark":"light");
+const doneHTML=()=>`
+  <span class="ic" style="--b:var(--blue)">✓</span>
+  <div class="eyebrow">ALL DONE · 全部搞定</div>
+  <div class="ttl">这个月的续费<br><em>搞定了！</em></div>
+  <dl class="kv">
+    <div><dt>续</dt><dd>${demo.tally.keep} 笔</dd></div>
+    <div><dt>不续了</dt><dd>${demo.tally.cancel} 笔</dd></div>
+    <div><dt>再想想</dt><dd>${demo.tally.later} 笔</dd></div>
+  </dl>
+  <div class="amount"><span class="meta">每月省下</span>${big(fmtNum(demo.tally.saved),"≈¥")}</div>
+  <button class="later" data-replay>↻ 再印一张</button>`;
+
+const misregister=(el,from="translate(16px,12px)")=>play(el,[{transform:from},{transform:"translate(3px,2px)"}],{duration:1000,easing:EASE.back});
+window.dockIn=()=>Promise.all([
+  play($("#dock").closest(".shadow"),[{opacity:0,transform:"translateY(16px)"},{opacity:1,transform:"none"}],{duration:460}),
+  play($("#dock"),[{transform:"scale(.3)",opacity:0},{transform:"none",opacity:.9}],{pseudoElement:"::before",duration:800,delay:150,easing:EASE.back}),
+  misregister($("#dock .big .p")),
+  play($("#dock .pend"),[{transform:"rotate(-16deg) scale(1.35)",opacity:0},{transform:"rotate(-1.5deg) scale(1)",opacity:1}],{duration:440,delay:520,easing:EASE.back}),
+  stagger($$("#dock .sec, #dock .row, #dock .foot, #dock .more"),[{opacity:0,transform:"translateX(-12px)"},{opacity:1,transform:"none"}],{gap:30,delay:360,duration:380}),
+  ...$$("#dock .row.hot .nm span").map((el,i)=>play(el,[{backgroundSize:"0 100%"},{backgroundSize:"100% 100%"}],{duration:520,delay:1100+i*160,easing:EASE.io})),
+]);
+window.cardIn=(first)=>Promise.all([
+  play($("#card").closest(".shadow"),[{opacity:0,transform:"translateY(-30px) rotate(-4deg) scale(1.04)"},{opacity:1,transform:"none"}],{duration:520,delay:first?200:0,easing:EASE.back}),
+  play($("#card"),[{transform:"scale(.3)",opacity:0},{transform:"none",opacity:.9}],{pseudoElement:"::before",duration:800,delay:first?300:120,easing:EASE.back}),
+  misregister($("#card .big .p"),"translate(-12px,10px)"),
+]);
+const RS={keep:"续！",cancel:"不续！",later:"晚点？"};
+window.cardFx=async(choice)=>{
+  const paper=$("#card"),sheet=paper.closest(".shadow");
+  paper.insertAdjacentHTML("beforeend",`<div class="rs rs-${choice}"><span class="b">${RS[choice]}</span><span class="a" aria-hidden="true">${RS[choice]}</span></div>`);
+  const rs=$(".rs",paper);
+  /* slam, then the second colour lands a beat later and off register */
+  await play(rs,[{transform:"translate(-50%,-50%) rotate(-24deg) scale(3)",opacity:0},{transform:"translate(-50%,-50%) rotate(-8deg) scale(.92)",opacity:1,offset:.7},{transform:"translate(-50%,-50%) rotate(-10deg) scale(1)",opacity:1}],{duration:300,easing:EASE.in,fill:"forwards"});
+  play($(".a",rs),[{transform:"translate(14px,10px)",opacity:0},{transform:"translate(5px,4px)",opacity:1}],{duration:380,easing:EASE.back,fill:"forwards"});
+  play(sheet,[{transform:"none"},{transform:"translate(2px,2px) rotate(.4deg)"},{transform:"translate(-2px,0)"},{transform:"none"}],{duration:200,easing:"linear"});
+  await wait(620);
+  await play(sheet,[{opacity:1,transform:"none"},{opacity:0,transform:"translate(-70px,-40px) rotate(-12deg)"}],{duration:420,easing:EASE.in,fill:"forwards"});
+};
+window.rowFx=(row,choice)=>choice==="keep"&&play($(".nm span",row),[{backgroundSize:"0 100%"},{backgroundSize:"100% 100%"}],{duration:500,easing:EASE.io});
+/*<motion-core> shared by every receipt preview; each page defines dockHTML/cardHTML/doneHTML and dockIn/cardIn/cardFx/rowFx */
+const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const wait = (ms) => new Promise((r) => setTimeout(r, RM ? 0 : ms));
+const EASE = { out: "cubic-bezier(.2,.8,.2,1)", back: "cubic-bezier(.34,1.56,.64,1)", in: "cubic-bezier(.55,0,.75,.2)", io: "cubic-bezier(.65,0,.35,1)" };
+/* Enter animations fill backwards (they hand back to the stylesheet when done); exits pass fill:"forwards". */
+function play(el, kf, opts = {}) {
+  if (!el) return Promise.resolve();
+  const a = el.animate(kf, { duration: 420, easing: EASE.out, fill: "backwards", ...opts, ...(RM ? { duration: 1, delay: 0 } : {}) });
+  return a.finished.then(() => a, () => a);
+}
+const stagger = (els, kf, { gap = 40, delay = 0, ...o } = {}) => Promise.all([...els].map((el, i) => play(el, kf, { ...o, delay: delay + i * gap })));
+const fmtNum = (v) => v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function countTo(el, from, to, ms = 900) {
+  if (RM) { el.textContent = fmtNum(to); return Promise.resolve(); }
+  return new Promise((res) => {
+    const t0 = performance.now();
+    const tick = (t) => { const k = Math.min(1, (t - t0) / ms); el.textContent = fmtNum(from + (to - from) * (1 - Math.pow(1 - k, 4))); k < 1 ? requestAnimationFrame(tick) : res(); };
+    requestAnimationFrame(tick);
+  });
+}
+
+/* Demo data: the two renewals waiting for a decision */
+const RATE = { "US$": 7.12, "¥": 1 };
+const cny = (p) => { const m = /^(US\$|¥)([\d.]+)$/.exec(p); return m ? +m[2] * RATE[m[1]] : 0; };
+const PENDING = [
+  { n: "ChatGPT Plus", b: "#10a37f", l: "C", p: "US$20.00", day: "10-05", dayZh: "10 月 5 日", when: "明天", cyc: "每月", trial: true },
+  { n: "Netflix", b: "#e50914", l: "N", p: "US$15.49", day: "10-06", dayZh: "10 月 6 日", when: "后天", cyc: "每月", trial: false },
+];
+const titleOf = (it) => (it.trial ? `${it.n} 的试用快结束了` : `还在用 ${it.n} 吗？`);
+const subOf = (it) => (it.trial ? `${it.when}试用结束，并开始第一次扣费` : `${it.when}自动续费，每月 ${it.p}`);
+const statusOf = (it) => (it.trial ? "试用中" : "生效中");
+const chargeOf = (it) => (it.trial ? "首次扣费" : "本次扣费");
+const MARK = { keep: "已续", cancel: "已取消", later: "稍后" };
+const demo = {};
+function resetDemo() {
+  Object.assign(demo, { remaining: 407.27, monthly: 481.22, queue: PENDING.slice(), index: 0, total: PENDING.length, busy: false, tally: { keep: 0, cancel: 0, later: 0, saved: 0 } });
+}
+const tallyText = () => [demo.tally.keep && `续 ${demo.tally.keep}`, demo.tally.cancel && `不续 ${demo.tally.cancel}`, demo.tally.later && `稍后 ${demo.tally.later}`].filter(Boolean).join(" · ");
+const savedText = () => `≈¥${fmtNum(demo.tally.saved)}`;
+
+/* A decision ripples into the dock: the row, the totals and the pending banner */
+async function applyDecision(item, choice) {
+  demo.tally[choice]++;
+  const jobs = [];
+  if (choice === "cancel") {
+    const v = cny(item.p);
+    demo.tally.saved += v;
+    $$("[data-num]").forEach((el) => jobs.push(countTo(el, demo.remaining, demo.remaining - v)));
+    $$("[data-monthly]").forEach((el) => jobs.push(countTo(el, demo.monthly, demo.monthly - v)));
+    demo.remaining -= v;
+    demo.monthly -= v;
+  }
+  const row = $(`[data-row="${item.n}"]`);
+  if (row) {
+    row.classList.add("is-" + choice);
+    ($("[data-mark]", row) || row).insertAdjacentHTML("beforeend", `<i class="mk mk-${choice}">${MARK[choice]}</i>`);
+    jobs.push(Promise.resolve(window.rowFx?.(row, choice, item)));
+  }
+  jobs.push(updatePending());
+  await Promise.all(jobs);
+}
+async function updatePending() {
+  const banner = $("[data-pending]");
+  if (!banner) return;
+  const left = demo.queue.slice(1);
+  const count = $("[data-pcount]", banner);
+  await play(count, [{ transform: "none", opacity: 1 }, { transform: "translateY(-80%)", opacity: 0 }], { duration: 170, easing: EASE.in, fill: "forwards" });
+  if (left.length) {
+    count.textContent = left.length;
+    $("[data-pnames]", banner).textContent = left.map((x) => x.n).join("、");
+  } else {
+    banner.classList.add("done");
+    count.textContent = "✓";
+    $("[data-ptext]", banner).textContent = "都处理好了";
+    $("[data-pnames]", banner).textContent = tallyText();
+  }
+  count.getAnimations().forEach((a) => a.cancel());
+  await play(count, [{ transform: "translateY(80%)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 340, easing: EASE.back });
+}
+
+async function decide(choice, btn) {
+  if (demo.busy || !demo.queue.length) return;
+  demo.busy = true;
+  const item = demo.queue[0];
+  const fx = applyDecision(item, choice);
+  await window.cardFx(choice, btn, item);
+  demo.queue.shift();
+  demo.index++;
+  renderCard();
+  $(".card-w").getAnimations({ subtree: true }).forEach((a) => a.cancel());
+  await Promise.all([window.cardIn(false), fx]);
+  demo.busy = false;
+}
+function renderCard() {
+  const el = $("#card");
+  el.innerHTML = demo.queue.length ? cardHTML(demo.queue[0]) : doneHTML();
+  $$("[data-choice]", el).forEach((b) => (b.onclick = () => decide(b.dataset.choice, b)));
+  $("[data-replay]", el)?.addEventListener("click", () => replay());
+}
+const nudge = (el) => play(el, [{ transform: "none" }, { transform: "translateX(-7px)" }, { transform: "translateX(6px)" }, { transform: "translateX(-3px)" }, { transform: "none" }], { duration: 420, easing: "linear" });
+async function replay() {
+  resetDemo();
+  document.getAnimations().forEach((a) => a.cancel());
+  $("#dock").innerHTML = dockHTML();
+  $("[data-pending]")?.addEventListener("click", () => nudge($(".card-w")));
+  renderCard();
+  $(".stage").style.visibility = "visible";
+  $$("[data-num]").forEach((el) => countTo(el, 0, demo.remaining, 1100));
+  $$("[data-monthly]").forEach((el) => countTo(el, 0, demo.monthly, 1100));
+  await Promise.all([window.dockIn(), window.cardIn(true)]);
+}
+
+/* Light/dark with a circular reveal from wherever the switch happened */
+const root = document.documentElement;
+const params = new URLSearchParams(location.search);
+if (window.top !== window || params.has("embed")) root.classList.add("embedded");
+function setMode(m, origin) {
+  const apply = () => { root.dataset.mode = m; $$(".seg button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.m === m)); };
+  if (root.dataset.mode === m || !document.startViewTransition || RM) return apply();
+  root.style.setProperty("--vx", origin ? origin.x + "px" : "100%");
+  root.style.setProperty("--vy", origin ? origin.y + "px" : "0px");
+  document.startViewTransition(apply);
+}
+$$(".seg button").forEach((b) => (b.onclick = (e) => setMode(b.dataset.m, { x: e.clientX, y: e.clientY })));
+addEventListener("message", (e) => {
+  const d = e.data || {};
+  if (d.type === "mode") setMode(d.mode, d.origin);
+  if (d.type === "replay") replay();
+});
+/* inside the index page, shortcut keys go to the switcher */
+if (root.classList.contains("embedded")) addEventListener("keydown", (e) => {
+  if (!e.metaKey && !e.ctrlKey && !e.altKey && /^(ArrowLeft|ArrowRight|[1-5]|r|R|d|D)$/.test(e.key)) parent.postMessage({ type: "key", key: e.key }, "*");
+});
+root.dataset.mode = params.has("dark") ? "dark" : "light";
+$$(".seg button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.m === root.dataset.mode));
+Promise.race([document.fonts.ready, wait(800)]).then(replay);
+/*</motion-core>*/
 </script>
 </body>
 </html>

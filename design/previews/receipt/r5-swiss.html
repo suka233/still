@@ -7,11 +7,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-:root{--desk:#ebebea;--paper:#ffffff;--ink:#111111;--ink2:#8a8a8a;--hair:#ececec;--accent:#ff4f00;--soft:#f4f4f3;--shadow:rgb(0 0 0/.09)}
-[data-mode=dark]{--desk:#050505;--paper:#151515;--ink:#f4f4f4;--ink2:#8c8c8c;--hair:#262626;--accent:#ff6a2b;--soft:#1f1f1f;--shadow:rgb(0 0 0/.7)}
+:root{--desk:#ebebea;--paper:#ffffff;--ink:#111111;--ink2:#8a8a8a;--hair:#ececec;--accent:#ff4f00;--keep:#1f8a4c;--soft:#f4f4f3;--shadow:rgb(0 0 0/.09)}
+[data-mode=dark]{--desk:#050505;--paper:#151515;--ink:#f4f4f4;--ink2:#8c8c8c;--hair:#262626;--accent:#ff6a2b;--keep:#4cc27f;--soft:#1f1f1f;--shadow:rgb(0 0 0/.7)}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
-body{background:var(--desk);color:var(--ink);min-height:100vh;transition:background .3s,color .3s;-webkit-font-smoothing:antialiased}
+body{background:var(--desk);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased}
 
 .bar{max-width:900px;margin:0 auto;padding:28px 24px 0;display:flex;gap:16px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;font-family:system-ui,-apple-system,"PingFang SC",sans-serif}
 .bar h1{font-size:18px;font-weight:700}.bar p{font-size:13px;color:var(--ink2);margin-top:4px;max-width:600px;line-height:1.6}
@@ -23,31 +23,34 @@ body{background:var(--desk);color:var(--ink);min-height:100vh;transition:backgro
 
 /* ── swiss slip ── */
 .shadow{filter:drop-shadow(0 1px 1px var(--shadow)) drop-shadow(0 10px 20px var(--shadow))}
-.paper{background:var(--paper);color:var(--ink);padding:18px 18px 26px;
+.paper{position:relative;background:var(--paper);color:var(--ink);padding:18px 18px 26px;overflow:hidden;
   font:400 13px/1.45 "Inter","Noto Sans SC",sans-serif;font-variant-numeric:tabular-nums;font-feature-settings:"tnum","ss01","cv11";
-  /* fine zig-zag only on the bottom edge */
   -webkit-mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) bottom/8px 100% repeat-x;
           mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) bottom/8px 100% repeat-x}
+/* rules are drawn, not bordered, so they can be animated */
+.rule{height:2px;background:var(--ink);transform-origin:0 50%}
+.rule.thin{height:1px}
 
-.top{display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:2px solid var(--ink)}
+.top{display:flex;justify-content:space-between;align-items:center;padding-bottom:10px}
 .logo{font-weight:700;font-size:13px;letter-spacing:-.01em}.logo span{color:var(--ink2);font-weight:500;margin-left:4px}
-.add{width:24px;height:24px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-size:16px;line-height:1}
-.add:hover{background:var(--accent)}
+.add{width:24px;height:24px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-size:16px;line-height:1;transition:background .15s,transform .2s}
+.add:hover{background:var(--accent);transform:rotate(90deg)}
 .lbl{font-size:11px;font-weight:500;color:var(--ink2);margin-top:16px}
-.big{font-size:44px;font-weight:600;letter-spacing:-.045em;line-height:1;margin:4px 0 0}
+.big{font-size:44px;font-weight:600;letter-spacing:-.045em;line-height:1;margin:4px 0 0;white-space:nowrap}
 .big small{font-size:.42em;letter-spacing:-.01em;font-weight:500;color:var(--ink2);margin-right:2px;vertical-align:.95em}
 .prog{display:grid;grid-template-columns:repeat(31,1fr);gap:2px;margin:16px 0 6px;height:14px}
-.prog i{background:var(--hair)}.prog i.past{background:var(--ink)}.prog i.due{background:var(--accent)}
+.prog i{background:var(--hair);transform-origin:50% 100%;transition:background .4s}.prog i.past{background:var(--ink)}.prog i.due{background:var(--accent)}.prog i.kept{background:var(--ink)}
 .legend{display:flex;justify-content:space-between;font-size:11px;color:var(--ink2)}
 
-.pend{display:flex;align-items:center;gap:12px;width:100%;margin:16px 0 0;padding:11px 12px;background:var(--accent);color:#fff;text-align:left;border-radius:2px}
-.pend b{font-size:26px;font-weight:600;letter-spacing:-.04em;line-height:1}
-.pend span{flex:1;min-width:0;font-weight:600}.pend small{display:block;font-weight:400;font-size:11px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pend{display:flex;align-items:center;gap:12px;width:100%;margin:16px 0 0;padding:11px 12px;background:var(--accent);color:#fff;text-align:left;border-radius:2px;transition:background .4s}
+.pend b{font-size:26px;font-weight:600;letter-spacing:-.04em;line-height:1;min-width:16px;text-align:center}
+.pend>span{flex:1;min-width:0;font-weight:600}.pend small{display:block;font-weight:400;font-size:11px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pend:hover{filter:brightness(1.05)}
+.pend.done{background:var(--ink);color:var(--paper)}
 
-.sec{display:flex;justify-content:space-between;font-size:11px;font-weight:600;margin:20px 0 0;padding-bottom:6px;border-bottom:1px solid var(--ink)}
+.sec{display:flex;justify-content:space-between;font-size:11px;font-weight:600;margin:20px 0 0;padding-bottom:6px}
 .sec em{font-style:normal;color:var(--ink2);font-weight:500}
-.row{display:grid;grid-template-columns:38px 1fr auto;gap:0 8px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--hair);cursor:pointer}
+.row{display:grid;grid-template-columns:38px 1fr auto;gap:0 8px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--hair);cursor:pointer;transition:opacity .5s}
 .row:hover{background:var(--soft);margin:0 -6px;padding-left:6px;padding-right:6px}
 .dt{font-size:11.5px;color:var(--ink2);font-weight:500}
 .nm{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -56,8 +59,13 @@ body{background:var(--desk);color:var(--ink);min-height:100vh;transition:backgro
 .cd{font-size:11px;color:var(--ink2);text-align:right}
 .hot .dt,.hot .cd{color:var(--accent);font-weight:600}
 .tag{font-style:normal;color:var(--accent);margin-left:6px;font-weight:600}
+.row .st{background-image:linear-gradient(var(--accent),var(--accent))}
+.is-cancel{opacity:.45}
+.is-cancel .dt,.is-cancel .cd{color:var(--ink2)}
+.mk{margin-left:6px;font-size:10.5px;font-weight:600}
+.mk-keep{color:var(--keep)}.mk-keep::before{content:"✓ "}.mk-cancel{color:var(--accent)}.mk-later{color:var(--ink2)}
 
-.foot{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;padding-top:10px;border-top:2px solid var(--ink)}
+.foot{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;padding-top:10px}
 .foot b{font-size:20px;font-weight:600;letter-spacing:-.03em}
 .more{display:flex;justify-content:space-between;width:100%;margin-top:12px;font-size:12px;font-weight:600}
 .more:hover{color:var(--accent)}
@@ -65,31 +73,50 @@ body{background:var(--desk);color:var(--ink);min-height:100vh;transition:backgro
 /* card */
 .card{padding:22px 22px 30px}
 .chead{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--ink2);font-weight:500}
-.ic{width:44px;height:44px;border-radius:10px;background:#10a37f;color:#fff;display:grid;place-items:center;font-weight:700;font-size:18px;margin-top:20px}
+.ic{width:44px;height:44px;border-radius:10px;background:var(--b);color:#fff;display:grid;place-items:center;font-weight:700;font-size:18px;margin-top:20px}
 .ttl{font-size:26px;font-weight:600;letter-spacing:-.03em;line-height:1.15;margin:16px 0 6px}
 .ttl em{font-style:normal;color:var(--accent)}
 .lead{font-size:13px;color:var(--ink2)}
 table{width:100%;border-collapse:collapse;margin-top:20px}
 td{padding:8px 0;border-bottom:1px solid var(--hair);font-size:13px}td:last-child{text-align:right;font-weight:500}
-tr:first-child td{border-top:2px solid var(--ink)}
 td:first-child{color:var(--ink2)}
-.total td{border-bottom:2px solid var(--ink);padding:14px 0}.total td:first-child{color:var(--ink);font-weight:600}
+.total td{border-bottom:0;padding:14px 0}.total td:first-child{color:var(--ink);font-weight:600}
 .total td:last-child{font-size:30px;font-weight:600;letter-spacing:-.04em}
 .btns{display:grid;grid-template-columns:1.3fr 1fr;gap:8px;margin-top:22px}
-.btn{height:48px;border-radius:6px;font-weight:600;font-size:15px;transition:transform .1s,background .15s}
+.btn{height:48px;border-radius:6px;font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform .1s,background .25s,color .25s}
 .btn.keep{background:var(--ink);color:var(--paper)}
 .btn.drop{background:var(--soft);color:var(--ink)}
 .btn.drop:hover{color:var(--accent)}
 .btn:active{transform:scale(.98)}
-.later{display:block;width:100%;margin-top:8px;height:40px;font-size:13px;font-weight:500;color:var(--ink2);border-radius:6px}
+.btn.c-keep,.btn.c-keep:hover{background:var(--keep);color:#fff}.btn.c-cancel,.btn.c-cancel:hover{background:var(--accent);color:#fff}
+.btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.btn svg path{stroke-dasharray:30;stroke-dashoffset:0}
+.later{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:8px;height:40px;font-size:13px;font-weight:500;color:var(--ink2);border-radius:6px;transition:background .2s,color .2s}
 .later:hover{background:var(--soft);color:var(--ink)}
+.later.confirmed{background:var(--soft);color:var(--ink)}
+.later svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.later svg path{stroke-dasharray:30}
+/*<motion-core-css>*/
+.stage{visibility:hidden}
+.embedded .seg{display:none}
+.mk{display:inline-block;font-style:normal;white-space:nowrap;animation:mk-in .5s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes mk-in{from{transform:scale(.3) rotate(-14deg);opacity:0}}
+[data-pcount]{display:inline-block}
+/* strike-through drawn left to right on cancelled rows */
+.st{background:linear-gradient(currentColor,currentColor) no-repeat 0 56%/0 1.5px;transition:background-size .5s cubic-bezier(.65,0,.35,1)}
+.is-cancel .st{background-size:100% 1.5px}
+::view-transition-old(root){animation:none}
+::view-transition-new(root){animation:vt-reveal .6s cubic-bezier(.65,0,.35,1)}
+@keyframes vt-reveal{from{clip-path:circle(0 at var(--vx,100%) var(--vy,0))}to{clip-path:circle(150vmax at var(--vx,100%) var(--vy,0))}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;transition-duration:1ms!important}}
+/*</motion-core-css>*/
 </style>
 </head>
 <body>
 <header class="bar">
   <div>
     <h1>R5 · 极简 Swiss</h1>
-    <p>Apple Store / 设计工作室那种电子小票。纯白纸、Inter 等宽数字、黑色粗细线做网格，只在底边留一圈细锯齿。整月用 31 格日历条表示，今天之前涂黑、待扣费日标橙。最克制、最好读。</p>
+    <p>白色电子小票：入场时分隔线从左往右画出来，31 格月历一格格点亮。做决定时按钮里画出一个对勾，卡片像轮播一样滑到下一张；「不续了」会把月历上那一格熄灭。</p>
   </div>
   <div class="seg"><button data-m="light">浅色</button><button data-m="dark">深色</button></div>
 </header>
@@ -107,54 +134,239 @@ td:first-child{color:var(--ink2)}
 
 <script>
 const SUBS=[
-  {n:"ChatGPT Plus",p:"US$20.00",d:"10.05",t:1,cyc:"每月",trial:true,g:0},
-  {n:"Netflix",p:"US$15.49",d:"10.06",t:2,cyc:"每月",g:0},
-  {n:"Spotify Premium",p:"US$11.99",d:"10.09",t:5,cyc:"每月",g:0},
-  {n:"iCloud+",p:"¥21.00",d:"10.16",t:12,cyc:"每月",g:1},
-  {n:"GitHub Copilot",p:"US$10.00",d:"10.22",t:18,cyc:"每月",g:1},
+  {n:"ChatGPT Plus",p:"US$20.00",d:"10.05",day:5,t:1,cyc:"每月",trial:true,g:0},
+  {n:"Netflix",p:"US$15.49",d:"10.06",day:6,t:2,cyc:"每月",g:0},
+  {n:"Spotify Premium",p:"US$11.99",d:"10.09",day:9,t:5,cyc:"每月",g:0},
+  {n:"iCloud+",p:"¥21.00",d:"10.16",day:16,t:12,cyc:"每月",g:1},
+  {n:"GitHub Copilot",p:"US$10.00",d:"10.22",day:22,t:18,cyc:"每月",g:1},
   {n:"B 站大会员",p:"¥148.00",d:"11.13",t:40,cyc:"每年",g:2},
   {n:"Notion Plus",p:"US$96.00",d:"01.07",t:95,cyc:"每年",g:2},
   {n:"域名 still.app",p:"US$14.00",d:"03.03",t:150,cyc:"每年",g:2},
 ];
 const GROUPS=["7 天内","30 天内","更晚"];
 const when=t=>t===1?"明天":t===2?"后天":`${t} 天后`;
-const DUE=new Set([5,6,9,16,22]);
+const DUE=new Set(SUBS.filter(s=>s.day).map(s=>s.day));
 
-document.getElementById("dock").innerHTML=`
+const dockHTML=()=>`
   <div class="top"><span class="logo">Still<span>续了么</span></span><button class="add" title="添加">+</button></div>
+  <div class="rule"></div>
   <div class="lbl">十月还要付</div>
-  <div class="big"><small>≈¥</small>407.27</div>
-  <div class="prog">${Array.from({length:31},(_,i)=>`<i class="${i<3?"past":DUE.has(i+1)?"due":""}"></i>`).join("")}</div>
+  <div class="big"><small>≈¥</small><span data-num>407.27</span></div>
+  <div class="prog">${Array.from({length:31},(_,i)=>`<i data-day="${i+1}" class="${i<3?"past":DUE.has(i+1)?"due":""}"></i>`).join("")}</div>
   <div class="legend"><span>已付 ¥0.00</span><span>共 ≈¥407.27</span></div>
-  <button class="pend"><b>2</b><span>个续费等你决定<small>ChatGPT Plus、Netflix</small></span>→</button>
+  <button class="pend" data-pending><b data-pcount>2</b><span><span data-ptext>个续费等你决定</span><small data-pnames>ChatGPT Plus、Netflix</small></span>→</button>
   ${GROUPS.map((g,i)=>{const list=SUBS.filter(s=>s.g===i);return `
     <div class="sec"><span>${g}</span><em>${list.length}</em></div>
+    <div class="rule thin"></div>
     ${list.map(s=>`
-      <div class="row ${s.t<=2?"hot":""}">
-        <span class="dt">${s.d}</span><span class="nm">${s.n}</span><span class="pr">${s.p}</span>
-        <span class="sub">${s.cyc}${s.trial?'<i class="tag">试用</i>':""}</span><span class="cd">${when(s.t)}</span>
+      <div class="row ${s.t<=2?"hot":""}" data-row="${s.n}">
+        <span class="dt">${s.d}</span><span class="nm"><span class="st">${s.n}</span></span><span class="pr st">${s.p}</span>
+        <span class="sub" data-mark>${s.cyc}${s.trial?'<i class="tag">试用</i>':""}</span><span class="cd">${when(s.t)}</span>
       </div>`).join("")}`}).join("")}
-  <div class="foot"><span style="font-size:11px;font-weight:600">月均支出</span><b>≈¥481.22</b></div>
+  <div class="rule" style="margin-top:14px"></div>
+  <div class="foot" style="margin-top:0"><span style="font-size:11px;font-weight:600">月均支出</span><b>≈¥<span data-monthly>481.22</span></b></div>
   <button class="more"><span>查看全部订阅</span><span>↗</span></button>`;
 
-document.getElementById("card").innerHTML=`
-  <div class="chead"><span>续费提醒</span><span>1 / 2</span></div>
-  <span class="ic">C</span>
-  <div class="ttl">ChatGPT Plus 的试用<br><em>明天结束</em></div>
-  <div class="lead">试用结束后会开始第一次扣费</div>
+const cardHTML=(it)=>`
+  <div class="chead"><span>续费提醒</span><span>${demo.index+1} / ${demo.total}</span></div>
+  <span class="ic" style="--b:${it.b}">${it.l}</span>
+  <div class="ttl">${it.trial?`${it.n} 的试用<br><em>${it.when}结束</em>`:`还在用 ${it.n}？<br><em>${it.when}续费</em>`}</div>
+  <div class="lead">${it.trial?"试用结束后会开始第一次扣费":`每月 ${it.p}，到期自动扣款`}</div>
   <table>
-    <tr><td>扣费日</td><td>2026.10.05</td></tr>
-    <tr><td>周期</td><td>每月</td></tr>
-    <tr><td>状态</td><td>试用中</td></tr>
-    <tr class="total"><td>首次扣费</td><td>US$20.00</td></tr>
+    <tr><td>扣费日</td><td>2026.${it.day.replace("-",".")}</td></tr>
+    <tr><td>周期</td><td>${it.cyc}</td></tr>
+    <tr><td>状态</td><td>${statusOf(it)}</td></tr>
   </table>
-  <div class="btns"><button class="btn keep">续</button><button class="btn drop">不续了</button></div>
-  <button class="later">再想想 · 稍后提醒我</button>`;
+  <div class="rule"></div>
+  <table style="margin-top:0"><tr class="total"><td>${chargeOf(it)}</td><td>${it.p}</td></tr></table>
+  <div class="rule"></div>
+  <div class="btns"><button class="btn keep" data-choice="keep">续</button><button class="btn drop" data-choice="cancel">不续了</button></div>
+  <button class="later" data-choice="later">再想想 · 稍后提醒我</button>`;
 
-const root=document.documentElement;
-function setMode(m){root.dataset.mode=m;document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===m))}
-document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>setMode(b.dataset.m));
-setMode(new URLSearchParams(location.search).has("dark")?"dark":"light");
+const doneHTML=()=>`
+  <div class="chead"><span>续费提醒</span><span>${demo.total} / ${demo.total}</span></div>
+  <span class="ic" style="--b:var(--keep)">✓</span>
+  <div class="ttl">全部完成<br><em>下一笔 10.09</em></div>
+  <div class="lead">这个月要你决定的续费都处理完了</div>
+  <table>
+    <tr><td>续</td><td>${demo.tally.keep}</td></tr>
+    <tr><td>不续了</td><td>${demo.tally.cancel}</td></tr>
+    <tr><td>再想想</td><td>${demo.tally.later}</td></tr>
+  </table>
+  <div class="rule"></div>
+  <table style="margin-top:0"><tr class="total"><td>每月省下</td><td>${savedText()}</td></tr></table>
+  <div class="rule"></div>
+  <button class="later" data-replay style="margin-top:16px">↻ 重新演示</button>`;
+
+const draw=(els,delay=0)=>stagger(els,[{transform:"scaleX(0)"},{transform:"none"}],{gap:70,delay,duration:620,easing:EASE.io});
+const wipe=(els,delay=0,gap=28)=>stagger(els,[{opacity:0,clipPath:"inset(0 100% 0 0)"},{opacity:1,clipPath:"inset(0 0 0 0)"}],{gap,delay,duration:460,easing:EASE.io});
+window.dockIn=()=>Promise.all([
+  play($("#dock").closest(".shadow"),[{opacity:0},{opacity:1}],{duration:260}),
+  draw($$("#dock .rule"),120),
+  stagger($$("#dock .prog i"),[{transform:"scaleY(0)"},{transform:"none"}],{gap:16,delay:260,duration:300,easing:EASE.out}),
+  wipe($$("#dock .top, #dock .lbl, #dock .big, #dock .legend, #dock .pend, #dock .sec, #dock .row, #dock .foot, #dock .more"),160,26),
+]);
+window.cardIn=(first)=>Promise.all([
+  play($("#card").closest(".shadow"),first?[{opacity:0},{opacity:1}]:[{opacity:0,transform:"translateX(36px)"},{opacity:1,transform:"none"}],{duration:first?260:420,easing:EASE.out}),
+  draw($$("#card .rule"),first?200:120),
+  wipe($$("#card > :not(.rule)"),first?120:60,32),
+]);
+const ICON={keep:"M5 12.5l4.5 4.5L19 7",cancel:"M7 7l10 10M17 7L7 17",later:"M5 12h13M13 6l6 6-6 6"};
+const LABEL={keep:"已续",cancel:"已取消",later:"明天再提醒"};
+window.cardFx=async(choice,btn)=>{
+  btn.classList.add("confirmed","c-"+choice);
+  btn.innerHTML=`<svg viewBox="0 0 24 24"><path d="${ICON[choice]}"/></svg>${LABEL[choice]}`;
+  play($("path",btn),[{strokeDashoffset:30},{strokeDashoffset:0}],{duration:420,easing:EASE.out});
+  play(btn,[{transform:"scale(.96)"},{transform:"none"}],{duration:260,easing:EASE.back});
+  await wait(720);
+  await play($("#card").closest(".shadow"),[{opacity:1,transform:"none"},{opacity:0,transform:"translateX(-36px)"}],{duration:300,easing:EASE.in,fill:"forwards"});
+};
+window.rowFx=(row,choice,it)=>{
+  const cell=$(`#dock .prog i[data-day="${+it.day.slice(3)}"]`);
+  if(!cell||choice==="later")return;
+  cell.classList.remove("due");
+  if(choice==="keep")cell.classList.add("kept");
+  return play(cell,[{transform:"scaleY(1.8)"},{transform:"none"}],{duration:420,easing:EASE.back});
+};
+/*<motion-core> shared by every receipt preview; each page defines dockHTML/cardHTML/doneHTML and dockIn/cardIn/cardFx/rowFx */
+const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const wait = (ms) => new Promise((r) => setTimeout(r, RM ? 0 : ms));
+const EASE = { out: "cubic-bezier(.2,.8,.2,1)", back: "cubic-bezier(.34,1.56,.64,1)", in: "cubic-bezier(.55,0,.75,.2)", io: "cubic-bezier(.65,0,.35,1)" };
+/* Enter animations fill backwards (they hand back to the stylesheet when done); exits pass fill:"forwards". */
+function play(el, kf, opts = {}) {
+  if (!el) return Promise.resolve();
+  const a = el.animate(kf, { duration: 420, easing: EASE.out, fill: "backwards", ...opts, ...(RM ? { duration: 1, delay: 0 } : {}) });
+  return a.finished.then(() => a, () => a);
+}
+const stagger = (els, kf, { gap = 40, delay = 0, ...o } = {}) => Promise.all([...els].map((el, i) => play(el, kf, { ...o, delay: delay + i * gap })));
+const fmtNum = (v) => v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function countTo(el, from, to, ms = 900) {
+  if (RM) { el.textContent = fmtNum(to); return Promise.resolve(); }
+  return new Promise((res) => {
+    const t0 = performance.now();
+    const tick = (t) => { const k = Math.min(1, (t - t0) / ms); el.textContent = fmtNum(from + (to - from) * (1 - Math.pow(1 - k, 4))); k < 1 ? requestAnimationFrame(tick) : res(); };
+    requestAnimationFrame(tick);
+  });
+}
+
+/* Demo data: the two renewals waiting for a decision */
+const RATE = { "US$": 7.12, "¥": 1 };
+const cny = (p) => { const m = /^(US\$|¥)([\d.]+)$/.exec(p); return m ? +m[2] * RATE[m[1]] : 0; };
+const PENDING = [
+  { n: "ChatGPT Plus", b: "#10a37f", l: "C", p: "US$20.00", day: "10-05", dayZh: "10 月 5 日", when: "明天", cyc: "每月", trial: true },
+  { n: "Netflix", b: "#e50914", l: "N", p: "US$15.49", day: "10-06", dayZh: "10 月 6 日", when: "后天", cyc: "每月", trial: false },
+];
+const titleOf = (it) => (it.trial ? `${it.n} 的试用快结束了` : `还在用 ${it.n} 吗？`);
+const subOf = (it) => (it.trial ? `${it.when}试用结束，并开始第一次扣费` : `${it.when}自动续费，每月 ${it.p}`);
+const statusOf = (it) => (it.trial ? "试用中" : "生效中");
+const chargeOf = (it) => (it.trial ? "首次扣费" : "本次扣费");
+const MARK = { keep: "已续", cancel: "已取消", later: "稍后" };
+const demo = {};
+function resetDemo() {
+  Object.assign(demo, { remaining: 407.27, monthly: 481.22, queue: PENDING.slice(), index: 0, total: PENDING.length, busy: false, tally: { keep: 0, cancel: 0, later: 0, saved: 0 } });
+}
+const tallyText = () => [demo.tally.keep && `续 ${demo.tally.keep}`, demo.tally.cancel && `不续 ${demo.tally.cancel}`, demo.tally.later && `稍后 ${demo.tally.later}`].filter(Boolean).join(" · ");
+const savedText = () => `≈¥${fmtNum(demo.tally.saved)}`;
+
+/* A decision ripples into the dock: the row, the totals and the pending banner */
+async function applyDecision(item, choice) {
+  demo.tally[choice]++;
+  const jobs = [];
+  if (choice === "cancel") {
+    const v = cny(item.p);
+    demo.tally.saved += v;
+    $$("[data-num]").forEach((el) => jobs.push(countTo(el, demo.remaining, demo.remaining - v)));
+    $$("[data-monthly]").forEach((el) => jobs.push(countTo(el, demo.monthly, demo.monthly - v)));
+    demo.remaining -= v;
+    demo.monthly -= v;
+  }
+  const row = $(`[data-row="${item.n}"]`);
+  if (row) {
+    row.classList.add("is-" + choice);
+    ($("[data-mark]", row) || row).insertAdjacentHTML("beforeend", `<i class="mk mk-${choice}">${MARK[choice]}</i>`);
+    jobs.push(Promise.resolve(window.rowFx?.(row, choice, item)));
+  }
+  jobs.push(updatePending());
+  await Promise.all(jobs);
+}
+async function updatePending() {
+  const banner = $("[data-pending]");
+  if (!banner) return;
+  const left = demo.queue.slice(1);
+  const count = $("[data-pcount]", banner);
+  await play(count, [{ transform: "none", opacity: 1 }, { transform: "translateY(-80%)", opacity: 0 }], { duration: 170, easing: EASE.in, fill: "forwards" });
+  if (left.length) {
+    count.textContent = left.length;
+    $("[data-pnames]", banner).textContent = left.map((x) => x.n).join("、");
+  } else {
+    banner.classList.add("done");
+    count.textContent = "✓";
+    $("[data-ptext]", banner).textContent = "都处理好了";
+    $("[data-pnames]", banner).textContent = tallyText();
+  }
+  count.getAnimations().forEach((a) => a.cancel());
+  await play(count, [{ transform: "translateY(80%)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 340, easing: EASE.back });
+}
+
+async function decide(choice, btn) {
+  if (demo.busy || !demo.queue.length) return;
+  demo.busy = true;
+  const item = demo.queue[0];
+  const fx = applyDecision(item, choice);
+  await window.cardFx(choice, btn, item);
+  demo.queue.shift();
+  demo.index++;
+  renderCard();
+  $(".card-w").getAnimations({ subtree: true }).forEach((a) => a.cancel());
+  await Promise.all([window.cardIn(false), fx]);
+  demo.busy = false;
+}
+function renderCard() {
+  const el = $("#card");
+  el.innerHTML = demo.queue.length ? cardHTML(demo.queue[0]) : doneHTML();
+  $$("[data-choice]", el).forEach((b) => (b.onclick = () => decide(b.dataset.choice, b)));
+  $("[data-replay]", el)?.addEventListener("click", () => replay());
+}
+const nudge = (el) => play(el, [{ transform: "none" }, { transform: "translateX(-7px)" }, { transform: "translateX(6px)" }, { transform: "translateX(-3px)" }, { transform: "none" }], { duration: 420, easing: "linear" });
+async function replay() {
+  resetDemo();
+  document.getAnimations().forEach((a) => a.cancel());
+  $("#dock").innerHTML = dockHTML();
+  $("[data-pending]")?.addEventListener("click", () => nudge($(".card-w")));
+  renderCard();
+  $(".stage").style.visibility = "visible";
+  $$("[data-num]").forEach((el) => countTo(el, 0, demo.remaining, 1100));
+  $$("[data-monthly]").forEach((el) => countTo(el, 0, demo.monthly, 1100));
+  await Promise.all([window.dockIn(), window.cardIn(true)]);
+}
+
+/* Light/dark with a circular reveal from wherever the switch happened */
+const root = document.documentElement;
+const params = new URLSearchParams(location.search);
+if (window.top !== window || params.has("embed")) root.classList.add("embedded");
+function setMode(m, origin) {
+  const apply = () => { root.dataset.mode = m; $$(".seg button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.m === m)); };
+  if (root.dataset.mode === m || !document.startViewTransition || RM) return apply();
+  root.style.setProperty("--vx", origin ? origin.x + "px" : "100%");
+  root.style.setProperty("--vy", origin ? origin.y + "px" : "0px");
+  document.startViewTransition(apply);
+}
+$$(".seg button").forEach((b) => (b.onclick = (e) => setMode(b.dataset.m, { x: e.clientX, y: e.clientY })));
+addEventListener("message", (e) => {
+  const d = e.data || {};
+  if (d.type === "mode") setMode(d.mode, d.origin);
+  if (d.type === "replay") replay();
+});
+/* inside the index page, shortcut keys go to the switcher */
+if (root.classList.contains("embedded")) addEventListener("keydown", (e) => {
+  if (!e.metaKey && !e.ctrlKey && !e.altKey && /^(ArrowLeft|ArrowRight|[1-5]|r|R|d|D)$/.test(e.key)) parent.postMessage({ type: "key", key: e.key }, "*");
+});
+root.dataset.mode = params.has("dark") ? "dark" : "light";
+$$(".seg button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.m === root.dataset.mode));
+Promise.race([document.fonts.ready, wait(800)]).then(replay);
+/*</motion-core>*/
 </script>
 </body>
 </html>
