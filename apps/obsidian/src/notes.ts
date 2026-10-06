@@ -26,7 +26,7 @@ function dailyNoteOptions(app: App): DailyNoteOptions {
   return { folder: (options.folder ?? "").trim(), format: options.format?.trim() || "YYYY-MM-DD", template: (options.template ?? "").trim() };
 }
 
-async function ensureFolder(app: App, folder: string) {
+export async function ensureFolder(app: App, folder: string) {
   const parts = normalizePath(folder).split("/").filter(Boolean);
   for (let i = 1; i <= parts.length; i++) {
     const path = parts.slice(0, i).join("/");

@@ -53,7 +53,7 @@ export function PendingSection({ className }: { className?: string }) {
     );
   }
 
-  const names = pending.map((p) => p.subscription.name).join("、");
+  const names = pending.map((p) => p.subscription.name).join(locale.startsWith("zh") ? "、" : ", ");
   const flip = settled || undefined;
 
   return (

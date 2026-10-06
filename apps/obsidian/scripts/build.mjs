@@ -2,7 +2,7 @@
 /**
  * Builds the Obsidian plugin into dist/:
  *   main.js, styles.css   (Vite)
- *   manifest.json, versions.json
+ *   manifest.json, versions.json   (copied from the repository root)
  *
  *   node scripts/build.mjs            production build
  *   node scripts/build.mjs --watch    development build, rebuilds on change
@@ -23,13 +23,15 @@ const mode = watch ? "development" : "production";
 rmSync(dist, { recursive: true, force: true });
 mkdirSync(dist, { recursive: true });
 
+// Obsidian reads manifest.json and versions.json from the repository root, so that's where they live.
+const repoRoot = resolve(root, "../..");
 function copyStatic() {
-  for (const name of ["manifest.json", "versions.json"]) cpSync(join(root, name), join(dist, name));
+  for (const name of ["manifest.json", "versions.json"]) cpSync(join(repoRoot, name), join(dist, name));
 }
 copyStatic();
 
 if (watch) {
-  watchFs(join(root, "manifest.json"), () => copyStatic());
+  watchFs(join(repoRoot, "manifest.json"), () => copyStatic());
   await viteBuild({ root, mode, configFile: join(root, "vite.config.ts"), build: { watch: {} } });
 } else {
   await viteBuild({ root, mode, configFile: join(root, "vite.config.ts"), logLevel: "warn" });

@@ -22,10 +22,10 @@ import {
 import { Notice, Platform, Plugin, TFolder, addIcon, getLanguage, normalizePath, setIcon, type TAbstractFile } from "obsidian";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import manifest from "../manifest.json" with { type: "json" };
+import manifest from "../../../manifest.json" with { type: "json" };
 import { createEngineClient, type ObsidianStillClient } from "./client.js";
 import { createEngineHost, readDevice } from "./host.js";
-import { MarkdownMirror, SummaryBlock, dailyNoteJournal, parseBlockOptions, type SummarySource } from "./notes.js";
+import { MarkdownMirror, SummaryBlock, dailyNoteJournal, ensureFolder, parseBlockOptions, type SummarySource } from "./notes.js";
 import { VaultFileStore } from "./storage.js";
 import "./styles.css";
 import { ICON, ICON_SVG, ManagerLeafView, StillSettingTab, UpcomingView, VIEW_MANAGER, VIEW_UPCOMING, confirmModal } from "./views.js";
@@ -189,7 +189,14 @@ export default class StillPlugin extends Plugin {
       await workspace.revealLeaf(existing);
       return;
     }
-    await workspace.getLeaf("tab").setViewState({ type: VIEW_MANAGER, active: true });
+    let leaf;
+    try {
+      leaf = workspace.getLeaf("tab");
+    } catch {
+      // No tab group in the main area (every tab closed): let Obsidian create one.
+      leaf = workspace.getLeaf(false);
+    }
+    await leaf.setViewState({ type: VIEW_MANAGER, active: true });
   }
 
   #registerStatusBar() {
@@ -286,7 +293,17 @@ export default class StillPlugin extends Plugin {
         new Notice(this.t("folderTaken", { folder: next }));
         return current;
       }
+      const parent = next.includes("/") ? next.slice(0, next.lastIndexOf("/")) : "";
+      if (parent) await ensureFolder(this.app, parent);
+      const oldNotes = this.#mirror.notesFolder;
       await fileManager.renameFile(from, next);
+      this.data.folder = next;
+      // The Bases view filters on the notes folder; follow the move.
+      for (const file of vault.getFiles()) {
+        if (file.extension === "base" && file.parent?.path === next) {
+          await vault.process(file, (text) => text.split(JSON.stringify(oldNotes)).join(JSON.stringify(this.#mirror.notesFolder)));
+        }
+      }
       new Notice(this.t("folderMoved", { folder: next }));
     }
     this.data.folder = next;

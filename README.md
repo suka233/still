@@ -1,69 +1,53 @@
 # Still · 续了么
 
-Subscription tracker that asks before it renews. SiYuan plugin first; Obsidian,
-self-hosted server (Docker) and mobile clients later.
+> Before it renews, Still asks: **still using it?**
 
-![Still](docs/media/preview.png)
+Still keeps track of your subscriptions and free trials, inside the notes app you already use. Before each charge it shows a card — **keep**, **cancel**, or **decide later** — one click. Available for **Obsidian** and **SiYuan**.
 
-User docs: [English](apps/siyuan/README.md) · [中文](apps/siyuan/README.zh-CN.md) · [Changelog](CHANGELOG.md)
+[中文说明](README.zh-CN.md) · [Changelog](CHANGELOG.md) · [Developing](docs/development.md)
 
-## Layout
+![Still in Obsidian](docs/media/obsidian.png)
 
-```
-packages/core     Platform-independent domain logic (no DOM, no Intl, no crypto):
-                  calendar dates, billing cycles, money, HLC timestamps,
-                  reminders, file-per-record repository. Runs in goja.
-packages/engine   The service every host runs: owns reads/writes, schedules
-                  reminders, claims them across devices, pushes, writes daily
-                  notes. Hosts plug in storage, HTTP, timers and events.
-packages/ui       React + shadcn/ui views shared by every host. Tailwind classes
-                  are prefixed `still:`; no global preflight. Eight themes render
-                  one superset markup (`stl-*`) styled per theme with @scope.
-apps/siyuan       SiYuan plugin: kernel.js (goja; runs the engine behind RPC) and
-                  index.js (frontend: dock, tab, status bar, reminder card).
-apps/obsidian     Obsidian plugin: main.js runs the engine in-process over a vault
-                  folder (default `Still/`); sidebar, manager tab, settings tab.
-                  Its CSS is lifted one id of specificity above Obsidian's
-                  element styles at build time.
-tools/goja-runner Runs JS in the same goja setup SiYuan uses, for tests.
-```
+## Features
 
-## Commands
+- **Reminders before every charge** — 3 days and 1 day ahead by default, and before free trials convert; same-day reminders wait for your notify time.
+- **The "still using it?" card** — what this charge costs and roughly how much you've paid so far. "Cancel it" marks the subscription cancelled, with Undo and a shortcut to the provider's cancellation page.
+- **Push to your phone** — Bark, ntfy, Telegram, Server酱 (WeChat), WeCom, DingTalk, Feishu, Discord, Slack, Gotify or any webhook.
+- **A sidebar that answers "what's next?"** — what's left to pay this month, decisions waiting for you, upcoming charges; the status bar shows the next one.
+- **Manager** — monthly and yearly spend, savings, six-month forecast, calendar and category insights.
+- **90+ services** with brand icons; multi-currency totals combined with exchange rates.
+- **Eight themes** — five receipt styles (Thermal, Boutique, Ticket, Riso, Swiss) plus Calm, Wallet and Timeline — each in light and dark, following your app.
+- **Lives in your notes** — daily-note entries for charges and cancellations, and a live overview table in any note.
+- **Your data stays yours** — plain JSON files in your vault or workspace, synced however you sync it; JSON export and import, and the same format in both apps.
 
-```bash
-pnpm install
-pnpm test        # core unit tests + kernel.js end-to-end in real goja (needs Go)
-pnpm typecheck
-pnpm build       # apps/siyuan/dist + apps/siyuan/package.zip
-```
+## Obsidian
 
-Develop against a dedicated SiYuan workspace (needs SiYuan 3.8.5+ installed; the
-script uses its kernel binary, trusts bazaar plugins and turns update downloads off):
+Install from **Settings → Community plugins → Browse**, search for "Still". Requires Obsidian 1.8.7 or later; works on desktop and mobile.
 
-```bash
-pnpm --filter @still/siyuan dev                     # rebuild on change
-node apps/siyuan/scripts/serve.mjs                  # kernel on :6899, workspace ~/SiYuan/still-dev
-node apps/siyuan/scripts/seed.mjs --reset           # demo data
-node tools/snap/snap.mjs /tmp/snaps                 # Playwright screenshots for visual QA
-```
+- Open the sidebar with the ribbon icon or the command **Still: Open upcoming charges**; **Still: Open subscriptions** opens the manager in a tab.
+- Data is kept in the vault folder `Still/` (one JSON file per record); rename or move it in **Settings → Still**, and the data moves with it.
+- Put a live table of upcoming charges in any note:
 
-Or link `dist/` into an existing workspace with `node apps/siyuan/scripts/link.mjs <workspace>`.
+  ````markdown
+  ```still
+  days: 30
+  limit: 10
+  ```
+  ````
 
-Tutorial clips live in `docs/tutorial/clips/` and are recorded with the
-make-kmind-tutorial-slice-lite pipeline against the dev kernel.
+  Both lines are optional. **Still: Insert subscription overview** inserts a static table instead.
+- **Daily notes** — turn on "Write to daily note" in Still's settings; entries go into today's note using your Daily notes settings (folder, date format, template).
+- **Markdown notes** (optional, in Settings → Still) — one note per subscription in `Still/Notes`, with its details as properties, plus a `Subscriptions.base` view. Still maintains these notes; change subscriptions in Still.
+- Obsidian has no background process, so reminders and pushes happen while Obsidian is open on any of your devices; anything missed is caught up the next time it starts. If several devices sync the vault, pick one as the sender in Settings → Notifications.
 
-## Design notes
+## SiYuan
 
-- **The kernel plugin is the single writer.** The frontend calls it over
-  JSON-RPC (`apps/siyuan/src/shared/rpc.ts`); it broadcasts `changed` and
-  `reminders-due`. Reminders are computed even when no window is open.
-- **One file per subscription** under `data/storage/petal/still/subscriptions/`,
-  so SiYuan's file-level sync behaves like per-record last-writer-wins.
-  Deletes are tombstones. `updatedAt` is a hybrid logical clock string, ready
-  for a sync server.
-- **Dates are civil dates** (`YYYY-MM-DD`), never instants. Month cycles are
-  computed from the anchor (Jan 31 → Feb 28 → Mar 31). The kernel uses the
-  host time zone; Docker deployments should set `TZ`.
-- **Reminders** collapse missed thresholds into the most urgent one, wait for
-  `notifyAt` on the day, and are claimed atomically so only one window shows
-  each one. Delivery logs are per device (`delivered/<deviceId>.json`).
+Install from **Bazaar → Plugins**, search for "Still" or "续了么". Requires SiYuan 3.8.5 or later. Reminders are computed by a kernel plugin, so they're scheduled and pushed even with every window closed. See the [SiYuan guide](apps/siyuan/README.md) for the dock, the `/still` overview table and the AI agent tool.
+
+## Privacy
+
+Apart from push channels you configure, Still only calls public exchange-rate APIs (open.er-api.com / Frankfurter; turn conversion off in Settings to stop). Your subscription data is never uploaded.
+
+## License
+
+MIT © suka233

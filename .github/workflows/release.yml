@@ -1,8 +1,11 @@
 name: Release
 
+# One release carries both plugins. The tag is the bare version ("0.1.0"):
+# Obsidian looks releases up by exact tag, and the SiYuan bazaar takes
+# package.zip from the latest release.
 on:
   push:
-    tags: ["v*"]
+    tags: ["[0-9]+.[0-9]+.[0-9]+"]
 
 permissions:
   contents: write
@@ -22,18 +25,17 @@ jobs:
           go-version: "1.26"
           cache-dependency-path: tools/goja-runner/go.sum
       - run: pnpm install --frozen-lockfile
-      - name: Tag must match plugin.json version
-        run: |
-          version=$(node -p "require('./apps/siyuan/plugin.json').version")
-          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
-            echo "tag $GITHUB_REF_NAME does not match plugin.json version $version" >&2
-            exit 1
-          fi
+      - name: Tag must match both plugins' versions
+        run: node tools/check-release.mjs "$GITHUB_REF_NAME"
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
-      # The SiYuan bazaar installs the package.zip attached to the latest release.
+      # SiYuan installs package.zip; Obsidian installs main.js, manifest.json and styles.css.
       - uses: softprops/action-gh-release@v2
         with:
-          files: apps/siyuan/package.zip
+          files: |
+            apps/siyuan/package.zip
+            apps/obsidian/dist/main.js
+            apps/obsidian/dist/manifest.json
+            apps/obsidian/dist/styles.css
           body_path: CHANGELOG.md

@@ -80,8 +80,7 @@ export function createPortal(doc: Document, ctx: Pick<MountContext, "scopes" | "
 /** Renders a Still view into a host element inside its own `.still-root` scope; returns the unmount. */
 export function mountStill(container: Element, node: ReactNode, ctx: MountContext, { fill = true } = {}): () => void {
   const scope = container.ownerDocument.createElement("div");
-  scope.className = `still-root ${ctx.scopeClassName}`;
-  if (fill) scope.style.height = "100%";
+  scope.className = `still-root ${ctx.scopeClassName}${fill ? " still-fill" : ""}`;
   container.append(scope);
   ctx.scopes.add(scope);
   const root: Root = createRoot(scope);

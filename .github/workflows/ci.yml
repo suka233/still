@@ -20,6 +20,7 @@ jobs:
           go-version: "1.26"
           cache-dependency-path: tools/goja-runner/go.sum
       - run: pnpm install --frozen-lockfile
+      - run: node tools/check-release.mjs
       - run: pnpm typecheck
       # Unit tests plus kernel.js end-to-end inside goja (the engine SiYuan embeds).
       - run: pnpm test
@@ -28,3 +29,10 @@ jobs:
         with:
           name: still-siyuan-package
           path: apps/siyuan/package.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: still-obsidian-plugin
+          path: |
+            apps/obsidian/dist/main.js
+            apps/obsidian/dist/manifest.json
+            apps/obsidian/dist/styles.css

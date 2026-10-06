@@ -39,8 +39,23 @@ abstract class StillLeafView extends ItemView {
     return ICON;
   }
 
+  #doc: Document | null = null;
+
   override async onOpen(): Promise<void> {
+    this.#mount();
+    // A leaf can be built in the main window and then moved to a popout (or dragged
+    // between windows); remount so dialogs and popovers open in the right window.
+    this.registerEvent(
+      this.app.workspace.on("layout-change", () => {
+        if (this.#unmount && this.contentEl.ownerDocument !== this.#doc) this.#mount();
+      }),
+    );
+  }
+
+  #mount() {
+    this.#unmount?.();
     this.contentEl.empty();
+    this.#doc = this.contentEl.ownerDocument;
     this.#unmount = this.plugin.mount(this.contentEl, this.render());
   }
 
