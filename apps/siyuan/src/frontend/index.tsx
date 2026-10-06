@@ -27,6 +27,8 @@ import { SCOPE_CLASS, ScopeRegistry, mount, type MountContext } from "./mount.js
 
 const TAB_TYPE = "manager";
 const DOCK_TYPE = "upcoming";
+const SVG_NS = "http://www.w3.org/2000/svg";
+const XLINK_NS = "http://www.w3.org/1999/xlink";
 
 function isSiyuanDark(): boolean {
   return document.documentElement.dataset.themeMode === "dark";
@@ -163,7 +165,7 @@ export default class StillPlugin extends Plugin {
       // `openTab` is a no-op on mobile; use a full-screen dialog instead.
       const dialog = new Dialog({ title: this.#t("appName"), content: "<div></div>", width: "100vw", height: "100vh" });
       const body = dialog.element.querySelector(".b3-dialog__body") as HTMLElement;
-      body.style.padding = "0";
+      body.classList.add("still-dialog-body");
       const unmount = mount(body, <ManagerView />, this.#ctx);
       const destroy = dialog.destroy.bind(dialog);
       dialog.destroy = (options) => {
@@ -205,7 +207,7 @@ export default class StillPlugin extends Plugin {
     this.addTab({
       type: TAB_TYPE,
       init() {
-        (this.element as HTMLElement).style.overflow = "auto";
+        (this.element as HTMLElement).classList.add("still-tab");
         unmounts.set(this, mount(this.element, <ManagerView />, ctx()));
       },
       destroy() {
@@ -226,8 +228,16 @@ export default class StillPlugin extends Plugin {
       if (status !== "ready" || !this.#statusBar) return;
       const next = nextChargeWithinWeek(subscriptions, today);
       const label = next ? `${next.subscription.name} · ${formatDaysLeft(next.daysLeft, this.#t)}` : "";
-      el.innerHTML = label ? `<svg><use xlink:href="#iconStill"></use></svg><span></span>` : "";
-      el.querySelector("span")?.append(label);
+      el.replaceChildren();
+      if (label) {
+        const svg = document.createElementNS(SVG_NS, "svg");
+        const use = document.createElementNS(SVG_NS, "use");
+        use.setAttributeNS(XLINK_NS, "xlink:href", "#iconStill");
+        svg.append(use);
+        const text = document.createElement("span");
+        text.textContent = label;
+        el.append(svg, text);
+      }
       el.title = next ? formatMoney(next.subscription.price, this.#locale) : "";
     };
     this.#cleanups.push(this.#store.subscribe(render));

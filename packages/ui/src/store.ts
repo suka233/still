@@ -183,12 +183,12 @@ export function createStillStore(client: StillClient, now: () => Date = () => ne
     },
 
     dispose() {
-      if (timer) clearInterval(timer);
+      if (timer) window.clearInterval(timer);
       timer = null;
     },
   }));
 
-  timer = setInterval(() => {
+  timer = window.setInterval(() => {
     const clock = readClock();
     store.setState(clock.today === store.getState().today ? { clock } : { clock, today: clock.today });
   }, 30_000);

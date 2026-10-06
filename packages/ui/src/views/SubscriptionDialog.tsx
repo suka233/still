@@ -130,7 +130,7 @@ export function SubscriptionDialog({ open, onOpenChange, subscription, initialPi
     setStep(subscription ? "form" : "pick");
     setForm(subscription ? stateFromSubscription(subscription, settings.remindDaysBefore) : blankState(defaults));
     if (!subscription && initialPick) onPick(initialPick);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Deps on purpose: reset only when the dialog opens or its target changes, not on settings edits.
   }, [open, subscription, initialPick]);
 
   function onPick(result: PickResult) {
@@ -210,7 +210,7 @@ function SubscriptionForm({
   useEffect(() => {
     // Presets already know the name; jump straight to the price.
     (form.name ? priceRef : nameRef).current?.focus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Deps on purpose: focus once, when the form first appears.
   }, []);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((f) => ({ ...f, [key]: value }));

@@ -159,7 +159,7 @@ function download(filename: string, content: string, mime: string) {
   document.body.append(a);
   a.click();
   a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function DataActions() {

@@ -29,8 +29,8 @@ export function PendingSection({ className }: { className?: string }) {
     previous.current = pending.length;
     if (before > 0 && pending.length === 0 && !reducedMotion()) {
       setDone(true);
-      const timer = setTimeout(() => setDone(false), DONE_MS);
-      return () => clearTimeout(timer);
+      const timer = window.setTimeout(() => setDone(false), DONE_MS);
+      return () => window.clearTimeout(timer);
     }
   }, [pending.length]);
 

@@ -7,6 +7,15 @@
   z-index: 1000;
 }
 
+/* The mobile manager dialog and the manager tab. */
+.b3-dialog__body.still-dialog-body {
+  padding: 0;
+}
+
+.still-tab.still-tab {
+  overflow: auto;
+}
+
 .still-statusbar {
   display: inline-flex;
   align-items: center;

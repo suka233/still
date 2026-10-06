@@ -23,14 +23,14 @@ const TIMEOUT_MS = 15_000;
 export function createRpcClient(rpc: IKernelPluginRpc): SiyuanStillClient {
   const call = <T>(method: string, ...params: unknown[]): Promise<T> =>
     new Promise<T>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new RpcTimeoutError(method)), TIMEOUT_MS);
+      const timer = window.setTimeout(() => reject(new RpcTimeoutError(method)), TIMEOUT_MS);
       rpc.call[method]!(...(params as never[])).then(
         (value: T) => {
-          clearTimeout(timer);
+          window.clearTimeout(timer);
           resolve(value);
         },
         (error: unknown) => {
-          clearTimeout(timer);
+          window.clearTimeout(timer);
           reject(error);
         },
       );

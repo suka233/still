@@ -10,7 +10,7 @@ export function reducedMotion(): boolean {
 }
 
 export function pause(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, reducedMotion() ? 0 : ms));
+  return new Promise((resolve) => window.setTimeout(resolve, reducedMotion() ? 0 : ms));
 }
 
 const entered = new Set<string>();
@@ -21,8 +21,8 @@ export function useFirstEntrance(key: string, ms = 700): boolean {
   useEffect(() => {
     entered.add(key);
     if (!on) return;
-    const timer = setTimeout(() => setOn(false), ms);
-    return () => clearTimeout(timer);
+    const timer = window.setTimeout(() => setOn(false), ms);
+    return () => window.clearTimeout(timer);
   }, [key, ms, on]);
   return on;
 }
@@ -53,11 +53,11 @@ export function useTweenedTotals(target: Record<string, number>, ms = 650): Reco
       for (const c of keys) next[c] = Math.round((start[c] ?? 0) + ((target[c] ?? 0) - (start[c] ?? 0)) * e);
       from.current = k < 1 ? next : target;
       setShown(k < 1 ? next : target);
-      if (k < 1) frame = requestAnimationFrame(tick);
+      if (k < 1) frame = window.requestAnimationFrame(tick);
     };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    frame = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frame);
+    // Deps on purpose: `signature` stands in for `target`, which is a new object every render.
   }, [signature, ms]);
   return shown;
 }
@@ -68,7 +68,7 @@ export function useTweenedTotals(target: Record<string, number>, ms = 650): Reco
  */
 export function useLingering<T>(items: readonly T[], keyOf: (item: T) => string, shouldLinger: (item: T) => boolean, ms = 950): { item: T; leaving: boolean }[] {
   const previous = useRef<readonly T[]>(items);
-  const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
+  const timers = useRef(new Set<number>());
   const [gone, setGone] = useState<{ item: T; index: number; key: string }[]>([]);
 
   useEffect(() => {
@@ -81,14 +81,14 @@ export function useLingering<T>(items: readonly T[], keyOf: (item: T) => string,
     const keys = new Set(removed.map((r) => r.key));
     setGone((g) => [...g.filter((x) => !keys.has(x.key)), ...removed]);
     // Timers outlive later list changes on purpose; they're only cleared on unmount.
-    const timer = setTimeout(() => {
+    const timer = window.setTimeout(() => {
       timers.current.delete(timer);
       setGone((g) => g.filter((x) => !keys.has(x.key)));
     }, ms);
     timers.current.add(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Deps on purpose: runs per list change; `keyOf`/`shouldLinger` are inline callbacks.
   }, [items]);
-  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), []);
 
   const out: { item: T; leaving: boolean }[] = items.map((item) => ({ item, leaving: false }));
   for (const g of [...gone].sort((a, b) => a.index - b.index)) {
