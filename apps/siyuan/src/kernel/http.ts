@@ -2,22 +2,7 @@
  * Outbound HTTP for the kernel plugin. `siyuan.client.fetch` only reaches the
  * local kernel, so external requests go through SiYuan's forward proxy.
  */
-export interface HttpRequest {
-  url: string;
-  method?: "GET" | "POST" | "PUT";
-  headers?: Record<string, string>;
-  /** Sent as JSON unless `text` is set. */
-  json?: unknown;
-  text?: string;
-  contentType?: string;
-  timeoutMs?: number;
-}
-
-export interface HttpResponse {
-  status: number;
-  body: string;
-  json<T = unknown>(): T | null;
-}
+import { httpResponse, type HttpRequest, type HttpResponse } from "@still/engine";
 
 export async function httpRequest(req: HttpRequest): Promise<HttpResponse> {
   const options: Record<string, unknown> = {
@@ -38,16 +23,5 @@ export async function httpRequest(req: HttpRequest): Promise<HttpResponse> {
   const envelope = (await res.json()) as { code: number; msg: string; data?: { status: number; body: string } };
   // URLs and proxy messages can contain credentials (bot tokens, webhook keys).
   if (envelope.code !== 0 || !envelope.data) throw new Error("forwardProxy request failed");
-  const { status, body } = envelope.data;
-  return {
-    status,
-    body,
-    json<T>() {
-      try {
-        return JSON.parse(body) as T;
-      } catch {
-        return null;
-      }
-    },
-  };
+  return httpResponse(envelope.data.status, envelope.data.body);
 }

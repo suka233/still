@@ -1,0 +1,12 @@
+{
+  "push.title": "{name} renews {when}",
+  "push.trialTitle": "{name} trial ends {when}",
+  "push.body": "{price} · Still using it?",
+  "push.today": "today",
+  "push.tomorrow": "tomorrow",
+  "push.inDays": "in {n} days",
+  "push.testTitle": "Still is connected",
+  "push.testBody": "Renewal reminders will arrive here.",
+  "journal.charge": "💳 Renewed {name}: {price}",
+  "journal.cancel": "✂️ Decided not to renew {name} (saves {price} per charge)"
+}

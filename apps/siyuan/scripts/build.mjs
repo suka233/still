@@ -24,9 +24,20 @@ const mode = watch ? "development" : "production";
 rmSync(dist, { recursive: true, force: true });
 mkdirSync(dist, { recursive: true });
 
+/** SiYuan's i18n files, with the engine's push and daily-note text merged in (SiYuan file names → engine catalogs). */
+const engineMessages = join(root, "../../packages/engine/src/messages");
+function writeI18n() {
+  mkdirSync(join(dist, "i18n"), { recursive: true });
+  for (const name of readdirSync(join(root, "src/i18n")).filter((n) => n.endsWith(".json"))) {
+    const own = JSON.parse(readFileSync(join(root, "src/i18n", name), "utf8"));
+    const engine = JSON.parse(readFileSync(join(engineMessages, name.startsWith("zh") ? "zh-CN.json" : "en.json"), "utf8"));
+    writeFileSync(join(dist, "i18n", name), JSON.stringify({ ...engine, ...own }, null, 2) + "\n");
+  }
+}
+
 function copyStatic() {
   cpSync(join(root, "plugin.json"), join(dist, "plugin.json"));
-  cpSync(join(root, "src/i18n"), join(dist, "i18n"), { recursive: true });
+  writeI18n();
   for (const name of ["README.md", "README.zh-CN.md", "icon.png", "preview.png"]) {
     const from = join(root, name);
     if (existsSync(from)) cpSync(from, join(dist, name));
@@ -68,7 +79,7 @@ copyStatic();
 
 if (watch) {
   // Keep i18n and the manifest in sync too; SiYuan reads them on plugin reload.
-  for (const path of [join(root, "src/i18n"), join(root, "plugin.json")]) {
+  for (const path of [join(root, "src/i18n"), engineMessages, join(root, "plugin.json")]) {
     watchFs(path, { recursive: true }, () => {
       try {
         copyStatic();

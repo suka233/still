@@ -1,16 +1,6 @@
 {
   "openManager": "续了么：打开订阅管理",
   "addSubscription": "续了么：添加订阅",
-  "push.title": "{name} {when}续费",
-  "push.trialTitle": "{name} 试用{when}结束",
-  "push.body": "{price} · 续了么？",
-  "push.today": "今天",
-  "push.tomorrow": "明天",
-  "push.inDays": "{n} 天后",
-  "push.testTitle": "续了么已连接",
-  "push.testBody": "续费提醒会推送到这里。",
-  "journal.charge": "💳 续费 {name}：{price}",
-  "journal.cancel": "✂️ 决定不续 {name}（每次省 {price}）",
   "agent.title": "订阅（续了么）",
   "agent.description": "列出续了么记录的用户订阅：名称、价格、计费周期、状态、下次扣费日期，以及按币种汇总的月均支出。用于回答关于周期性支出或即将续费的问题。"
 }

@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@still/core": "workspace:*",
+    "@still/engine": "workspace:*",
     "@still/ui": "workspace:*",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

@@ -1,0 +1,12 @@
+{
+  "push.title": "{name} {when}续费",
+  "push.trialTitle": "{name} 试用{when}结束",
+  "push.body": "{price} · 续了么？",
+  "push.today": "今天",
+  "push.tomorrow": "明天",
+  "push.inDays": "{n} 天后",
+  "push.testTitle": "续了么已连接",
+  "push.testBody": "续费提醒会推送到这里。",
+  "journal.charge": "💳 续费 {name}：{price}",
+  "journal.cancel": "✂️ 决定不续 {name}（每次省 {price}）"
+}

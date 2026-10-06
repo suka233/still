@@ -20,6 +20,9 @@ importers:
       '@still/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@still/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
       '@still/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -65,6 +68,19 @@ importers:
         version: 8.3.2(esbuild@0.28.2)(jiti@2.7.0)
 
   packages/core:
+    devDependencies:
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: ^5.0.3
+        version: 5.0.3(vite@8.3.2(esbuild@0.28.2)(jiti@2.7.0))
+
+  packages/engine:
+    dependencies:
+      '@still/core':
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       typescript:
         specifier: ^6.0.3

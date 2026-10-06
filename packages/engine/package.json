@@ -1,0 +1,25 @@
+{
+  "name": "@still/engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Still's host-independent service: storage, reminder scheduling, delivery and push, shared by every host",
+  "license": "MIT",
+  "author": "suka233",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./messages/*.json": "./src/messages/*.json"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@still/core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.3"
+  }
+}

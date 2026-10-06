@@ -13,10 +13,13 @@ User docs: [English](apps/siyuan/README.md) · [中文](apps/siyuan/README.zh-CN
 packages/core     Platform-independent domain logic (no DOM, no Intl, no crypto):
                   calendar dates, billing cycles, money, HLC timestamps,
                   reminders, file-per-record repository. Runs in goja.
+packages/engine   The service every host runs: owns reads/writes, schedules
+                  reminders, claims them across devices, pushes, writes daily
+                  notes. Hosts plug in storage, HTTP, timers and events.
 packages/ui       React + shadcn/ui views shared by every host. Tailwind classes
                   are prefixed `still:`; no global preflight. Eight themes render
                   one superset markup (`stl-*`) styled per theme with @scope.
-apps/siyuan       SiYuan plugin: kernel.js (goja, owns data + scheduling) and
+apps/siyuan       SiYuan plugin: kernel.js (goja; runs the engine behind RPC) and
                   index.js (frontend: dock, tab, status bar, reminder card).
 tools/goja-runner Runs JS in the same goja setup SiYuan uses, for tests.
 ```

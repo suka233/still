@@ -1,49 +1,18 @@
 /**
  * Still kernel plugin. Runs inside SiYuan's Go kernel (goja), independently of
- * any open window, and owns all reads and writes of Still's data.
- *
- * The frontend talks to it over JSON-RPC (see `../shared/rpc.ts`); the kernel
- * pushes `changed` and `reminders-due` notifications back.
+ * any open window. The service itself is `@still/engine`; this file adapts it
+ * to SiYuan: storage, forward-proxy HTTP, daily notes, change detection and
+ * JSON-RPC (see `../shared/rpc.ts`) with `changed` / `reminders-due` pushes.
  */
-import {
-  NotFoundError,
-  PATHS,
-  StillRepository,
-  ValidationError,
-  cancellationEndDate,
-  computeDueReminders,
-  createHlcClock,
-  indexDecisions,
-  isLocalDate,
-  isStillBackup,
-  localDateOf,
-  localMinutesOf,
-  parseRatesPayload,
-  toSubscriptionInput,
-  validateChannel,
-  type FileStore,
-  type Snapshot,
-  type StillBackup,
-  type Subscription,
-} from "@still/core";
-import { RPC, type ChannelTestResult, type DecideResult, type DeviceInfo, type ImportResult, type RpcErrorData } from "../shared/rpc.js";
+import { NotFoundError, PATHS, ValidationError, type FileStore } from "@still/core";
+import { StillEngine, type DeviceInfo, type EngineHost } from "@still/engine";
+import { RPC, type RpcErrorData } from "../shared/rpc.js";
 import { registerAgentCapability } from "./agent.js";
 import { httpRequest } from "./http.js";
-import { Notifier, listNotebooks, sendToChannel, testMessage } from "./notify.js";
+import { journal, listNotebooks, translator } from "./notify.js";
 
-/** How often the reminder scheduler wakes up. */
-const TICK_MS = 60_000;
 /** How often storage is checked for changes made elsewhere (sync, other devices). */
 const POLL_MS = 15_000;
-/** Exchange rates are refreshed at most this often… */
-const RATES_MAX_AGE_MS = 12 * 60 * 60_000;
-/** …and after a failed attempt, retried no sooner than this. */
-const RATES_RETRY_MS = 60 * 60_000;
-/** Tried in order; both are free and need no API key. */
-const RATE_SOURCES = [
-  { url: "https://open.er-api.com/v6/latest/USD", source: "ExchangeRate-API" },
-  { url: "https://api.frankfurter.app/latest?from=USD", source: "Frankfurter (ECB)" },
-];
 /** Directories watched for changes, relative to the plugin's storage dir. */
 const WATCHED = [".", PATHS.subscriptionsDir, PATHS.decisionsDir, PATHS.deliveredDir];
 
@@ -68,26 +37,18 @@ const files: FileStore = {
 };
 
 /** This device as SiYuan knows it; the ID is reduced to the characters HLC node IDs allow. */
-async function readDeviceInfo(): Promise<DeviceInfo> {
+async function readConf(): Promise<{ device: DeviceInfo; lang: string }> {
   try {
     const res = await siyuan.client.fetch("/api/system/getConf", { method: "POST", body: "{}" });
-    const system = (await res.json())?.data?.conf?.system ?? {};
+    const conf = (await res.json())?.data?.conf ?? {};
+    const system = conf.system ?? {};
+    const lang = String(conf.appearance?.lang ?? "");
     const cleaned = typeof system.id === "string" ? system.id.replace(/[^0-9A-Za-z]/g, "").slice(0, 16) : "";
-    if (cleaned) return { deviceId: cleaned, name: String(system.name ?? ""), os: String(system.os ?? siyuan.plugin.platform) };
+    if (cleaned) return { device: { deviceId: cleaned, name: String(system.name ?? ""), os: String(system.os ?? siyuan.plugin.platform) }, lang };
   } catch (e) {
     await siyuan.logger.warn("getConf failed, falling back to a random device id", String(e));
   }
-  return { deviceId: `r${Math.random().toString(36).slice(2, 12)}`, name: "", os: siyuan.plugin.platform };
-}
-
-/** Serialises async sections so concurrent RPC calls can't interleave read-modify-write. */
-function createMutex() {
-  let tail: Promise<unknown> = Promise.resolve();
-  return <T>(fn: () => Promise<T>): Promise<T> => {
-    const run = tail.then(fn, fn);
-    tail = run.catch(() => undefined);
-    return run;
-  };
+  return { device: { deviceId: `r${Math.random().toString(36).slice(2, 12)}`, name: "", os: siyuan.plugin.platform }, lang: "" };
 }
 
 function toRpcError(e: unknown): Error {
@@ -102,95 +63,11 @@ function toRpcError(e: unknown): Error {
   return e instanceof Error ? e : new Error(String(e));
 }
 
-function clockNow() {
-  const now = new Date();
-  return { today: localDateOf(now), minutes: localMinutesOf(now) };
-}
-
-let repo: StillRepository;
-let deviceId: string;
-let device: DeviceInfo;
-let notifier: Notifier;
+let engine: StillEngine;
 const timers: unknown[] = [];
-const exclusive = createMutex();
-/** Keys already broadcast during this kernel session, so each tick doesn't re-announce them. */
-const announced = new Set<string>();
 /** Last seen shape of the storage directories, to notice edits made elsewhere. */
 let fingerprint = "";
 const unwatched = new Set(WATCHED);
-
-async function snapshot(): Promise<Snapshot> {
-  const [subscriptions, settings, decisions, rates] = await Promise.all([
-    repo.listSubscriptions(),
-    repo.getSettings(),
-    repo.listDecisions(),
-    repo.getRates(),
-  ]);
-  return { subscriptions, settings, decisions, rates };
-}
-
-/**
- * The user just told us about this subscription, so don't ask "still using
- * it?" about a charge that's already inside the reminder window. A regular
- * renewal counts as kept; a trial conversion stays in "Waiting for you"
- * (that reminder is too valuable to drop) but doesn't pop up a card.
- */
-async function settleNewSubscription(sub: Subscription) {
-  const settings = await repo.getSettings();
-  const due = computeDueReminders([sub], settings, clockNow(), new Set(), new Map());
-  for (const r of due) {
-    if (r.kind === "renewal") await repo.decide(sub.id, r.chargeDate, "keep");
-    else await repo.markDelivered(deviceId, [r.key]);
-  }
-}
-
-let lastRatesAttempt = 0;
-/** Fetches exchange rates when conversion is on and the cache is stale. */
-async function refreshRates(force = false) {
-  const now = Date.now();
-  if (!force && now - lastRatesAttempt < RATES_RETRY_MS) return;
-  const settings = await repo.getSettings();
-  if (!settings.convertCurrency && !force) return;
-  const cached = await repo.getRates();
-  if (!force && cached && now - Date.parse(cached.fetchedAt) < RATES_MAX_AGE_MS) return;
-  lastRatesAttempt = now;
-  for (const { url, source } of RATE_SOURCES) {
-    try {
-      const res = await httpRequest({ url, timeoutMs: 8_000 });
-      const rates = res.status === 200 ? parseRatesPayload(res.json(), new Date().toISOString(), source) : null;
-      if (!rates) continue;
-      await exclusive(() => repo.saveRates(rates));
-      await changed();
-      return;
-    } catch (e) {
-      await siyuan.logger.warn(`exchange rates from ${source} failed`, String(e));
-    }
-  }
-}
-
-async function dueState() {
-  const [subscriptions, settings, delivered, decisions] = await Promise.all([
-    repo.listSubscriptions(),
-    repo.getSettings(),
-    repo.readDelivered(),
-    repo.listDecisions(),
-  ]);
-  const clock = clockNow();
-  const index = indexDecisions(decisions);
-  return {
-    subscriptions,
-    settings,
-    clock,
-    /** Not yet shown in any window. */
-    due: computeDueReminders(subscriptions, settings, clock, delivered, index),
-    /** Due regardless of window delivery; push keeps its own log (`push|…`). */
-    dueForPush: computeDueReminders(subscriptions, settings, clock, new Set(), index),
-  };
-}
-
-async function dueReminders() {
-  return (await dueState()).due;
-}
 
 async function readFingerprint(): Promise<string> {
   const parts: string[] = [];
@@ -204,22 +81,12 @@ async function readFingerprint(): Promise<string> {
   return parts.sort().join("|");
 }
 
-/** Broadcasts `changed` if storage differs from the last known state. */
+/** Tells the engine if storage differs from the last known state. */
 async function detectExternalChange() {
   const next = await readFingerprint();
   if (next === fingerprint) return;
   fingerprint = next;
-  await siyuan.rpc.broadcast(RPC.notifyChanged, { source: "storage" });
-  void tick();
-}
-
-async function changed() {
-  // Our own writes may have just created a directory worth watching.
-  if (unwatched.size) await watchStorage();
-  fingerprint = await readFingerprint();
-  await siyuan.rpc.broadcast(RPC.notifyChanged, { source: "rpc" });
-  // Edits can move a charge date into a reminder window right away.
-  void tick();
+  await engine.externalChange();
 }
 
 /** Watches storage directories where the platform supports it (not on mobile). */
@@ -244,173 +111,61 @@ function onKernelEvent(event: { type: string }) {
   }, 400);
 }
 
-let ticking = false;
-let tickAgain = false;
-async function tick(): Promise<void> {
-  // Never overlap (a push round can be slow); re-run once if asked meanwhile.
-  if (ticking) {
-    tickAgain = true;
-    return;
-  }
-  ticking = true;
-  void refreshRates();
-  try {
-    const { due, dueForPush, subscriptions, settings, clock } = await dueState();
-    const fresh = due.filter((r) => !announced.has(r.key));
-    for (const r of fresh) announced.add(r.key);
-    if (fresh.length) await siyuan.rpc.broadcast(RPC.notifyRemindersDue, { reminders: fresh });
-    // Push and journal independently of any window being open.
-    await notifier.pushReminders(dueForPush, subscriptions);
-    await notifier.journalCharges(subscriptions, settings, clock);
-  } catch (e) {
-    await siyuan.logger.error("reminder tick failed", String(e));
-  } finally {
-    ticking = false;
-    if (tickAgain) {
-      tickAgain = false;
-      void tick();
-    }
-  }
+function createHost(device: DeviceInfo, lang: string): EngineHost {
+  return {
+    files,
+    device,
+    http: httpRequest,
+    t: translator(lang),
+    async emit(event) {
+      if (event.type === "changed") await siyuan.rpc.broadcast(RPC.notifyChanged, { source: event.source === "write" ? "rpc" : "storage" });
+      else await siyuan.rpc.broadcast(RPC.notifyRemindersDue, { reminders: event.reminders });
+    },
+    log: {
+      warn: (message, detail) => siyuan.logger.warn(message, detail ?? ""),
+      error: (message, detail) => siyuan.logger.error(message, detail ?? ""),
+    },
+    every(ms, fn) {
+      const handle = setInterval(fn, ms);
+      return () => clearInterval(handle);
+    },
+    journal,
+    async afterWrite() {
+      // Our own writes may have just created a directory worth watching.
+      if (unwatched.size) await watchStorage();
+      fingerprint = await readFingerprint();
+    },
+  };
 }
 
-type Handler = (...args: any[]) => Promise<unknown>;
+type Handler = (...args: any[]) => Promise<unknown> | unknown;
 
-const handlers: Record<string, Handler> = {
-  [RPC.snapshot]: () => snapshot(),
-
-  /** `options.settle: false` keeps reminders for an imminent charge (demo/seed data, imports). */
-  [RPC.createSubscription]: (input: unknown, options?: { settle?: boolean }) =>
-    exclusive(async () => {
-      const record = await repo.createSubscription(input);
-      if (options?.settle !== false) await settleNewSubscription(record);
-      await changed();
-      return record;
-    }),
-
-  [RPC.updateSubscription]: (id: string, input: unknown) =>
-    exclusive(async () => {
-      const record = await repo.updateSubscription(id, input);
-      await changed();
-      return record;
-    }),
-
-  [RPC.deleteSubscription]: (id: string) =>
-    exclusive(async () => {
-      await repo.deleteSubscription(id);
-      await changed();
-      return null;
-    }),
-
-  [RPC.updateSettings]: (patch: unknown) =>
-    exclusive(async () => {
-      const settings = await repo.updateSettings(patch);
-      await changed();
-      return settings;
-    }),
-
-  [RPC.pendingReminders]: () => dueReminders(),
-
-  [RPC.exportData]: async (): Promise<StillBackup> => {
-    const [subscriptions, decisions, settings] = await Promise.all([
-      repo.listSubscriptions(),
-      repo.listDecisions(),
-      repo.getSettings(),
-    ]);
-    return { app: "still", format: 1, exportedAt: new Date().toISOString(), subscriptions, decisions, settings };
-  },
-
-  /** Merges a backup record by record; newer edits win on both sides. */
-  [RPC.importData]: (backup: unknown) =>
-    exclusive(async (): Promise<ImportResult> => {
-      if (!isStillBackup(backup)) throw new ValidationError(["not a Still backup file"]);
-      const result: ImportResult = { subscriptions: 0, decisions: 0, skipped: 0 };
-      for (const s of backup.subscriptions) {
-        if (await repo.mergeSubscription(s)) result.subscriptions++;
-        else result.skipped++;
-      }
-      for (const d of backup.decisions) {
-        if (await repo.mergeDecision(d)) result.decisions++;
-        else result.skipped++;
-      }
-      await changed();
-      return result;
-    }),
-
-  [RPC.getNotifications]: () => repo.getNotifications(),
-
-  [RPC.saveNotifications]: (settings: unknown) =>
-    exclusive(async () => {
-      const saved = await repo.saveNotifications(settings);
-      void tick(); // a newly added channel may have reminders waiting
-      return saved;
-    }),
-
-  [RPC.testChannel]: async (raw: unknown): Promise<ChannelTestResult> => {
-    const result = validateChannel(raw);
-    if (!result.ok) throw new ValidationError(result.errors);
-    return sendToChannel(result.value, testMessage());
-  },
-
-  [RPC.deviceInfo]: async () => device,
-
-  [RPC.listNotebooks]: () => listNotebooks(),
-
-  [RPC.refreshRates]: async () => {
-    await refreshRates(true);
-    return repo.getRates();
-  },
-
-  /**
-   * Marks reminders delivered and returns the subset this caller won. With
-   * several windows open, exactly one of them shows each notification.
-   */
-  [RPC.claimReminders]: (keys: unknown) =>
-    exclusive(async () => {
-      if (!Array.isArray(keys) || !keys.every((k) => typeof k === "string")) {
-        throw new ValidationError(["keys must be an array of strings"]);
-      }
-      const delivered = await repo.readDelivered();
-      const claimed = (keys as string[]).filter((k) => !delivered.has(k));
-      if (claimed.length) await repo.markDelivered(deviceId, claimed);
-      return claimed;
-    }),
-
-  /** Answers "still using it?" for one charge. "cancel" also ends the subscription. */
-  [RPC.decide]: (subscriptionId: string, chargeDate: unknown, choice: unknown, snoozeUntil?: unknown) =>
-    exclusive(async (): Promise<DecideResult> => {
-      const decision = await repo.decide(subscriptionId, chargeDate, choice, snoozeUntil);
-      let subscription = (await repo.getSubscription(subscriptionId))!;
-      if (decision.choice === "cancel" && subscription.status !== "cancelled") {
-        subscription = await repo.updateSubscription(subscriptionId, {
-          ...toSubscriptionInput(subscription),
-          status: "cancelled",
-          endDate: cancellationEndDate(clockNow().today, decision.chargeDate),
-        });
-        void notifier.journalCancellation(subscription);
-      }
-      await changed();
-      return { decision, subscription };
-    }),
-
-  /** Withdraws a decision; `restore` puts the subscription back as it was before. */
-  [RPC.undoDecision]: (subscriptionId: string, chargeDate: unknown, restore?: unknown) =>
-    exclusive(async () => {
-      if (!isLocalDate(chargeDate)) throw new ValidationError(["chargeDate must be a YYYY-MM-DD date"]);
-      await repo.clearDecision(subscriptionId, chargeDate);
-      const subscription = restore
-        ? await repo.updateSubscription(subscriptionId, restore)
-        : await repo.getSubscription(subscriptionId);
-      await changed();
-      return subscription;
-    }),
-};
+function handlers(e: StillEngine): Record<string, Handler> {
+  return {
+    [RPC.snapshot]: () => e.snapshot(),
+    [RPC.createSubscription]: (input: unknown, options?: { settle?: boolean }) => e.createSubscription(input, options),
+    [RPC.updateSubscription]: (id: string, input: unknown) => e.updateSubscription(id, input),
+    [RPC.deleteSubscription]: (id: string) => e.deleteSubscription(id),
+    [RPC.updateSettings]: (patch: unknown) => e.updateSettings(patch),
+    [RPC.pendingReminders]: () => e.pendingReminders(),
+    [RPC.exportData]: () => e.exportData(),
+    [RPC.importData]: (backup: unknown) => e.importData(backup),
+    [RPC.getNotifications]: () => e.getNotifications(),
+    [RPC.saveNotifications]: (settings: unknown) => e.saveNotifications(settings),
+    [RPC.testChannel]: (raw: unknown) => e.testChannel(raw),
+    [RPC.deviceInfo]: () => e.deviceInfo(),
+    [RPC.listNotebooks]: () => listNotebooks(),
+    [RPC.refreshRates]: () => e.refreshRates(true),
+    [RPC.claimReminders]: (keys: unknown) => e.claimReminders(keys),
+    [RPC.decide]: (subscriptionId: string, chargeDate: unknown, choice: unknown, snoozeUntil?: unknown) => e.decide(subscriptionId, chargeDate, choice, snoozeUntil),
+    [RPC.undoDecision]: (subscriptionId: string, chargeDate: unknown, restore?: unknown) => e.undoDecision(subscriptionId, chargeDate, restore),
+  };
+}
 
 siyuan.plugin.lifecycle.onload = async () => {
-  device = await readDeviceInfo();
-  deviceId = device.deviceId;
-  repo = new StillRepository({ files, clock: createHlcClock(deviceId) });
-  notifier = new Notifier(repo, () => deviceId);
-  for (const [name, handler] of Object.entries(handlers)) {
+  const { device, lang } = await readConf();
+  engine = new StillEngine(createHost(device, lang));
+  for (const [name, handler] of Object.entries(handlers(engine))) {
     await siyuan.rpc.bind(name, async (...args: unknown[]) => {
       try {
         return await handler(...args);
@@ -420,7 +175,7 @@ siyuan.plugin.lifecycle.onload = async () => {
     });
   }
   siyuan.event.handler = onKernelEvent;
-  await registerAgentCapability(() => repo);
+  await registerAgentCapability(() => engine.repo);
 };
 
 siyuan.plugin.lifecycle.onrunning = () => {
@@ -428,9 +183,8 @@ siyuan.plugin.lifecycle.onrunning = () => {
   void (async () => {
     fingerprint = await readFingerprint();
     await watchStorage();
-    await tick();
+    engine.start();
   })();
-  timers.push(setInterval(() => void tick(), TICK_MS));
   timers.push(
     setInterval(() => {
       void watchStorage();
@@ -440,6 +194,7 @@ siyuan.plugin.lifecycle.onrunning = () => {
 };
 
 siyuan.plugin.lifecycle.onunload = () => {
+  engine?.stop();
   for (const t of timers.splice(0)) clearInterval(t);
   siyuan.event.handler = null;
 };
