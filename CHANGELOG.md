@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2
+
+Obsidian: meets the community directory's requirements.
+
+- No Node.js APIs, so the plugin stays usable on mobile: devices are named after their platform plus part of their ID (e.g. "Mac · 7f3K") instead of the computer's host name
+- Shorter manifest description
+
 ## 0.1.1
 
 Still is now available for Obsidian too. Both plugins ship from this release.

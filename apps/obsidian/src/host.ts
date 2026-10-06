@@ -17,18 +17,9 @@ export function readDevice(app: App): DeviceInfo {
     app.saveLocalStorage(DEVICE_KEY, id);
   }
   const os = Platform.isIosApp ? "ios" : Platform.isAndroidApp ? "android" : Platform.isMacOS ? "darwin" : Platform.isWin ? "windows" : Platform.isLinux ? "linux" : "unknown";
-  let name = "";
-  if (Platform.isDesktopApp) {
-    try {
-      // Desktop Obsidian runs with Node integration.
-      const nodeRequire = (window as unknown as { require?: (id: string) => unknown }).require;
-      name = (nodeRequire?.("os") as { hostname(): string } | undefined)?.hostname() ?? "";
-    } catch {
-      name = "";
-    }
-  }
-  if (!name) name = Platform.isIosApp ? "iPhone / iPad" : Platform.isAndroidApp ? "Android" : "Obsidian";
-  return { deviceId: id, name, os };
+  // No Node APIs (they'd make the plugin desktop-only): the platform plus a bit of the ID tells devices apart.
+  const platform = Platform.isIosApp ? "iPhone / iPad" : Platform.isAndroidApp ? "Android" : Platform.isMacOS ? "Mac" : Platform.isWin ? "Windows" : Platform.isLinux ? "Linux" : "Obsidian";
+  return { deviceId: id, name: `${platform} · ${id.slice(-4)}`, os };
 }
 
 /** Obsidian's requestUrl (no CORS limits, works on mobile) with a timeout it doesn't have natively. */
