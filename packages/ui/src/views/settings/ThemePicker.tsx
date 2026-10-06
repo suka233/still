@@ -3,6 +3,7 @@ import { CheckIcon } from "lucide-react";
 import { Segmented } from "../../components/ui/segmented.js";
 import { useHostInfo, useI18n } from "../../context.js";
 import { cn } from "../../lib/utils.js";
+import { brandLine } from "../../format.js";
 import { ACCENTS, THEMES, applyAppearance, resolveAppearance, type ThemeId } from "../../theme.js";
 import { SubscriptionAvatar } from "../SubscriptionAvatar.js";
 
@@ -107,7 +108,7 @@ function ThumbDock({ theme }: { theme: ThemeId }) {
         <div className="stl-paper">
           <header className="stl-head">
             <span className="stl-seal">{t("appName").slice(0, 1)}</span>
-            <div className="stl-brandline">STILL · {t("appName")}</div>
+            <div className="stl-brandline">{brandLine(t("appName"))}</div>
             <div className="stl-head-main">
               <div className="stl-head-figure">
                 <div className="stl-eyebrow">{t("dock.remainingThisMonth")}</div>

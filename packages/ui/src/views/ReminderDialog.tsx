@@ -4,7 +4,7 @@ import { BRAND_ICON_PATHS } from "../catalog/icons.generated.js";
 import { getService, serviceIdOfIcon } from "../catalog/services.js";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../components/ui/dialog.js";
 import { useI18n, useStill } from "../context.js";
-import { formatCycle, formatDate, formatDaysLeft, formatMoney } from "../format.js";
+import { formatCycle, formatDate, formatDaysLeft, formatMoney, inlineWhen } from "../format.js";
 import { pause } from "../motion.js";
 import { readableOn } from "../theme.js";
 import { DecisionActions, type Answer } from "./DecisionActions.js";
@@ -70,7 +70,7 @@ export function ReminderDialog() {
   const brand = accentOf(sub);
   const service = getService(serviceIdOfIcon(sub.icon));
   const logo = service?.icon ? BRAND_ICON_PATHS[service.icon] : undefined;
-  const when = formatDaysLeft(reminder.daysLeft, t);
+  const when = inlineWhen(formatDaysLeft(reminder.daysLeft, t), locale);
   const date = formatDate(reminder.chargeDate, locale);
   const trial = reminder.kind === "trial-ending";
   const yearly = Math.round(monthlyEquivalent(sub.price.amount, sub.cycle) * 12);

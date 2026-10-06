@@ -24,7 +24,7 @@ import { RPC, type RemindersDueParams } from "../shared/rpc.js";
 import { createRpcClient, type SiyuanStillClient } from "./client.js";
 import { ICONS } from "./icons.js";
 import "./index.css";
-import { ScopeRegistry, mount, type MountContext } from "./mount.js";
+import { SCOPE_CLASS, ScopeRegistry, mount, type MountContext } from "./mount.js";
 
 const TAB_TYPE = "manager";
 const DOCK_TYPE = "upcoming";
@@ -90,6 +90,7 @@ export default class StillPlugin extends Plugin {
       version: pluginJson.version,
       portalContainer: this.#portal,
       scopes: this.#scopes,
+      scopeClassName: SCOPE_CLASS,
     };
 
     // Window-level UI (reminder card, toasts, add dialog) lives in the portal.

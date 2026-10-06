@@ -40,8 +40,11 @@ function testHost(files = memoryFiles(), deviceId = "dev1") {
   return { host, events, requests, journal, files };
 }
 
+// The engine compiles without DOM or Node types; tests just need a timer.
+declare function setTimeout(callback: () => void, ms: number): unknown;
+
 /** Writes start a background tick; let it (and a re-run it may schedule) finish. */
-const settle = () => new Promise((r) => setTimeout(r, 20));
+const settle = () => new Promise<void>((r) => setTimeout(() => r(), 20));
 
 const netflix = { name: "Netflix", status: "active", price: { amount: 1549, currency: "USD" }, cycle: { unit: "month", every: 1 }, anchorDate: "2026-09-05" };
 

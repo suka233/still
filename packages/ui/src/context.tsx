@@ -31,6 +31,8 @@ export interface StillProviderProps {
   /** Extra classes every Still scope carries in this host (theme mapping hooks). */
   scopeClassName?: string;
   version?: string;
+  /** Host-specific wording that replaces shared strings (e.g. "vault" instead of "workspace"). */
+  overrides?: Partial<Record<MessageKey, string>>;
   children: ReactNode;
 }
 
@@ -43,15 +45,16 @@ export function StillProvider({
   hostName = "",
   scopeClassName = "",
   version = "",
+  overrides,
   children,
 }: StillProviderProps) {
   const value = useMemo(() => {
     const { locale, messages } = resolveMessages(lang);
-    const base = createTranslate(messages);
+    const base = createTranslate(overrides ? { ...messages, ...overrides } : messages);
     // Every string may reference {host}; fill it in once here.
     const t: Translate = (key: MessageKey, vars) => base(key, { host: hostName, ...vars });
     return { store, client, host, locale, t, hostName, scopeClassName, version };
-  }, [store, client, host, lang, hostName, scopeClassName, version]);
+  }, [store, client, host, lang, hostName, scopeClassName, version, overrides]);
   return (
     <StillContext.Provider value={value}>
       <PortalContainerProvider container={portalContainer}>{children}</PortalContainerProvider>

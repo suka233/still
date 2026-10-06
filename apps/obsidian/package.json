@@ -1,0 +1,33 @@
+{
+  "name": "@still/obsidian",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Still (续了么) plugin for Obsidian",
+  "license": "MIT",
+  "author": "suka233",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs --watch",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@still/core": "workspace:*",
+    "@still/engine": "workspace:*",
+    "@still/ui": "workspace:*",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6.1.1",
+    "lightningcss": "^1.33.0",
+    "obsidian": "^1.13.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.2"
+  }
+}

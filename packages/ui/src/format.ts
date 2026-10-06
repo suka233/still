@@ -60,3 +60,13 @@ export function guessCurrency(locale: string): string {
   if (/^(de|fr|es|it|nl|pt|fi|el|sk|sl|et|lv|lt)\b/.test(l)) return "EUR";
   return "USD";
 }
+
+/** "STILL · 续了么", or just "STILL" where the app name already is Still. */
+export function brandLine(appName: string): string {
+  return appName.trim().toUpperCase() === "STILL" ? "STILL" : `STILL · ${appName}`;
+}
+
+/** A relative day ("In 2 days", "Tomorrow") for use inside a sentence: lower-case in English. */
+export function inlineWhen(text: string, locale: string): string {
+  return locale.startsWith("en") ? text.charAt(0).toLowerCase() + text.slice(1) : text;
+}

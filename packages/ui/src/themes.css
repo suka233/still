@@ -1433,3 +1433,10 @@
   .stl-c-service .still-avatar.stl-icon { width: 28px; height: 28px; }
   .stl-cat { display: none; }
 }
+
+/* Narrow managers (an Obsidian tab beside the sidebars, a phone): the hero stacks. */
+@container (max-width: 720px) {
+  @scope (.still-root) to (.still-root) {
+    .stl-hero { grid-template-columns: minmax(0, 1fr); }
+  }
+}

@@ -3,7 +3,7 @@ import { ArrowUpRightIcon, MoreHorizontalIcon, PlusIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { SERVICE_ICON_PREFIX, displayName, searchServices } from "../catalog/services.js";
 import { useHost, useI18n, useStill } from "../context.js";
-import { formatCycle, formatDate, formatDaysLeft, formatMoney, localToDate } from "../format.js";
+import { brandLine, formatCycle, formatDate, formatDaysLeft, formatMoney, localToDate } from "../format.js";
 import { cn } from "../lib/utils.js";
 import { useFirstEntrance, useLingering } from "../motion.js";
 import { PendingSection } from "./PendingSection.js";
@@ -90,7 +90,7 @@ export function UpcomingPanel({ className }: { className?: string }) {
         <span className="stl-seal" aria-hidden>
           {t("appName").slice(0, 1)}
         </span>
-        <div className="stl-brandline">STILL · {t("appName")}</div>
+        <div className="stl-brandline">{brandLine(t("appName"))}</div>
         <div className="stl-head-date">{t("dock.printed", { date: formatDate(today, locale, { year: "numeric", month: "short", day: "numeric", weekday: "short" }) })}</div>
         <div className="stl-head-main">
           <div className="stl-head-figure">

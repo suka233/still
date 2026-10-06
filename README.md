@@ -21,6 +21,10 @@ packages/ui       React + shadcn/ui views shared by every host. Tailwind classes
                   one superset markup (`stl-*`) styled per theme with @scope.
 apps/siyuan       SiYuan plugin: kernel.js (goja; runs the engine behind RPC) and
                   index.js (frontend: dock, tab, status bar, reminder card).
+apps/obsidian     Obsidian plugin: main.js runs the engine in-process over a vault
+                  folder (default `Still/`); sidebar, manager tab, settings tab.
+                  Its CSS is lifted one id of specificity above Obsidian's
+                  element styles at build time.
 tools/goja-runner Runs JS in the same goja setup SiYuan uses, for tests.
 ```
 

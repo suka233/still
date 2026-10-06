@@ -1,0 +1,10 @@
+/*
+ * Undo Obsidian's element styles inside Still's scopes (left at specificity
+ * 0,2,1 on purpose: above Obsidian's `button:not(.clickable-icon)` and
+ * friends, below every Still rule, which the build lifts by one id). Only
+ * the elements Obsidian styles globally; third-party markup (e.g. the toast
+ * list) keeps its own styles.
+ */
+.still-root.still-obsidian :is(button, input, select, textarea, a) {
+  all: revert;
+}

@@ -1,0 +1,32 @@
+@import "@still/ui/styles.css";
+
+/* The portal only hosts fixed-position dialogs; it must not take up space. */
+.still-root.still-portal {
+  position: fixed;
+  inset: 0 auto auto 0;
+  width: 0;
+  height: 0;
+  z-index: var(--layer-modal, 50);
+}
+
+/* Still's views draw edge to edge. */
+.workspace-leaf-content[data-type="still-upcoming"] > .view-content,
+.workspace-leaf-content[data-type="still-manager"] > .view-content {
+  padding: 0;
+}
+
+.still-settings-host {
+  margin-top: 8px;
+}
+
+.still-statusbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.still-statusbar svg {
+  width: 12px;
+  height: 12px;
+}
