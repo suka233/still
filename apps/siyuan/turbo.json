@@ -1,0 +1,10 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      // build.mjs merges the engine's push and daily-note text into SiYuan's i18n files.
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/packages/engine/src/messages/*.json", "$TURBO_ROOT$/LICENSE"]
+    }
+  }
+}

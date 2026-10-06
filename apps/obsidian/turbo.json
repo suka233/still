@@ -1,0 +1,10 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      // The build copies Obsidian's manifests from the repository root.
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/manifest.json", "$TURBO_ROOT$/versions.json"]
+    }
+  }
+}
