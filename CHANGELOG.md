@@ -1,10 +1,10 @@
 # Changelog
 
-## 0.1.0
+## 0.1.1
 
-First release of Still (续了么), for Obsidian and SiYuan.
+Still is now available for Obsidian too. Both plugins ship from this release.
 
-### Obsidian
+### Obsidian (new)
 
 - Sidebar of upcoming charges, manager in a tab, Still's settings in Settings → Still, reminder cards, ribbon icon, commands and (desktop) status bar; works on mobile
 - Data as JSON files in a vault folder (default `Still/`, movable from settings), the same format as the SiYuan plugin; changes arriving by sync refresh every view
@@ -12,6 +12,15 @@ First release of Still (续了么), for Obsidian and SiYuan.
 - A live ```still code block (`days`, `limit`) and commands to insert an overview or a live block
 - Daily-note entries that follow the Daily notes settings (folder, date format, template)
 - Optional Markdown notes: one note per subscription with its details as properties, plus a Bases view
+
+### SiYuan
+
+- The reminder and delivery service now lives in a shared engine used by both plugins; behaviour is unchanged
+- English wording: no more "STILL · Still" in the header, "in 2 days" stays lower-case mid-sentence, and names are listed with commas
+
+## 0.1.0
+
+First release of Still (续了么), for SiYuan.
 
 ### SiYuan
 

@@ -1,7 +1,7 @@
 {
   "id": "still",
   "name": "Still",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "minAppVersion": "1.8.7",
   "description": "Track subscriptions and free trials. Before each renewal, Still asks: still using it?",
   "author": "suka233",

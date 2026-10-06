@@ -30,6 +30,8 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      # Release notes: the newest section of the changelog.
+      - run: awk '/^## /{n++} n==1' CHANGELOG.md > release-notes.md
       # SiYuan installs package.zip; Obsidian installs main.js, manifest.json and styles.css.
       - uses: softprops/action-gh-release@v2
         with:
@@ -38,4 +40,4 @@ jobs:
             apps/obsidian/dist/main.js
             apps/obsidian/dist/manifest.json
             apps/obsidian/dist/styles.css
-          body_path: CHANGELOG.md
+          body_path: release-notes.md
