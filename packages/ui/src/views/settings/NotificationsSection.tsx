@@ -178,23 +178,23 @@ export function NotificationsSection() {
         )}
       </Card>
 
-      {notebooks && (
+      {(notebooks || client.dailyNotes) && (
         <Card className="still:gap-4 still:p-4">
           <CardHeader>
             <CardTitle className="still:font-display">{t("journal.title")}</CardTitle>
-            <CardDescription>{t("journal.description")}</CardDescription>
+            <CardDescription>{t(client.dailyNotes ? "journal.descriptionDaily" : "journal.description")}</CardDescription>
           </CardHeader>
           <div className="still:flex still:items-center still:justify-between still:gap-3">
             <span className="still:text-sm">{t("journal.enable")}</span>
             <Switch
               checked={settings.journal.enabled}
               onCheckedChange={(enabled) =>
-                void save({ ...settings, journal: { enabled, notebookId: settings.journal.notebookId ?? notebooks[0]?.id ?? null } })
+                void save({ ...settings, journal: { enabled, notebookId: settings.journal.notebookId ?? notebooks?.[0]?.id ?? null } })
               }
               aria-label={t("journal.enable")}
             />
           </div>
-          {settings.journal.enabled && (
+          {settings.journal.enabled && notebooks && (
             <div className="still:flex still:items-center still:justify-between still:gap-3">
               <span className="still:text-sm">{t("journal.notebook")}</span>
               <NativeSelect

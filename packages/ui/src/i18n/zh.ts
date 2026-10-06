@@ -244,6 +244,7 @@ export const zh: Messages = {
   "journal.title": "日记",
   "journal.description": "有订阅续费、或者你决定不续时，在当天的日记里记一笔。",
   "journal.enable": "写入日记",
+  "journal.descriptionDaily": "有订阅续费、或者你决定不续时，在当天的日记里记一笔。沿用「日记」核心插件的设置（文件夹、日期格式、模板）。",
   "journal.notebook": "笔记本",
   "journal.pickNotebook": "选择笔记本",
   "slash.summary": "续了么：插入订阅概览",

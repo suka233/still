@@ -242,6 +242,7 @@ export const en = {
   "journal.title": "Daily note",
   "journal.description": "Write a line into today's daily note when something renews, and when you decide not to renew.",
   "journal.enable": "Write to daily note",
+  "journal.descriptionDaily": "Add a line to today's daily note when something renews, and when you decide not to renew. Uses your Daily notes settings (folder, date format, template).",
   "journal.notebook": "Notebook",
   "journal.pickNotebook": "Choose a notebook",
   "slash.summary": "Still: insert subscription overview",

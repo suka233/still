@@ -26,6 +26,7 @@ async function call<T>(fn: () => Promise<T> | T): Promise<T> {
 /** StillClient that calls the engine directly: in Obsidian it runs in the plugin itself. */
 export function createEngineClient(engine: StillEngine): ObsidianStillClient {
   return {
+    dailyNotes: true,
     snapshot: () => call(() => engine.snapshot()),
     createSubscription: (input) => call(() => engine.createSubscription(input)),
     updateSubscription: (id, input) => call(() => engine.updateSubscription(id, input)),

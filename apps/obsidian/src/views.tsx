@@ -135,6 +135,10 @@ export class StillSettingTab extends PluginSettingTab {
           void plugin.setFolder(text.getValue()).then((folder) => text.setValue(folder));
         });
       });
+    new Setting(containerEl)
+      .setName(plugin.t("mirror"))
+      .setDesc(plugin.t("mirrorDesc", { folder: `${plugin.data.folder}/Notes` }))
+      .addToggle((toggle) => toggle.setValue(Boolean(plugin.data.mirror)).onChange((on) => void plugin.setMirror(on)));
     this.#unmount = plugin.mount(containerEl.createDiv({ cls: "still-settings-host" }), <SettingsView />, { fill: false });
   }
 

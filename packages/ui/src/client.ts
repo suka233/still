@@ -28,8 +28,10 @@ export interface StillClient {
   saveNotifications?(settings: NotificationSettings): Promise<NotificationSettings>;
   testChannel?(channel: Channel): Promise<{ ok: boolean; status: number; error?: string }>;
   deviceInfo?(): Promise<{ deviceId: string; name: string; os: string }>;
-  /** Notebooks for the daily-note option (SiYuan only). */
+  /** Notebooks for the daily-note option (SiYuan: entries go to a chosen notebook's daily note). */
   listNotebooks?(): Promise<{ id: string; name: string }[]>;
+  /** The host writes entries into its own daily note (Obsidian); no notebook to choose. */
+  readonly dailyNotes?: boolean;
 }
 
 export interface ImportResult {

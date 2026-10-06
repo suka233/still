@@ -39,6 +39,12 @@ const own = {
     confirm: "确定",
     cancel: "取消",
     saved: "已保存到「{path}」",
+    mirror: "Markdown 笔记",
+    mirrorDesc: "在「{folder}」里为每个订阅保留一篇笔记，订阅信息写在属性里，可以用 Bases 或 Dataview 汇总。这些笔记由续了么维护，手动修改会被覆盖。",
+    mirrorManaged: "这篇笔记由续了么自动维护，请在续了么里修改订阅。",
+    baseName: "订阅",
+    insertSummary: "插入订阅一览表",
+    insertLiveTable: "插入实时订阅表（still 代码块）",
   },
   en: {
     folder: "Data folder",
@@ -52,6 +58,12 @@ const own = {
     confirm: "OK",
     cancel: "Cancel",
     saved: "Saved to “{path}”",
+    mirror: "Markdown notes",
+    mirrorDesc: "Keep one note per subscription in “{folder}”, with its details as properties, for Bases or Dataview. Still maintains these notes; edits made by hand are overwritten.",
+    mirrorManaged: "Still keeps this note up to date. Change the subscription in Still.",
+    baseName: "Subscriptions",
+    insertSummary: "Insert subscription overview",
+    insertLiveTable: "Insert live subscription table (still code block)",
   },
 };
 

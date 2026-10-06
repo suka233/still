@@ -13,6 +13,7 @@ import {
   guessCurrency,
   mountStill,
   resolveMessages,
+  summaryMarkdown,
   type MountContext,
   type StillHost,
   type StillStore,
@@ -24,6 +25,7 @@ import { useState } from "react";
 import manifest from "../manifest.json" with { type: "json" };
 import { createEngineClient, type ObsidianStillClient } from "./client.js";
 import { createEngineHost, readDevice } from "./host.js";
+import { MarkdownMirror, SummaryBlock, dailyNoteJournal, parseBlockOptions, type SummarySource } from "./notes.js";
 import { VaultFileStore } from "./storage.js";
 import "./styles.css";
 import { ICON, ICON_SVG, ManagerLeafView, StillSettingTab, UpcomingView, VIEW_MANAGER, VIEW_UPCOMING, confirmModal } from "./views.js";
@@ -34,6 +36,8 @@ interface PluginData {
   folder: string;
   /** The sidebar is opened once on first run; after that it's the user's call. */
   dockShown?: boolean;
+  /** Keep one read-only note per subscription (for Bases / Dataview). */
+  mirror?: boolean;
 }
 
 const DEFAULTS: PluginData = { folder: "Still" };
@@ -58,6 +62,7 @@ export default class StillPlugin extends Plugin {
   readonly #portals = new Map<Document, HTMLElement>();
   readonly #cleanups: (() => void)[] = [];
   #openAdd: (() => void) | null = null;
+  #mirror!: MarkdownMirror;
 
   override async onload() {
     this.data = { ...DEFAULTS, ...((await this.loadData()) as Partial<PluginData> | null) };
@@ -71,7 +76,9 @@ export default class StillPlugin extends Plugin {
     this.t = ownTranslator(locale);
 
     this.#files = new VaultFileStore(this.app.vault.adapter, () => this.data.folder);
-    this.#engine = new StillEngine(createEngineHost({ plugin: this, files: this.#files, device: readDevice(this.app), lang, emit: (e) => this.#onEngine(e) }));
+    this.#engine = new StillEngine(
+      createEngineHost({ plugin: this, files: this.#files, device: readDevice(this.app), lang, emit: (e) => this.#onEngine(e), journal: dailyNoteJournal(this.app) }),
+    );
     this.#client = createEngineClient(this.#engine);
     this.#store = createStillStore(this.#client);
     this.#store.setState({ hostDark: isDark() });
@@ -110,11 +117,14 @@ export default class StillPlugin extends Plugin {
     this.addCommand({ id: "add-subscription", name: this.t("addSubscription"), callback: () => this.#openAdd?.() });
     if (Platform.isDesktopApp) this.#registerStatusBar();
     this.addSettingTab(new StillSettingTab(this.app, this));
+    this.#registerNotes();
 
-    // Edits that arrive by sync (or a text editor) refresh every view.
+    // Edits that arrive by sync (or a text editor) refresh every view. Only Still's
+    // JSON records count (and the folder itself): the mirror's notes live beside them.
     const onVaultChange = (file: TAbstractFile, oldPath?: string) => {
       const paths = [file.path, oldPath].filter((p): p is string => Boolean(p));
-      if (paths.some((p) => this.#files.contains(p) && !this.#files.isOwnWrite(p))) this.#externalChange();
+      const isData = (p: string) => this.#files.contains(p) && (p.endsWith(".json") || normalizePath(p) === this.#files.folder);
+      if (paths.some((p) => isData(p) && !this.#files.isOwnWrite(p))) this.#externalChange();
     };
     this.registerEvent(this.app.vault.on("create", (f) => onVaultChange(f)));
     this.registerEvent(this.app.vault.on("modify", (f) => onVaultChange(f)));
@@ -197,6 +207,65 @@ export default class StillPlugin extends Plugin {
       el.setAttr("aria-label", formatMoney(next.subscription.price, this.#locale));
     };
     this.#cleanups.push(this.#store.subscribe(render));
+  }
+
+  // ───────────────────────── notes ─────────────────────────
+
+  #registerNotes() {
+    const source: SummarySource = {
+      ready: () => this.#store.getState().status === "ready",
+      state: () => this.#store.getState(),
+      subscribe: (listener) => this.#store.subscribe(listener),
+      t: this.ui,
+      locale: this.#locale,
+    };
+    this.registerMarkdownCodeBlockProcessor("still", (code, el, ctx) => {
+      ctx.addChild(new SummaryBlock(el, this.app, source, parseBlockOptions(code), ctx.sourcePath));
+    });
+    this.addCommand({
+      id: "insert-summary",
+      name: this.t("insertSummary"),
+      editorCallback: (editor) => editor.replaceSelection(`${summaryMarkdown(this.#store.getState(), this.ui, this.#locale)}\n`),
+    });
+    this.addCommand({
+      id: "insert-live-table",
+      name: this.t("insertLiveTable"),
+      editorCallback: (editor) => editor.replaceSelection("```still\ndays: 30\n```\n"),
+    });
+
+    this.#mirror = new MarkdownMirror(this.app, () => this.data.folder, this.ui, { managed: this.t("mirrorManaged") });
+    let timer = 0;
+    let last = "";
+    this.#cleanups.push(
+      this.#store.subscribe((s) => {
+        if (!this.data.mirror || s.status !== "ready") return;
+        const key = JSON.stringify([s.subscriptions.map((x) => x.updatedAt), s.today, this.data.folder]);
+        if (key === last) return;
+        last = key;
+        window.clearTimeout(timer);
+        timer = window.setTimeout(() => void this.#syncMirror(), 800);
+      }),
+    );
+    this.#cleanups.push(() => window.clearTimeout(timer));
+  }
+
+  async #syncMirror() {
+    const { subscriptions, today } = this.#store.getState();
+    try {
+      await this.#mirror.sync(subscriptions, today);
+    } catch (e) {
+      console.warn("[still] Markdown mirror failed", e);
+    }
+  }
+
+  /** Turns the Markdown mirror on or off. */
+  async setMirror(on: boolean) {
+    this.data.mirror = on;
+    await this.saveData(this.data);
+    if (on) {
+      await this.#mirror.ensureBase(this.t("baseName"));
+      await this.#syncMirror();
+    }
   }
 
   // ───────────────────────── data ─────────────────────────

@@ -1,4 +1,4 @@
-import { convertTotals, monthlyTotals, upcomingCharges, type DueReminder, type LocalDate, type Subscription } from "@still/core";
+import { upcomingCharges, type DueReminder, type LocalDate, type Subscription } from "@still/core";
 import {
   ManagerView,
   ReminderDialog,
@@ -7,12 +7,11 @@ import {
   UpcomingPanel,
   createStillStore,
   createTranslate,
-  formatCycle,
-  formatDate,
   formatDaysLeft,
   formatMoney,
   guessCurrency,
   resolveMessages,
+  summaryMarkdown,
   type StillHost,
   type StillStore,
   type Translate,
@@ -236,27 +235,7 @@ export default class StillPlugin extends Plugin {
 
   /** A Markdown table of live subscriptions, inserted by the `/续了么` slash command. */
   #summaryMarkdown(): string {
-    const { subscriptions, today, settings, rates } = this.#store.getState();
-    const rows = upcomingCharges(subscriptions, today);
-    if (!rows.length) return this.#t("slash.empty");
-    const cell = (s: string) => s.replace(/\|/g, "\\|");
-    const lines = [
-      `| ${this.#t("slash.colName")} | ${this.#t("slash.colPrice")} | ${this.#t("slash.colCycle")} | ${this.#t("slash.colNext")} |`,
-      "| --- | ---: | --- | --- |",
-      ...rows.map(
-        (r) =>
-          `| ${cell(r.subscription.name)} | ${formatMoney(r.subscription.price, this.#locale)} | ${formatCycle(r.subscription.cycle, this.#t)} | ${formatDate(r.chargeDate, this.#locale)} · ${formatDaysLeft(r.daysLeft, this.#t)} |`,
-      ),
-    ];
-    const totals = monthlyTotals(subscriptions, today);
-    const converted = settings.convertCurrency && rates ? convertTotals(totals, settings.defaultCurrency, rates) : null;
-    const amount =
-      converted && !Object.keys(converted.unconverted).length && Object.keys(totals).length > 1
-        ? `≈ ${formatMoney({ amount: converted.amount, currency: settings.defaultCurrency }, this.#locale)}`
-        : Object.entries(totals)
-            .map(([currency, v]) => formatMoney({ amount: v, currency }, this.#locale))
-            .join(" + ");
-    return `${lines.join("\n")}\n\n${this.#t("slash.total", { amount })}`;
+    return summaryMarkdown(this.#store.getState(), this.#t, this.#locale);
   }
 
   #lastSync = 0;
