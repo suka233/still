@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.3
+
+Obsidian: passes the community directory's automated review.
+
+- The Markdown notes and folder moves read only Still's own folder instead of listing every file in the vault
+- Release files carry build provenance attestations
+- SiYuan: the status bar item and manager tab no longer set inline styles or HTML; nothing looks different
+
 ## 0.1.2
 
 Obsidian: meets the community directory's requirements.
