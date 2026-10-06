@@ -9,6 +9,9 @@ on:
 
 permissions:
   contents: write
+  # Build provenance for the release assets (checked by Obsidian's review).
+  id-token: write
+  attestations: write
 
 jobs:
   release:
@@ -32,6 +35,13 @@ jobs:
       - run: pnpm build
       # Release notes: the newest section of the changelog.
       - run: awk '/^## /{n++} n==1' CHANGELOG.md > release-notes.md
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            apps/siyuan/package.zip
+            apps/obsidian/dist/main.js
+            apps/obsidian/dist/manifest.json
+            apps/obsidian/dist/styles.css
       # SiYuan installs package.zip; Obsidian installs main.js, manifest.json and styles.css.
       - uses: softprops/action-gh-release@v2
         with:

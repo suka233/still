@@ -221,8 +221,8 @@ export class MarkdownMirror {
     await ensureFolder(this.app, folder);
 
     const byId = new Map<string, TFile>();
-    for (const file of vault.getMarkdownFiles()) {
-      if (file.parent?.path !== folder) continue;
+    for (const file of vault.getFolderByPath(folder)?.children ?? []) {
+      if (!(file instanceof TFile) || file.extension !== "md") continue;
       const id = ID_LINE.exec(await vault.cachedRead(file))?.[1];
       if (id) byId.set(id, file);
     }

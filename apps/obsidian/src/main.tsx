@@ -19,7 +19,7 @@ import {
   type StillStore,
   type Translate,
 } from "@still/ui";
-import { Notice, Platform, Plugin, TFolder, addIcon, getLanguage, normalizePath, setIcon, type TAbstractFile } from "obsidian";
+import { Notice, Platform, Plugin, TFile, TFolder, addIcon, getLanguage, normalizePath, setIcon, type TAbstractFile } from "obsidian";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import manifest from "../../../manifest.json" with { type: "json" };
@@ -299,8 +299,8 @@ export default class StillPlugin extends Plugin {
       await fileManager.renameFile(from, next);
       this.data.folder = next;
       // The Bases view filters on the notes folder; follow the move.
-      for (const file of vault.getFiles()) {
-        if (file.extension === "base" && file.parent?.path === next) {
+      for (const file of vault.getFolderByPath(next)?.children ?? []) {
+        if (file instanceof TFile && file.extension === "base") {
           await vault.process(file, (text) => text.split(JSON.stringify(oldNotes)).join(JSON.stringify(this.#mirror.notesFolder)));
         }
       }
