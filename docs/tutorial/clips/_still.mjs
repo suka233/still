@@ -106,7 +106,13 @@ export async function resetStill(page, { locale, subscriptions, claim = true, ap
     await api(page, "/api/file/removeFile", { path: "/data/storage/petal/still/delivered" }).catch(() => undefined);
   }
   await closeAllTabs(page);
+  // Reload with the dock closed, so its first entrance can be captured by actions.
+  if (await page.locator(".sy__stillupcoming").isVisible()) {
+    await page.locator('.dock__item:has(use[*|href="#iconStill"])').first().dispatchEvent("click");
+  }
   await reloadStill(page);
+  // Host hover labels can cover the dock while its first-open animation prints.
+  await page.addStyleTag({ content: '.tooltip, #tooltip, [role="tooltip"] { visibility: hidden !important; }' });
   return created;
 }
 
@@ -114,11 +120,29 @@ export async function resetStill(page, { locale, subscriptions, claim = true, ap
 export async function openDock(page) {
   const panel = page.locator(".sy__stillupcoming");
   if (!(await panel.isVisible())) {
-    await page.locator('.dock__item:has(use[*|href="#iconStill"])').first().click();
+    // Preparation may run while the reminder dialog covers the host chrome.
+    await page.locator('.dock__item:has(use[*|href="#iconStill"])').first().dispatchEvent("click");
     await page.waitForTimeout(600);
   }
   await panel.waitFor({ state: "visible" });
   return panel;
+}
+
+/** Open the dock with real input after the recording timeline has started. */
+export async function enterDock(driver) {
+  const { at, jumpTo, moveTo, click, pointWithin, page } = driver;
+  const icon = page.locator('.dock__item:has(use[*|href="#iconStill"])').first();
+  const target = await pointWithin(icon, 0.5, 0.5);
+  await jumpTo({ x: target.x - 90, y: target.y + 100 });
+  await at(0.1);
+  await moveTo(target, 240);
+  await at(0.7);
+  await click();
+  const dock = page.locator(".sy__stillupcoming");
+  await dock.waitFor({ state: "visible" });
+  await dock.locator(".stl-dock[data-enter]").waitFor({ state: "attached" });
+  await at(1.5);
+  return dock;
 }
 
 export async function openManager(page) {

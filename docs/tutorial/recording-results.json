@@ -1,0 +1,608 @@
+{
+  "recordedOn": "2026-10-05",
+  "host": "SiYuan 3.8.5, installed Google Chrome",
+  "defaultTheme": "thermal",
+  "output": {
+    "mp4": {
+      "width": 1280,
+      "height": 720,
+      "fps": 30,
+      "codec": "h264",
+      "audioStreams": 0
+    },
+    "webp": {
+      "width": 960,
+      "height": 540,
+      "fps": 15,
+      "loopCount": 0,
+      "maxBytes": 5242880
+    }
+  },
+  "alignment": {
+    "method": "last magenta sync-marker frame + one frame; wall-clock offset drift is diagnostic, not the slice alignment error",
+    "qaSweepDefaultMaxStartupDriftS": 0.5,
+    "qaSweep": {
+      "checked": 12,
+      "problems": [
+        "still-add-subscription · zh-CN: 同步漂移 0.604s 超过 0.5s",
+        "still-themes · zh-CN: 同步漂移 0.657s 超过 0.5s",
+        "still-snooze · en-US: 同步漂移 1.365s 超过 0.5s",
+        "still-themes · en-US: 同步漂移 1.51s 超过 0.5s",
+        "still-decide · zh-CN: 同步漂移 1.001s 超过 0.5s",
+        "still-snooze · zh-CN: 同步漂移 0.804s 超过 0.5s"
+      ],
+      "drift": {
+        "min": 0.296,
+        "max": 1.51,
+        "median": 0.5409999999999999
+      },
+      "webpKb": {
+        "min": 205,
+        "max": 1006,
+        "median": 470,
+        "over500": 3,
+        "over1024": 0
+      }
+    },
+    "startupDriftWarningsReviewedWithFrameMarker": true,
+    "visualReview": "First dock entrance and decision feedback checked against captured pointer times; no early cutoff or pointer obstruction observed.",
+    "motionFramesCheckedAtOffsetsS": [
+      0.04,
+      0.2,
+      0.4,
+      0.62,
+      0.8,
+      1.02
+    ],
+    "firstOpenFramesCheckedAtOffsetsS": [
+      0.02,
+      0.1,
+      0.18,
+      0.26,
+      0.34,
+      0.48
+    ]
+  },
+  "recordings": [
+    {
+      "id": "still-add-subscription",
+      "locale": "zh-CN",
+      "file": "docs/media/still-add-subscription.zh-CN.webp",
+      "mp4DurationS": 12.8,
+      "webpDurationMs": 12864,
+      "webpBytes": 417680,
+      "sha256": "3cc43fcfa7beb64b7c286fdb7a2b199f15e024fa1ac7816b86f1e17f7b1c585f",
+      "camera": {
+        "mode": "static"
+      },
+      "fit": null,
+      "semantic": {
+        "ok": true,
+        "operation": "still-add-subscription",
+        "created": {
+          "name": "Spotify Premium",
+          "price": {
+            "amount": 1199,
+            "currency": "CNY"
+          },
+          "icon": "service:spotify"
+        },
+        "reason": null
+      },
+      "wallClockOffsetDriftS": 0.604,
+      "clickTimesS": [
+        0.832,
+        2.929,
+        5.932,
+        9.424
+      ],
+      "endPointer": {
+        "x": 1091.2,
+        "y": 369.362
+      },
+      "contactSheetChecked": true,
+      "deliveryChecksPassed": true
+    },
+    {
+      "id": "still-add-subscription",
+      "locale": "en-US",
+      "file": "docs/media/still-add-subscription.en-US.webp",
+      "mp4DurationS": 12.8,
+      "webpDurationMs": 12864,
+      "webpBytes": 441790,
+      "sha256": "07489b3414bb8c5bea55545c72d60b4eae1654865c77d6cc2d7e1eadfe7464e4",
+      "camera": {
+        "mode": "static"
+      },
+      "fit": null,
+      "semantic": {
+        "ok": true,
+        "operation": "still-add-subscription",
+        "created": {
+          "name": "Spotify Premium",
+          "price": {
+            "amount": 1199,
+            "currency": "USD"
+          },
+          "icon": "service:spotify"
+        },
+        "reason": null
+      },
+      "wallClockOffsetDriftS": 0.3,
+      "clickTimesS": [
+        0.826,
+        2.924,
+        5.926,
+        9.425
+      ],
+      "endPointer": {
+        "x": 1091.2,
+        "y": 369.362
+      },
+      "contactSheetChecked": true,
+      "deliveryChecksPassed": true
+    },
+    {
+      "id": "still-decide",
+      "locale": "zh-CN",
+      "file": "docs/media/still-decide.zh-CN.webp",
+      "mp4DurationS": 10,
+      "webpDurationMs": 10050,
+      "webpBytes": 447388,
+      "sha256": "d49337705bc009f811103efdb488664fd85b99f07c4492c5646d166ce7a0dc11",
+      "camera": {
+        "mode": "static"
+      },
+      "fit": null,
+      "semantic": {
+        "ok": true,
+        "operation": "still-decide-cancel",
+        "status": "cancelled",
+        "decision": "cancel",
+        "reason": null
+      },
+      "wallClockOffsetDriftS": 1.001,
+      "clickTimesS": [
+        0.84,
+        2.539,
+        4.737
+      ],
+      "endPointer": {
+        "x": 860,
+        "y": 610
+      },
+      "contactSheetChecked": true,
+      "deliveryChecksPassed": true
+    },
+    {
+      "id": "still-decide",
+      "locale": "en-US",
+      "file": "docs/media/still-decide.en-US.webp",
+      "mp4DurationS": 10,
+      "webpDurationMs": 10050,
+      "webpBytes": 485870,
+      "sha256": "ff0f15b525f2be56c056eb4ca02616e54b16e4b166089a23e5c6d85696836a34",
+      "camera": {
+        "mode": "static"
+      },
+      "fit": null,
+      "semantic": {
+        "ok": true,
+        "operation": "still-decide-cancel",
+        "status": "cancelled",
+        "decision": "cancel",
+        "reason": null
+      },
+      "wallClockOffsetDriftS": 0.348,
+      "clickTimesS": [
+        0.826,
+        2.529,
+        4.729
+      ],
+      "endPointer": {
+        "x": 860,
+        "y": 610
+      },
+      "contactSheetChecked": true,
+      "deliveryChecksPassed": true
+    },
+    {
+      "id": "still-snooze",
+      "locale": "zh-CN",
+      "file": "docs/media/still-snooze.zh-CN.webp",
+      "mp4DurationS": 12.2,
+      "webpDurationMs": 12261,
+      "webpBytes": 476408,
+      "sha256": "3977b54cc768f758b395b80131add5a5bc6a642125936b6ff01a402f9369b7b2",
+      "camera": {
+        "mode": "static"
+      },
+      "fit": null,
+      "semantic": {
+        "ok": true,
+        "operation": "still-snooze",
+        "decision": {
+          "choice": "snooze",
+          "snoozeUntil": "2026-10-06"
+        },
+        "reason": null
+      },
+      "wallClockOffsetDriftS": 0.804,
+      "clickTimesS": [
+        0.829,
+        2.53,
+        4.526,
+        6.93
+      ],
+      "endPointer": {
+        "x": 860,
+        "y": 610
+      },
+      "contactSheetChecked": true,
+      "deliveryChecksPassed": true
+    },
+    {
+      "id": "still-snooze",
+      "locale": "en-US",
+      "file": "docs/media/still-snooze.en-US.webp",
+      "mp4DurationS": 12.2,
+      "webpDurationMs": 12261,
+      "webpBytes": 507898,
+      "sha256": "1740f65ca43cc8083c37ef4efe77fe962e8c86978179d36b00f65a21e6796a3a",
+      "camera": {
+        "mode": "static"
+      },
+      "fit": null,
+      "semantic": {
+        "ok": true,
+        "operation": "still-snooze",
+        "decision": {
+          "choice": "snooze",
+          "snoozeUntil": "2026-10-06"
+        },
+        "reason": null
+      },
+      "wallClockOffsetDriftS": 1.365,
+      "clickTimesS": [
+        0.828,
+        2.529,
+        4.531,
+        6.925
+      ],
+      "endPointer": {
+        "x": 860,
+        "y": 610
+      },
+      "contactSheetChecked": true,
+      "deliveryChecksPassed": true
+    },
+    {
+      "id": "still-themes",
+      "locale": "zh-CN",
+      "file": "docs/media/still-themes.zh-CN.webp",
+      "mp4DurationS": 16.8,
+      "webpDurationMs": 16884,
+      "webpBytes": 988658,
+      "sha256": "c78b4542ab20f2783ee52d92580aefa419c3b1822a5edb9e49005cf1576961af",
+      "camera": {
+        "mode": "static"
+      },
+      "fit": null,
+      "semantic": {
+        "ok": true,
+        "operation": "still-themes",
+        "visits": [
+          {
+            "expected": "boutique",
+            "actual": "boutique"
+          },
+          {
+            "expected": "ticket",
+            "actual": "ticket"
+          },
+          {
+            "expected": "riso",
+            "actual": "riso"
+          },
+          {
+            "expected": "swiss",
+            "actual": "swiss"
+          },
+          {
+            "expected": "thermal",
+            "actual": "thermal"
+          }
+        ],
+        "appearance": {
+          "accent": null,
+          "mode": "dark",
+          "theme": "thermal"
+        },
+        "reason": null
+      },
+      "wallClockOffsetDriftS": 0.657,
+      "clickTimesS": [
+        0.83,
+        2.902,
+        5.079,
+        7.277,
+        9.493,
+        11.676,
+        13.728
+      ],
+      "endPointer": {
+        "x": 640,
+        "y": 690
+      },
+      "contactSheetChecked": true,
+      "deliveryChecksPassed": true
+    },
+    {
+      "id": "still-themes",
+      "locale": "en-US",
+      "file": "docs/media/still-themes.en-US.webp",
+      "mp4DurationS": 16.8,
+      "webpDurationMs": 16884,
+      "webpBytes": 1029754,
+      "sha256": "5954ad38d87568ccb0fb24ce529a494cf3768a4301425c839547f981b41c469b",
+      "camera": {
+        "mode": "static"
+      },
+      "fit": null,
+      "semantic": {
+        "ok": true,
+        "operation": "still-themes",
+        "visits": [
+          {
+            "expected": "boutique",
+            "actual": "boutique"
+          },
+          {
+            "expected": "ticket",
+            "actual": "ticket"
+          },
+          {
+            "expected": "riso",
+            "actual": "riso"
+          },
+          {
+            "expected": "swiss",
+            "actual": "swiss"
+          },
+          {
+            "expected": "thermal",
+            "actual": "thermal"
+          }
+        ],
+        "appearance": {
+          "accent": null,
+          "mode": "dark",
+          "theme": "thermal"
+        },
+        "reason": null
+      },
+      "wallClockOffsetDriftS": 1.51,
+      "clickTimesS": [
+        0.826,
+        2.875,
+        5.074,
+        7.275,
+        9.475,
+        11.676,
+        13.725
+      ],
+      "endPointer": {
+        "x": 640,
+        "y": 690
+      },
+      "contactSheetChecked": true,
+      "deliveryChecksPassed": true
+    },
+    {
+      "id": "still-calendar",
+      "locale": "zh-CN",
+      "file": "docs/media/still-calendar.zh-CN.webp",
+      "mp4DurationS": 11.6,
+      "webpDurationMs": 11658,
+      "webpBytes": 210240,
+      "sha256": "4f4062cb5358f9499d254f45fc86c64c7a515b79a4c7d0a214113690cd0c4316",
+      "camera": {
+        "mode": "static"
+      },
+      "fit": null,
+      "semantic": {
+        "ok": true,
+        "operation": "still-calendar",
+        "activeTab": "洞察",
+        "reason": null
+      },
+      "wallClockOffsetDriftS": 0.296,
+      "clickTimesS": [
+        1.535,
+        3.726,
+        5.93,
+        8.134
+      ],
+      "endPointer": {
+        "x": 900,
+        "y": 660
+      },
+      "contactSheetChecked": true,
+      "deliveryChecksPassed": true
+    },
+    {
+      "id": "still-calendar",
+      "locale": "en-US",
+      "file": "docs/media/still-calendar.en-US.webp",
+      "mp4DurationS": 11.6,
+      "webpDurationMs": 11658,
+      "webpBytes": 241886,
+      "sha256": "693af3121387d83d8310f4e1f05bec2ff2c84fb3198072f9372cdb5ba200f9d4",
+      "camera": {
+        "mode": "static"
+      },
+      "fit": null,
+      "semantic": {
+        "ok": true,
+        "operation": "still-calendar",
+        "activeTab": "Insights",
+        "reason": null
+      },
+      "wallClockOffsetDriftS": 0.384,
+      "clickTimesS": [
+        1.53,
+        3.725,
+        5.926,
+        8.131
+      ],
+      "endPointer": {
+        "x": 900,
+        "y": 660
+      },
+      "contactSheetChecked": true,
+      "deliveryChecksPassed": true
+    },
+    {
+      "id": "still-slash",
+      "locale": "zh-CN",
+      "file": "docs/media/still-slash.zh-CN.webp",
+      "mp4DurationS": 8.8,
+      "webpDurationMs": 8844,
+      "webpBytes": 506180,
+      "sha256": "710ca6441385043e31b500fb54da43a11a969d8be91b7d61fbce4e26396bd8fb",
+      "camera": {
+        "presetId": "glide-focus",
+        "zoom": 1.4,
+        "beats": 3,
+        "anchors": 2
+      },
+      "fit": {
+        "breakpoints": {
+          "z": 63,
+          "x": 63,
+          "y": 76
+        },
+        "maxError": {
+          "zoom": 0,
+          "xPx": 0,
+          "yPx": 0.045
+        }
+      },
+      "semantic": {
+        "ok": true,
+        "operation": "still-slash",
+        "hasTable": true,
+        "reason": null
+      },
+      "wallClockOffsetDriftS": 0.478,
+      "clickTimesS": [
+        1.429
+      ],
+      "endPointer": {
+        "x": 1100,
+        "y": 640
+      },
+      "contactSheetChecked": true,
+      "deliveryChecksPassed": true
+    },
+    {
+      "id": "still-slash",
+      "locale": "en-US",
+      "file": "docs/media/still-slash.en-US.webp",
+      "mp4DurationS": 8.8,
+      "webpDurationMs": 8844,
+      "webpBytes": 545776,
+      "sha256": "9590a687eee6819be2c187dea752d0b48cae3187b0504a49e67fbe5360e457aa",
+      "camera": {
+        "presetId": "glide-focus",
+        "zoom": 1.4,
+        "beats": 3,
+        "anchors": 2
+      },
+      "fit": {
+        "breakpoints": {
+          "z": 63,
+          "x": 63,
+          "y": 76
+        },
+        "maxError": {
+          "zoom": 0,
+          "xPx": 0,
+          "yPx": 0.048
+        }
+      },
+      "semantic": {
+        "ok": true,
+        "operation": "still-slash",
+        "hasTable": true,
+        "reason": null
+      },
+      "wallClockOffsetDriftS": 0.343,
+      "clickTimesS": [
+        1.428
+      ],
+      "endPointer": {
+        "x": 1100,
+        "y": 640
+      },
+      "contactSheetChecked": true,
+      "deliveryChecksPassed": true
+    }
+  ],
+  "preview": {
+    "files": [
+      "docs/media/preview.png",
+      "apps/siyuan/preview.png"
+    ],
+    "width": 1024,
+    "height": 768,
+    "theme": "thermal",
+    "mode": "light",
+    "sha256": "1fc57f95cc89405679101c206f4a6a299ced3e9d7f38c2753e2629dadfaf603c",
+    "visualQaPassed": true
+  },
+  "coverageLimit": "Theme tour verifies all five paper themes and dark Thermal. Decision feedback is demonstrated in Thermal; other themes are not individually exercised for each answer.",
+  "timelineChanges": {
+    "still-add-subscription": {
+      "previousDurationS": 11.4,
+      "durationS": 12.8,
+      "reason": "Capture first dock entrance; shift the form flow by 1.4s"
+    },
+    "still-decide": {
+      "previousDurationS": 8.6,
+      "durationS": 10,
+      "cancelAtS": 4.6,
+      "restAtS": 6.2,
+      "reason": "Hold stamp, tear and dock row collapse in the full viewport"
+    },
+    "still-snooze": {
+      "previousDurationS": 9.4,
+      "durationS": 12.2,
+      "tomorrowAtS": 6.8,
+      "restAtS": 8.2,
+      "reason": "Hold the choices and feedback before the card exits"
+    },
+    "still-themes": {
+      "previousDurationS": 15,
+      "durationS": 16.8,
+      "reason": "Capture first dock entrance and verify each paper theme stop"
+    },
+    "still-calendar": {
+      "durationS": 11.6,
+      "reason": "Keep the full month and day details visible with a real scroll after mounting"
+    },
+    "still-slash": {
+      "durationS": 8.8,
+      "reason": "Original timeline retained"
+    }
+  },
+  "cleanup": {
+    "ownedDevelopmentKernelsStopped": true,
+    "workspaceConfigBackedUp": true,
+    "temporaryWorkspaceEntriesRemoved": 2,
+    "otherWorkspaceEntriesPreserved": 9,
+    "temporaryWorkspacesAndInstallDownloadsDeleted": true,
+    "recordingWorkingCopyAndIntermediateMediaDeleted": true,
+    "originalSkillUnmodified": true
+  }
+}

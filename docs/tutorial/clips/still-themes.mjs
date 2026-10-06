@@ -1,5 +1,5 @@
 // Still showcase: one click per theme; the whole UI follows, light and dark.
-import { demoSubscriptions, openDock, openManager, resetStill, rpc } from "./_still.mjs";
+import { demoSubscriptions, enterDock, openManager, resetStill, rpc } from "./_still.mjs";
 
 export const meta = {
   id: "still-themes",
@@ -11,7 +11,7 @@ export const meta = {
     "en-US": { settings: "Settings", themes: ["Boutique", "Ticket", "Riso", "Swiss", "Thermal"], dark: "Dark" },
   },
   viewport: { width: 1280, height: 720 },
-  durationS: 15.0,
+  durationS: 16.8,
   cursorStyle: "device-mouse",
   hide: [],
   camera: null,
@@ -23,31 +23,34 @@ export const meta = {
 
 export async function seed({ page, locale }) {
   await resetStill(page, { locale, subscriptions: demoSubscriptions(locale, { netflixDue: false }) });
-  await openDock(page);
   const manager = await openManager(page);
   await manager.getByRole("tab", { name: meta.i18n[locale].settings, exact: true }).click();
   await page.waitForTimeout(500);
-  // Centre the light/dark switch: the theme cards sit just above it, and the
-  // status bar would cover anything at the very bottom.
-  await manager.getByRole("radio", { name: meta.i18n[locale].dark, exact: true }).evaluate((el) => el.scrollIntoView({ block: "center" }));
+  // Align the grid's top; centring the mode switch would hide the first row.
+  await manager.locator("button[aria-pressed]", { hasText: meta.i18n[locale].themes[0] }).first().evaluate((el) => el.parentElement.scrollIntoView({ block: "start" }));
   await page.waitForTimeout(400);
-  return {};
+  return { visits: [] };
 }
 
-export async function actions(driver) {
-  const { at, moveTo, jumpTo, click, pointWithin, page, strings } = driver;
+export async function actions(driver, seeded) {
+  const { at, moveTo, click, pointWithin, page, strings } = driver;
   const manager = page.locator(".layout__center .still-panel").first();
+  await enterDock(driver);
   const card = (name) => manager.locator("button[aria-pressed]", { hasText: name }).first();
-  const first = await pointWithin(card(strings.themes[0]), 0.5, 0.4);
-  await jumpTo({ x: first.x - 120, y: first.y + 160 });
+  // Opening the dock changes the manager width; align the grid again.
+  await card(strings.themes[0]).evaluate((el) => el.parentElement.scrollIntoView({ block: "start" }));
 
   // Start on Thermal (the default), visit the other paper themes, come back.
-  let t = 0.6;
-  for (const name of strings.themes) {
+  let t = 2.0;
+  const expected = ["boutique", "ticket", "riso", "swiss", "thermal"];
+  for (const [index, name] of strings.themes.entries()) {
     await at(t);
     await moveTo(await pointWithin(card(name), 0.5, 0.4), 480);
     await at(t + 0.75);
     await click();
+    await page.waitForFunction(({ name }) => [...document.querySelectorAll('.layout__center button[aria-pressed="true"]')].some((el) => el.textContent.includes(name)), { name });
+    const appearance = (await rpc(page, "snapshot")).settings.appearance;
+    seeded.visits.push({ expected: expected[index], actual: appearance.theme });
     t += 2.2;
   }
   // Finish in dark mode.
@@ -60,8 +63,8 @@ export async function actions(driver) {
   await moveTo({ x: 640, y: 690 }, 520);
 }
 
-export async function verify({ page }) {
+export async function verify({ page }, seeded) {
   const settings = (await rpc(page, "snapshot")).settings;
-  const ok = settings.appearance.theme === "thermal" && settings.appearance.mode === "dark";
-  return { ok, operation: "still-themes", appearance: settings.appearance, reason: ok ? null : "theme not applied" };
+  const ok = seeded.visits.length === 5 && seeded.visits.every((v) => v.actual === v.expected) && settings.appearance.theme === "thermal" && settings.appearance.mode === "dark";
+  return { ok, operation: "still-themes", visits: seeded.visits, appearance: settings.appearance, reason: ok ? null : "theme not applied" };
 }

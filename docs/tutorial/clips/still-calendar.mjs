@@ -14,7 +14,8 @@ export const meta = {
   durationS: 11.6,
   cursorStyle: "precision-dart",
   hide: [],
-  camera: { presetId: "glide-focus", zoom: 1.35, lagS: 0.1 },
+  // Keep the calendar's selected-day details and both insight columns visible.
+  camera: null,
   output: {
     mp4: { width: 1280, height: 720, fps: 30 },
     webp: { width: 960, height: 540, fps: 15, maxBytes: 5 * 1024 * 1024 },
@@ -28,8 +29,8 @@ export async function seed({ page, locale }) {
   if (await dock.isVisible()) await page.locator('.dock__item:has(use[*|href="#iconStill"])').first().click();
   const manager = await openManager(page);
   const tabs = manager.getByRole("tablist").first();
-  await tabs.scrollIntoViewIfNeeded();
-  await page.evaluate(() => document.querySelector(".layout__center .layout-tab-container > div:not(.fn__none)")?.scrollBy({ top: -60 }));
+  // Start with tabs at the top, leaving room for every week of the month grid.
+  await tabs.evaluate((el) => el.scrollIntoView({ block: "start" }));
   await page.waitForTimeout(400);
   return {};
 }
@@ -46,6 +47,11 @@ export async function actions(driver) {
   await at(1.4);
   await click();
   await manager.locator("button.still\\:aspect-square").first().waitFor({ state: "visible" });
+  // The list tab was too short to scroll this far during seed. Once the
+  // calendar is mounted, scroll with real input so the last week fits too.
+  await at(1.75);
+  await page.mouse.wheel(0, 160);
+  await page.waitForTimeout(300);
 
   // Pick a day that has charges.
   await at(2.3);

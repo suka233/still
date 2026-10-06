@@ -1,5 +1,5 @@
 // Still tutorial: not sure yet? "Decide later" asks again on a day you pick.
-import { demoSubscriptions, openDock, resetStill, rpc } from "./_still.mjs";
+import { demoSubscriptions, enterDock, resetStill, rpc } from "./_still.mjs";
 
 export const meta = {
   id: "still-snooze",
@@ -11,10 +11,11 @@ export const meta = {
     "en-US": { later: "Decide later", option: "Tomorrow", name: "Netflix" },
   },
   viewport: { width: 1280, height: 720 },
-  durationS: 9.4,
+  durationS: 12.2,
   cursorStyle: "precision-dart",
   hide: [],
-  camera: { presetId: "glide-focus", zoom: 1.6, lagS: 0.1 },
+  // Keep the card, popover and dock feedback visible at the same time.
+  camera: null,
   seedSettleMs: 1500,
   output: {
     mp4: { width: 1280, height: 720, fps: 30 },
@@ -23,36 +24,38 @@ export const meta = {
 };
 
 export async function seed({ page, locale }) {
-  await resetStill(page, { locale, subscriptions: demoSubscriptions(locale), claim: false });
-  await openDock(page);
-  await page.locator("[role=dialog]").waitFor({ state: "visible", timeout: 15_000 });
+  await resetStill(page, { locale, subscriptions: demoSubscriptions(locale) });
   return {};
 }
 
 export async function actions(driver) {
-  const { at, moveTo, jumpTo, click, pointWithin, page, strings } = driver;
+  const { at, moveTo, click, pointWithin, page, strings } = driver;
+  const dock = await enterDock(driver);
+  await moveTo(await pointWithin(dock.locator(".stl-pending-head"), 0.7, 0.5), 320);
+  await at(2.4);
+  await click();
   const dialog = page.locator("[role=dialog]");
+  await dialog.waitFor({ state: "visible" });
   const later = dialog.getByRole("button", { name: strings.later });
   const target = await pointWithin(later, 0.85, 0.55);
-  await jumpTo({ x: target.x - 60, y: target.y + 210 });
 
-  await at(0.8);
-  await moveTo(target, 600);
-  await at(1.9);
+  await at(3.2);
+  await moveTo(target, 420);
+  await at(4.4);
   await click();
   const option = page.locator("[data-slot=popover-content] button", { hasText: strings.option }).first();
   await option.waitFor({ state: "visible" });
 
-  // Popovers need a long settle so the camera arrives while it's open.
-  await at(2.5);
-  await moveTo(await pointWithin(option, 0.9, 0.5), 520);
-  await at(4.1);
+  // Leave time to read the snooze choices before selecting tomorrow.
+  await at(5.0);
+  await moveTo(await pointWithin(option, 0.9, 0.5), 320);
+  await at(6.8);
   await click();
   await page.locator("[data-sonner-toaster] li").first().waitFor({ state: "visible" });
 
-  await at(4.9);
-  const toast = page.locator("[data-sonner-toaster] li").first();
-  await moveTo(await pointWithin(toast, 0.35, 1.6), 640);
+  // Keep the later stamp and exit in frame before looking at the result.
+  await at(8.2);
+  await moveTo({ x: 860, y: 610 }, 420);
 }
 
 export async function verify({ page, strings }) {
