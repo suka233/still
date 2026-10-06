@@ -8,6 +8,7 @@ First release of Still (续了么) for SiYuan.
 - "Still using it?" decision card before each charge: keep, cancel (with undo and a shortcut to the provider's cancellation page) or decide later
 - Reminders computed by a kernel plugin, so they're scheduled even with no window open; one window shows each reminder
 - Push to your phone through Bark, ntfy, Telegram, Server酱 (WeChat), WeCom, DingTalk, Feishu, Discord, Slack, Gotify or a webhook
+- Push failures show status information without exposing credentials, request URLs or provider response bodies in notices and logs
 - Dock with what's left to pay this month, decisions waiting for you and upcoming charges; status bar shows the next charge
 - Manager with totals, savings, a six-month forecast, calendar, insights and settings
 - ~90 built-in services with brand icons

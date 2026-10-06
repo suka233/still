@@ -62,9 +62,11 @@ export async function sendToChannel(channel: Channel, message: PushMessage): Pro
   try {
     const req = buildChannelRequest(channel, message);
     const res = await httpRequest({ url: req.url, method: req.method, headers: req.headers, json: req.json, timeoutMs: 10_000 });
-    return isDelivered(res.status) ? { ok: true, status: res.status } : { ok: false, status: res.status, error: res.body.slice(0, 300) };
-  } catch (e) {
-    return { ok: false, status: 0, error: String(e) };
+    // Providers may echo credentials in their response; only expose the status.
+    return isDelivered(res.status) ? { ok: true, status: res.status } : { ok: false, status: res.status, error: `Push request failed (HTTP ${res.status})` };
+  } catch {
+    // Transport errors may also include the complete request URL or headers.
+    return { ok: false, status: 0, error: "Push request failed" };
   }
 }
 

@@ -36,7 +36,8 @@ export async function httpRequest(req: HttpRequest): Promise<HttpResponse> {
   }
   const res = await siyuan.client.fetch("/api/network/forwardProxy", { method: "POST", body: JSON.stringify(options) });
   const envelope = (await res.json()) as { code: number; msg: string; data?: { status: number; body: string } };
-  if (envelope.code !== 0 || !envelope.data) throw new Error(`forwardProxy ${req.url}: ${envelope.msg || envelope.code}`);
+  // URLs and proxy messages can contain credentials (bot tokens, webhook keys).
+  if (envelope.code !== 0 || !envelope.data) throw new Error("forwardProxy request failed");
   const { status, body } = envelope.data;
   return {
     status,

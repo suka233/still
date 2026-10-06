@@ -101,6 +101,7 @@ var __mock = { storage: new Map(), mtimes: new Map(), rpc: new Map(), broadcasts
         if (path === "/api/network/forwardProxy") {
           var req = JSON.parse(init.body);
           __mock.proxied = (__mock.proxied || []).concat([req]);
+          if (__mock.proxyFailure) return __mock.proxyFailure(req, reply);
           if (req.url.indexOf("fail.example") >= 0) return reply({ code: 0, data: { url: req.url, status: 500, body: "nope" } });
           var payload = { result: "success", base_code: "USD", rates: { USD: 1, CNY: 7.2, EUR: 0.9 } };
           var envelope = { code: 0, msg: "", data: { url: req.url, status: 200, body: JSON.stringify(payload), contentType: "application/json" } };

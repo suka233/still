@@ -131,6 +131,23 @@
   check("test push goes through forwardProxy", test.ok && __mock.proxied.some((p) => p.url === "https://ntfy.sh" && p.payload.topic === "still-test"), test);
   var failing = await call("testChannel", { id: "t2", kind: "webhook", config: { url: "https://fail.example/hook" } });
   check("failed test push reports status", failing.ok === false && failing.status === 500, failing);
+  var privateChannel = { id: "private-test", kind: "telegram", config: { botToken: "123456789:dummy-private-bot-token", chatId: "12345" } };
+  __mock.proxyFailure = function (req, reply) {
+    return reply({ code: -1, msg: "failed to POST " + req.url });
+  };
+  var proxyFailure = await call("testChannel", privateChannel);
+  check("proxy errors omit credential-bearing URLs", !proxyFailure.ok && proxyFailure.status === 0 && proxyFailure.error === "Push request failed", proxyFailure);
+  __mock.proxyFailure = function (req, reply) {
+    return reply({ code: 0, data: { status: 401, body: "rejected " + req.url + " token=" + privateChannel.config.botToken } });
+  };
+  var providerFailure = await call("testChannel", privateChannel);
+  check("provider errors omit echoed credentials", !providerFailure.ok && providerFailure.status === 401 && providerFailure.error === "Push request failed (HTTP 401)", providerFailure);
+  __mock.proxyFailure = function (req) {
+    throw new Error("transport failed: " + req.url);
+  };
+  var transportFailure = await call("testChannel", privateChannel);
+  check("transport errors omit credentials", !transportFailure.ok && transportFailure.status === 0 && transportFailure.error === "Push request failed", transportFailure);
+  delete __mock.proxyFailure;
   var badChannel = null;
   try {
     await call("testChannel", { id: "t3", kind: "telegram", config: {} });
